@@ -5,16 +5,27 @@
   // Auth gate
   // ---------------------------------------------------------------------------
 
-  window.onAuthReady(function (user) {
+  var _appInitialized = false;
+
+  function handleAuthState(user) {
     if (user) {
       document.getElementById('login-screen').style.display = 'none';
       document.getElementById('app').style.display = 'block';
-      initApp(user);
+      if (!_appInitialized) {
+        _appInitialized = true;
+        initApp(user);
+      }
     } else {
+      _appInitialized = false;
       document.getElementById('login-screen').style.display = 'flex';
       document.getElementById('app').style.display = 'none';
     }
-  });
+  }
+
+  // onAuthReady fires once on page load (catches already-logged-in state)
+  window.onAuthReady(handleAuthState);
+  // onAuthStateChange fires on every subsequent change (catches popup login)
+  window.onAuthStateChange(handleAuthState);
 
   // ---------------------------------------------------------------------------
   // Tab switching
