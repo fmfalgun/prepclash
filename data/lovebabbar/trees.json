@@ -1,0 +1,62 @@
+{
+  "topicId": "trees",
+  "source": "lovebabbar",
+  "questions": [
+    {
+      "id": "lb_tree_1",
+      "name": "Inorder Traversal",
+      "difficulty": "easy",
+      "url": "https://leetcode.com/problems/binary-tree-inorder-traversal/",
+      "tags": ["tree", "dfs"],
+      "babbarIndex": 1
+    },
+    {
+      "id": "lb_tree_2",
+      "name": "Maximum Depth of Binary Tree",
+      "difficulty": "easy",
+      "url": "https://leetcode.com/problems/maximum-depth-of-binary-tree/",
+      "tags": ["tree", "dfs"],
+      "babbarIndex": 2
+    },
+    {
+      "id": "lb_tree_3",
+      "name": "Diameter of Binary Tree",
+      "difficulty": "easy",
+      "url": "https://leetcode.com/problems/diameter-of-binary-tree/",
+      "tags": ["tree", "dfs"],
+      "babbarIndex": 3
+    },
+    {
+      "id": "lb_tree_4",
+      "name": "Lowest Common Ancestor of BST",
+      "difficulty": "medium",
+      "url": "https://leetcode.com/problems/lowest-common-ancestor-of-a-binary-search-tree/",
+      "tags": ["tree", "bst"],
+      "babbarIndex": 4
+    },
+    {
+      "id": "lb_tree_5",
+      "name": "Binary Tree Level Order Traversal",
+      "difficulty": "medium",
+      "url": "https://leetcode.com/problems/binary-tree-level-order-traversal/",
+      "tags": ["tree", "bfs"],
+      "babbarIndex": 5
+    },
+    {
+      "id": "lb_tree_6",
+      "name": "Construct Binary Tree from Preorder and Inorder",
+      "difficulty": "medium",
+      "url": "https://leetcode.com/problems/construct-binary-tree-from-preorder-and-inorder-traversal/",
+      "tags": ["tree", "divide-and-conquer"],
+      "babbarIndex": 6
+    },
+    {
+      "id": "lb_tree_7",
+      "name": "Serialize and Deserialize Binary Tree",
+      "difficulty": "hard",
+      "url": "https://leetcode.com/problems/serialize-and-deserialize-binary-tree/",
+      "tags": ["tree", "design"],
+      "babbarIndex": 7
+    }
+  ]
+}

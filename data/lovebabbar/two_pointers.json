@@ -1,0 +1,46 @@
+{
+  "topicId": "two_pointers",
+  "source": "lovebabbar",
+  "questions": [
+    {
+      "id": "lb_tp_1",
+      "name": "Two Sum II - Input Array Is Sorted",
+      "difficulty": "medium",
+      "url": "https://leetcode.com/problems/two-sum-ii-input-array-is-sorted/",
+      "tags": ["two-pointers", "array"],
+      "babbarIndex": 1
+    },
+    {
+      "id": "lb_tp_2",
+      "name": "3Sum",
+      "difficulty": "medium",
+      "url": "https://leetcode.com/problems/3sum/",
+      "tags": ["two-pointers", "array"],
+      "babbarIndex": 2
+    },
+    {
+      "id": "lb_tp_3",
+      "name": "Container With Most Water",
+      "difficulty": "medium",
+      "url": "https://leetcode.com/problems/container-with-most-water/",
+      "tags": ["two-pointers", "array"],
+      "babbarIndex": 3
+    },
+    {
+      "id": "lb_tp_4",
+      "name": "Minimum Window Substring",
+      "difficulty": "hard",
+      "url": "https://leetcode.com/problems/minimum-window-substring/",
+      "tags": ["two-pointers", "sliding-window", "string"],
+      "babbarIndex": 4
+    },
+    {
+      "id": "lb_tp_5",
+      "name": "Longest Substring Without Repeating Characters",
+      "difficulty": "medium",
+      "url": "https://leetcode.com/problems/longest-substring-without-repeating-characters/",
+      "tags": ["two-pointers", "sliding-window"],
+      "babbarIndex": 5
+    }
+  ]
+}

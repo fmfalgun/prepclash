@@ -1,0 +1,46 @@
+{
+  "topicId": "advanced_graphs",
+  "source": "lovebabbar",
+  "questions": [
+    {
+      "id": "lb_ag_1",
+      "name": "Network Delay Time (Dijkstra)",
+      "difficulty": "medium",
+      "url": "https://leetcode.com/problems/network-delay-time/",
+      "tags": ["graph", "shortest-path", "dijkstra"],
+      "babbarIndex": 1
+    },
+    {
+      "id": "lb_ag_2",
+      "name": "Cheapest Flights Within K Stops",
+      "difficulty": "medium",
+      "url": "https://leetcode.com/problems/cheapest-flights-within-k-stops/",
+      "tags": ["graph", "dp", "bellman-ford"],
+      "babbarIndex": 2
+    },
+    {
+      "id": "lb_ag_3",
+      "name": "Critical Connections in a Network",
+      "difficulty": "hard",
+      "url": "https://leetcode.com/problems/critical-connections-in-a-network/",
+      "tags": ["graph", "bridges"],
+      "babbarIndex": 3
+    },
+    {
+      "id": "lb_ag_4",
+      "name": "Minimum Cost to Connect All Points (Prim/Kruskal)",
+      "difficulty": "medium",
+      "url": "https://leetcode.com/problems/min-cost-to-connect-all-points/",
+      "tags": ["graph", "mst"],
+      "babbarIndex": 4
+    },
+    {
+      "id": "lb_ag_5",
+      "name": "Alien Dictionary",
+      "difficulty": "hard",
+      "url": "https://www.geeksforgeeks.org/given-sorted-dictionary-find-precedence-characters/",
+      "tags": ["graph", "topological-sort"],
+      "babbarIndex": 5
+    }
+  ]
+}

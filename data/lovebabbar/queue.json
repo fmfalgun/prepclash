@@ -1,0 +1,46 @@
+{
+  "topicId": "queue",
+  "source": "lovebabbar",
+  "questions": [
+    {
+      "id": "lb_queue_1",
+      "name": "Implement Queue using Stacks",
+      "difficulty": "easy",
+      "url": "https://leetcode.com/problems/implement-queue-using-stacks/",
+      "tags": ["queue", "stack"],
+      "babbarIndex": 1
+    },
+    {
+      "id": "lb_queue_2",
+      "name": "Sliding Window Maximum",
+      "difficulty": "hard",
+      "url": "https://leetcode.com/problems/sliding-window-maximum/",
+      "tags": ["queue", "deque", "sliding-window"],
+      "babbarIndex": 2
+    },
+    {
+      "id": "lb_queue_3",
+      "name": "Gas Station",
+      "difficulty": "medium",
+      "url": "https://leetcode.com/problems/gas-station/",
+      "tags": ["queue", "greedy"],
+      "babbarIndex": 3
+    },
+    {
+      "id": "lb_queue_4",
+      "name": "Number of Recent Calls",
+      "difficulty": "easy",
+      "url": "https://leetcode.com/problems/number-of-recent-calls/",
+      "tags": ["queue"],
+      "babbarIndex": 4
+    },
+    {
+      "id": "lb_queue_5",
+      "name": "Design Circular Queue",
+      "difficulty": "medium",
+      "url": "https://leetcode.com/problems/design-circular-queue/",
+      "tags": ["queue", "design"],
+      "babbarIndex": 5
+    }
+  ]
+}

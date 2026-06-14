@@ -1,0 +1,54 @@
+{
+  "topicId": "hashing",
+  "source": "lovebabbar",
+  "questions": [
+    {
+      "id": "lb_hash_1",
+      "name": "Two Sum",
+      "difficulty": "easy",
+      "url": "https://leetcode.com/problems/two-sum/",
+      "tags": ["hash-table", "array"],
+      "babbarIndex": 1
+    },
+    {
+      "id": "lb_hash_2",
+      "name": "Group Anagrams",
+      "difficulty": "medium",
+      "url": "https://leetcode.com/problems/group-anagrams/",
+      "tags": ["hash-table", "string"],
+      "babbarIndex": 2
+    },
+    {
+      "id": "lb_hash_3",
+      "name": "Longest Consecutive Sequence",
+      "difficulty": "medium",
+      "url": "https://leetcode.com/problems/longest-consecutive-sequence/",
+      "tags": ["hash-table", "array"],
+      "babbarIndex": 3
+    },
+    {
+      "id": "lb_hash_4",
+      "name": "Top K Frequent Elements",
+      "difficulty": "medium",
+      "url": "https://leetcode.com/problems/top-k-frequent-elements/",
+      "tags": ["hash-table", "heap"],
+      "babbarIndex": 4
+    },
+    {
+      "id": "lb_hash_5",
+      "name": "Subarray Sum Equals K",
+      "difficulty": "medium",
+      "url": "https://leetcode.com/problems/subarray-sum-equals-k/",
+      "tags": ["hash-table", "array", "prefix-sum"],
+      "babbarIndex": 5
+    },
+    {
+      "id": "lb_hash_6",
+      "name": "4Sum II",
+      "difficulty": "medium",
+      "url": "https://leetcode.com/problems/4sum-ii/",
+      "tags": ["hash-table", "array"],
+      "babbarIndex": 6
+    }
+  ]
+}

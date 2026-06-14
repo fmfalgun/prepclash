@@ -1,0 +1,38 @@
+{
+  "topicId": "oop",
+  "source": "lovebabbar",
+  "questions": [
+    {
+      "id": "lb_oop_1",
+      "name": "Design Parking System",
+      "difficulty": "easy",
+      "url": "https://leetcode.com/problems/design-parking-system/",
+      "tags": ["oop", "design"],
+      "babbarIndex": 1
+    },
+    {
+      "id": "lb_oop_2",
+      "name": "Design HashMap",
+      "difficulty": "easy",
+      "url": "https://leetcode.com/problems/design-hashmap/",
+      "tags": ["oop", "design"],
+      "babbarIndex": 2
+    },
+    {
+      "id": "lb_oop_3",
+      "name": "Design Twitter",
+      "difficulty": "medium",
+      "url": "https://leetcode.com/problems/design-twitter/",
+      "tags": ["oop", "design"],
+      "babbarIndex": 3
+    },
+    {
+      "id": "lb_oop_4",
+      "name": "Design Snake Game",
+      "difficulty": "medium",
+      "url": "https://leetcode.com/problems/design-snake-game/",
+      "tags": ["oop", "design", "queue"],
+      "babbarIndex": 4
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "topicId": "computer_networks",
+  "source": "lovebabbar",
+  "questions": [
+    {
+      "id": "lb_cn_1",
+      "name": "OSI Model Layers",
+      "difficulty": "easy",
+      "url": "https://www.geeksforgeeks.org/layers-of-osi-model/",
+      "tags": ["networks", "theory"],
+      "babbarIndex": 1
+    },
+    {
+      "id": "lb_cn_2",
+      "name": "TCP vs UDP",
+      "difficulty": "easy",
+      "url": "https://www.geeksforgeeks.org/differences-between-tcp-and-udp/",
+      "tags": ["networks", "theory"],
+      "babbarIndex": 2
+    },
+    {
+      "id": "lb_cn_3",
+      "name": "HTTP vs HTTPS",
+      "difficulty": "easy",
+      "url": "https://www.geeksforgeeks.org/difference-between-http-and-https/",
+      "tags": ["networks", "theory"],
+      "babbarIndex": 3
+    },
+    {
+      "id": "lb_cn_4",
+      "name": "Network Delay Time",
+      "difficulty": "medium",
+      "url": "https://leetcode.com/problems/network-delay-time/",
+      "tags": ["networks", "graph", "dijkstra"],
+      "babbarIndex": 4
+    }
+  ]
+}

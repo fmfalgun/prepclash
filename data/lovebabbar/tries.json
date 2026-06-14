@@ -1,0 +1,46 @@
+{
+  "topicId": "tries",
+  "source": "lovebabbar",
+  "questions": [
+    {
+      "id": "lb_trie_1",
+      "name": "Implement Trie (Prefix Tree)",
+      "difficulty": "medium",
+      "url": "https://leetcode.com/problems/implement-trie-prefix-tree/",
+      "tags": ["trie", "design"],
+      "babbarIndex": 1
+    },
+    {
+      "id": "lb_trie_2",
+      "name": "Design Add and Search Words",
+      "difficulty": "medium",
+      "url": "https://leetcode.com/problems/design-add-and-search-words-data-structure/",
+      "tags": ["trie", "design"],
+      "babbarIndex": 2
+    },
+    {
+      "id": "lb_trie_3",
+      "name": "Word Search II",
+      "difficulty": "hard",
+      "url": "https://leetcode.com/problems/word-search-ii/",
+      "tags": ["trie", "backtracking"],
+      "babbarIndex": 3
+    },
+    {
+      "id": "lb_trie_4",
+      "name": "Longest Word in Dictionary",
+      "difficulty": "medium",
+      "url": "https://leetcode.com/problems/longest-word-in-dictionary/",
+      "tags": ["trie", "hash-table"],
+      "babbarIndex": 4
+    },
+    {
+      "id": "lb_trie_5",
+      "name": "Replace Words",
+      "difficulty": "medium",
+      "url": "https://leetcode.com/problems/replace-words/",
+      "tags": ["trie", "string"],
+      "babbarIndex": 5
+    }
+  ]
+}

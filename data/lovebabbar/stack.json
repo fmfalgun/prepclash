@@ -1,0 +1,54 @@
+{
+  "topicId": "stack",
+  "source": "lovebabbar",
+  "questions": [
+    {
+      "id": "lb_stack_1",
+      "name": "Valid Parentheses",
+      "difficulty": "easy",
+      "url": "https://leetcode.com/problems/valid-parentheses/",
+      "tags": ["stack", "string"],
+      "babbarIndex": 1
+    },
+    {
+      "id": "lb_stack_2",
+      "name": "Next Greater Element I",
+      "difficulty": "easy",
+      "url": "https://leetcode.com/problems/next-greater-element-i/",
+      "tags": ["stack", "monotonic-stack"],
+      "babbarIndex": 2
+    },
+    {
+      "id": "lb_stack_3",
+      "name": "Next Greater Element II",
+      "difficulty": "medium",
+      "url": "https://leetcode.com/problems/next-greater-element-ii/",
+      "tags": ["stack", "monotonic-stack"],
+      "babbarIndex": 3
+    },
+    {
+      "id": "lb_stack_4",
+      "name": "Trapping Rain Water",
+      "difficulty": "hard",
+      "url": "https://leetcode.com/problems/trapping-rain-water/",
+      "tags": ["stack", "two-pointers"],
+      "babbarIndex": 4
+    },
+    {
+      "id": "lb_stack_5",
+      "name": "Largest Rectangle in Histogram",
+      "difficulty": "hard",
+      "url": "https://leetcode.com/problems/largest-rectangle-in-histogram/",
+      "tags": ["stack", "monotonic-stack"],
+      "babbarIndex": 5
+    },
+    {
+      "id": "lb_stack_6",
+      "name": "Min Stack",
+      "difficulty": "medium",
+      "url": "https://leetcode.com/problems/min-stack/",
+      "tags": ["stack", "design"],
+      "babbarIndex": 6
+    }
+  ]
+}

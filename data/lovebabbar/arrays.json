@@ -1,0 +1,70 @@
+{
+  "topicId": "arrays",
+  "source": "lovebabbar",
+  "questions": [
+    {
+      "id": "lb_arrays_1",
+      "name": "Set Matrix Zeroes",
+      "difficulty": "medium",
+      "url": "https://leetcode.com/problems/set-matrix-zeroes/",
+      "tags": ["array", "matrix"],
+      "babbarIndex": 1
+    },
+    {
+      "id": "lb_arrays_2",
+      "name": "Pascal's Triangle",
+      "difficulty": "easy",
+      "url": "https://leetcode.com/problems/pascals-triangle/",
+      "tags": ["array"],
+      "babbarIndex": 2
+    },
+    {
+      "id": "lb_arrays_3",
+      "name": "Next Permutation",
+      "difficulty": "medium",
+      "url": "https://leetcode.com/problems/next-permutation/",
+      "tags": ["array", "two-pointers"],
+      "babbarIndex": 3
+    },
+    {
+      "id": "lb_arrays_4",
+      "name": "Kadane's Algorithm (Max Subarray)",
+      "difficulty": "medium",
+      "url": "https://leetcode.com/problems/maximum-subarray/",
+      "tags": ["array", "dp"],
+      "babbarIndex": 4
+    },
+    {
+      "id": "lb_arrays_5",
+      "name": "Sort Colors (Dutch Flag)",
+      "difficulty": "medium",
+      "url": "https://leetcode.com/problems/sort-colors/",
+      "tags": ["array", "two-pointers"],
+      "babbarIndex": 5
+    },
+    {
+      "id": "lb_arrays_6",
+      "name": "Best Time to Buy and Sell Stock",
+      "difficulty": "easy",
+      "url": "https://leetcode.com/problems/best-time-to-buy-and-sell-stock/",
+      "tags": ["array", "greedy"],
+      "babbarIndex": 6
+    },
+    {
+      "id": "lb_arrays_7",
+      "name": "Rotate Image",
+      "difficulty": "medium",
+      "url": "https://leetcode.com/problems/rotate-image/",
+      "tags": ["array", "matrix"],
+      "babbarIndex": 7
+    },
+    {
+      "id": "lb_arrays_8",
+      "name": "Merge Intervals",
+      "difficulty": "medium",
+      "url": "https://leetcode.com/problems/merge-intervals/",
+      "tags": ["array", "sorting"],
+      "babbarIndex": 8
+    }
+  ]
+}

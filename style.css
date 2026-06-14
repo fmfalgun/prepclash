@@ -1,0 +1,1336 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap');
+
+/* ============================================================
+   RESET & BASE
+   ============================================================ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 14px;
+  scroll-behavior: smooth;
+}
+
+:root {
+  --bg:         #0d0d0d;
+  --surface:    #111111;
+  --border:     #1e1e1e;
+  --green:      #00ff41;
+  --gold:       #f4d03f;
+  --red:        #e74c3c;
+  --muted:      #555555;
+  --text:       #e0e0e0;
+  --font:       'JetBrains Mono', 'Courier New', Courier, monospace;
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 1rem;
+  line-height: 1.5;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--muted);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) var(--bg);
+}
+
+a {
+  color: var(--green);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+button {
+  font-family: var(--font);
+  cursor: pointer;
+}
+
+input,
+textarea,
+select {
+  font-family: var(--font);
+}
+
+ul,
+ol {
+  list-style: none;
+}
+
+/* ============================================================
+   TYPOGRAPHY UTILITIES
+   ============================================================ */
+
+.text-green  { color: var(--green); }
+.text-gold   { color: var(--gold); }
+.text-red    { color: var(--red); }
+.text-muted  { color: var(--muted); }
+.text-white  { color: var(--text); }
+.mono        { font-family: var(--font); }
+
+/* ============================================================
+   LOGIN SCREEN
+   ============================================================ */
+
+#login-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  width: 100%;
+  background-color: var(--bg);
+  padding: 2rem;
+  text-align: center;
+}
+
+#login-screen .login-title {
+  font-size: 3.5rem;
+  font-weight: 800;
+  letter-spacing: 0.25em;
+  color: var(--green);
+  text-transform: uppercase;
+  margin-bottom: 0.5rem;
+  /* Subtle flicker — terminal on */
+  animation: flicker 4s infinite;
+}
+
+#login-screen .login-tagline {
+  font-size: 0.9rem;
+  letter-spacing: 0.3em;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-bottom: 3rem;
+}
+
+#login-screen .login-tagline span {
+  color: var(--border);
+  margin: 0 0.5em;
+}
+
+#login-screen .btn-login {
+  display: inline-block;
+  padding: 0.75rem 2rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--green);
+  background: transparent;
+  border: 1px solid var(--green);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+#login-screen .btn-login:hover {
+  background: var(--green);
+  color: #000000;
+}
+
+#login-screen .btn-login:active {
+  filter: brightness(0.85);
+}
+
+/* Aliases matching actual HTML class names */
+#login-screen .logo {
+  font-size: clamp(2.5rem, 8vw, 5rem);
+  font-weight: 800;
+  letter-spacing: 0.3em;
+  color: var(--green);
+  margin-bottom: 0.5rem;
+}
+#login-screen .tagline {
+  font-size: clamp(0.65rem, 2vw, 0.85rem);
+  letter-spacing: 0.3em;
+  color: var(--muted);
+  margin-bottom: 0.5rem;
+}
+#login-screen .status-line {
+  font-size: 0.75rem;
+  color: var(--muted);
+  letter-spacing: 0.15em;
+  margin-bottom: 2.5rem;
+}
+#login-btn {
+  background: transparent;
+  border: 1px solid var(--green);
+  color: var(--green);
+  font-family: var(--font);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  padding: 0.75rem 2rem;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+#login-btn:hover {
+  background: var(--green);
+  color: var(--bg);
+}
+
+#login-screen .login-decoration {
+  margin-bottom: 2.5rem;
+  color: var(--border);
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  user-select: none;
+}
+
+/* ============================================================
+   TOP BAR
+   ============================================================ */
+
+#topbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 44px;
+  padding: 0 1.5rem;
+  background-color: var(--bg);
+  border-bottom: 1px solid var(--border);
+}
+
+#topbar .topbar-brand {
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  color: var(--green);
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+#topbar .topbar-brand .topbar-sep {
+  color: var(--border);
+  font-weight: 400;
+}
+
+#topbar .topbar-meta {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  font-size: 0.75rem;
+  color: var(--text);
+  letter-spacing: 0.05em;
+}
+
+#topbar .topbar-meta .topbar-player {
+  color: var(--green);
+}
+
+#topbar .topbar-meta .topbar-xp {
+  color: var(--gold);
+}
+
+#topbar .topbar-meta .topbar-xp-label {
+  color: var(--muted);
+  margin-right: 0.25em;
+}
+
+#topbar .btn-logout {
+  padding: 0.3rem 0.75rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  background: transparent;
+  border: 1px solid var(--border);
+  transition: color 0.15s, border-color 0.15s;
+}
+
+#topbar .btn-logout:hover {
+  color: var(--red);
+  border-color: var(--red);
+}
+
+/* ============================================================
+   TAB NAVIGATION
+   ============================================================ */
+
+#tabs {
+  position: fixed;
+  top: 44px;
+  left: 0;
+  right: 0;
+  z-index: 99;
+  display: flex;
+  align-items: stretch;
+  height: 38px;
+  background-color: var(--bg);
+  border-bottom: 1px solid var(--border);
+  padding: 0 1.5rem;
+  gap: 0;
+}
+
+#tabs .tab-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 1.25rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+  margin-bottom: -1px; /* overlap container border */
+}
+
+#tabs .tab-btn:hover {
+  color: var(--text);
+}
+
+#tabs .tab-btn.active {
+  color: var(--green);
+  border-bottom-color: var(--green);
+}
+
+/* ============================================================
+   TAB CONTENT AREA
+   ============================================================ */
+
+#tab-content {
+  margin-top: calc(44px + 38px); /* topbar + tabs */
+  min-height: calc(100vh - 44px - 38px);
+  padding: 1.5rem;
+  overflow-y: auto;
+}
+
+.tab-panel {
+  display: none;
+  height: 100%;
+  overflow-y: auto;
+  padding: 24px;
+  box-sizing: border-box;
+}
+.tab-panel.active {
+  display: block;
+}
+
+/* ============================================================
+   VILLAGE PANEL HEADER
+   ============================================================ */
+
+.village-header {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: start;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  margin-bottom: 1.5rem;
+}
+
+.village-header .village-name {
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--green);
+  margin-bottom: 0.15rem;
+}
+
+.village-header .village-name .village-sep {
+  color: var(--border);
+  margin: 0 0.4em;
+}
+
+.village-header .village-level {
+  color: var(--text);
+}
+
+.village-header .village-domain {
+  font-size: 0.72rem;
+  color: var(--muted);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  margin-bottom: 0.1rem;
+}
+
+.village-header .village-domain span {
+  color: var(--text);
+}
+
+.village-header .village-xp {
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 0.6rem;
+}
+
+.village-header .village-xp span {
+  color: var(--gold);
+}
+
+.village-header .village-progress-label {
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 0.2rem;
+}
+
+.village-header .village-progress-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.72rem;
+}
+
+.village-header .village-progress-pct {
+  color: var(--gold);
+  white-space: nowrap;
+}
+
+/* ============================================================
+   PROGRESS BARS (block-character style)
+   ============================================================ */
+
+.progress-bar {
+  display: inline-block;
+  font-family: var(--font);
+  color: var(--gold);
+  letter-spacing: 0.05em;
+  font-size: 0.85rem;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.progress-bar .bar-filled {
+  color: var(--gold);
+}
+
+.progress-bar .bar-empty {
+  color: var(--border);
+}
+
+/* ============================================================
+   NODE CARDS
+   ============================================================ */
+
+.nodes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1rem;
+}
+
+.node-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  transition: border-color 0.15s;
+}
+
+.node-card:hover:not(.node-locked) {
+  border-color: var(--muted);
+}
+
+/* Status variants */
+.node-card.node-completed {
+  border-left: 2px solid var(--green);
+}
+
+.node-card.node-in-progress {
+  border-left: 2px solid var(--gold);
+}
+
+.node-card.node-locked {
+  opacity: 0.6;
+  cursor: not-allowed;
+  border-left: 2px solid var(--red);
+}
+
+.node-card .node-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.2rem;
+}
+
+.node-card .node-icon {
+  font-size: 0.75rem;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+
+.node-card.node-completed .node-icon { color: var(--green); }
+.node-card.node-in-progress .node-icon { color: var(--gold); }
+.node-card.node-locked .node-icon { color: var(--red); }
+
+.node-card .node-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+
+.node-card.node-locked .node-title {
+  color: var(--muted);
+}
+
+.node-card .node-row {
+  font-size: 0.72rem;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  display: flex;
+  gap: 0.4em;
+}
+
+.node-card .node-row .node-key {
+  color: var(--muted);
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.node-card .node-row .node-val {
+  color: var(--text);
+  word-break: break-all;
+}
+
+/* Status value coloring per state */
+.node-card.node-completed  .node-status-val { color: var(--green); }
+.node-card.node-in-progress .node-status-val { color: var(--gold); }
+.node-card.node-locked      .node-status-val { color: var(--red); }
+
+.node-card .node-xp {
+  color: var(--gold);
+}
+
+.node-card .node-unlocks {
+  color: var(--muted);
+  font-style: italic;
+}
+
+.node-card .node-proof a {
+  color: var(--green);
+  font-size: 0.7rem;
+}
+
+.node-card .node-proof a:hover {
+  text-decoration: underline;
+}
+
+.node-card .node-action {
+  margin-top: 0.5rem;
+}
+
+.node-card .btn-node {
+  padding: 0.35rem 0.85rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.node-card:not(.node-locked) .btn-node:hover {
+  color: var(--green);
+  border-color: var(--green);
+}
+
+.node-card.node-locked .btn-node {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* ============================================================
+   STATUS TAGS
+   ============================================================ */
+
+.status-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 0.15em 0.5em;
+  border: 1px solid var(--border);
+  user-select: none;
+  white-space: nowrap;
+}
+
+.status-tag .tag-dot {
+  font-size: 0.6rem;
+}
+
+.status-tag.tag-active {
+  color: var(--green);
+  border-color: var(--green);
+}
+
+.status-tag.tag-locked {
+  color: var(--red);
+  border-color: var(--red);
+}
+
+.status-tag.tag-completed {
+  color: var(--green);
+  border-color: var(--green);
+  opacity: 0.75;
+}
+
+.status-tag.tag-in-progress {
+  color: var(--gold);
+  border-color: var(--gold);
+}
+
+/* ============================================================
+   LEADERBOARD TABLE
+   ============================================================ */
+
+.leaderboard-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+}
+
+.leaderboard-table thead tr {
+  border-bottom: 1px solid var(--border);
+}
+
+.leaderboard-table th {
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+  font-size: 0.68rem;
+}
+
+.leaderboard-table td {
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+  color: var(--text);
+}
+
+.leaderboard-table tbody tr {
+  background: var(--bg);
+  transition: background 0.1s;
+}
+
+.leaderboard-table tbody tr:hover {
+  background: var(--surface);
+}
+
+/* Rank column */
+.leaderboard-table .col-rank {
+  color: var(--green);
+  font-weight: 700;
+  font-size: 0.82rem;
+  width: 3rem;
+  text-align: center;
+}
+
+/* Top 3 rank styling */
+.leaderboard-table tbody tr:nth-child(1) .col-rank { color: var(--gold); }
+.leaderboard-table tbody tr:nth-child(2) .col-rank { color: var(--text); }
+.leaderboard-table tbody tr:nth-child(3) .col-rank { color: var(--muted); }
+
+/* Player name */
+.leaderboard-table .col-player {
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+/* XP column */
+.leaderboard-table .col-xp {
+  color: var(--gold);
+  font-weight: 700;
+  text-align: right;
+}
+
+/* Delta column */
+.leaderboard-table .col-delta {
+  text-align: right;
+  font-weight: 700;
+  width: 5rem;
+}
+
+.leaderboard-table .col-delta.delta-up   { color: var(--green); }
+.leaderboard-table .col-delta.delta-down { color: var(--red); }
+.leaderboard-table .col-delta.delta-same { color: var(--muted); }
+
+/* Domain / misc columns */
+.leaderboard-table .col-domain {
+  color: var(--muted);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* Current user row highlight */
+.leaderboard-table tbody tr.row-self {
+  background: #0a1a0a;
+}
+
+.leaderboard-table tbody tr.row-self td {
+  border-bottom-color: var(--border);
+}
+
+/* ============================================================
+   CLAN CAPITAL
+   ============================================================ */
+
+.clan-topic-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.clan-topic-row {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 0.75rem 1rem;
+}
+
+.clan-topic-row .topic-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.6rem;
+}
+
+.clan-topic-row .topic-name {
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+
+.clan-topic-row .topic-completion {
+  font-size: 0.68rem;
+  color: var(--muted);
+  letter-spacing: 0.05em;
+}
+
+.clan-topic-row .topic-players {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.clan-player-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.15rem;
+  min-width: 120px;
+  padding: 0.4rem 0.6rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+}
+
+.clan-player-cell .cell-name {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.clan-player-cell .cell-status {
+  font-size: 0.6rem;
+  letter-spacing: 0.05em;
+}
+
+.clan-player-cell .cell-bar {
+  font-size: 0.65rem;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+/* Player status coloring within clan cells */
+.clan-player-cell.cell-completed { border-color: #1a2e1a; }
+.clan-player-cell.cell-in-progress { border-color: #2e2800; }
+.clan-player-cell.cell-locked { opacity: 0.5; }
+
+.clan-player-cell.cell-completed .cell-status  { color: var(--green); }
+.clan-player-cell.cell-in-progress .cell-status { color: var(--gold); }
+.clan-player-cell.cell-locked .cell-status       { color: var(--red); }
+
+/* ============================================================
+   MODAL / OVERLAY
+   ============================================================ */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.modal-overlay.hidden {
+  display: none;
+}
+
+.modal-box {
+  background: var(--surface);
+  border: 1px solid var(--green);
+  padding: 1.5rem 1.75rem;
+  min-width: 340px;
+  max-width: 480px;
+  width: 100%;
+  position: relative;
+}
+
+.modal-box .modal-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--green);
+  margin-bottom: 0.25rem;
+}
+
+.modal-box .modal-subtitle {
+  font-size: 0.68rem;
+  color: var(--muted);
+  letter-spacing: 0.06em;
+  margin-bottom: 1.25rem;
+}
+
+.modal-box .modal-label {
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 0.35rem;
+}
+
+.modal-box .modal-input {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.modal-box .modal-input:focus {
+  border-color: var(--green);
+}
+
+.modal-box .modal-input::placeholder {
+  color: var(--muted);
+}
+
+.modal-box .modal-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+  justify-content: flex-end;
+}
+
+.modal-box .btn-modal-cancel {
+  padding: 0.45rem 1rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  background: transparent;
+  border: 1px solid var(--border);
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.modal-box .btn-modal-cancel:hover {
+  color: var(--red);
+  border-color: var(--red);
+}
+
+.modal-box .btn-modal-submit {
+  padding: 0.45rem 1rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--green);
+  background: transparent;
+  border: 1px solid var(--green);
+  transition: background 0.15s, color 0.15s;
+}
+
+.modal-box .btn-modal-submit:hover {
+  background: var(--green);
+  color: #000000;
+}
+
+.modal-box .btn-modal-close {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  line-height: 1;
+  padding: 0.1rem 0.3rem;
+  transition: color 0.15s;
+}
+
+.modal-box .btn-modal-close:hover {
+  color: var(--red);
+}
+
+/* ============================================================
+   SECTION DIVIDERS & LABELS
+   ============================================================ */
+
+.section-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.section-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.divider {
+  width: 100%;
+  height: 1px;
+  background: var(--border);
+  margin: 1.25rem 0;
+}
+
+/* ============================================================
+   GENERIC BUTTON STYLES
+   ============================================================ */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  padding: 0.4rem 0.9rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+
+.btn-green {
+  color: var(--green);
+  border-color: var(--green);
+}
+
+.btn-green:hover {
+  background: var(--green);
+  color: #000000;
+}
+
+.btn-gold {
+  color: var(--gold);
+  border-color: var(--gold);
+}
+
+.btn-gold:hover {
+  background: var(--gold);
+  color: #000000;
+}
+
+.btn-red {
+  color: var(--red);
+  border-color: var(--red);
+}
+
+.btn-red:hover {
+  background: var(--red);
+  color: #000000;
+}
+
+.btn:disabled,
+.btn[disabled] {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ============================================================
+   STAT CHIPS (for profile/village summaries)
+   ============================================================ */
+
+.stat-chip {
+  display: inline-flex;
+  flex-direction: column;
+  padding: 0.5rem 0.85rem;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  min-width: 80px;
+}
+
+.stat-chip .chip-label {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 0.15rem;
+}
+
+.stat-chip .chip-value {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.2;
+}
+
+.stat-chip.chip-green .chip-value { color: var(--green); }
+.stat-chip.chip-gold .chip-value  { color: var(--gold); }
+.stat-chip.chip-red .chip-value   { color: var(--red); }
+
+/* ============================================================
+   NOTIFICATION / TOAST
+   ============================================================ */
+
+.toast-container {
+  position: fixed;
+  bottom: 1.25rem;
+  right: 1.25rem;
+  z-index: 300;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.toast {
+  padding: 0.6rem 1rem;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  font-size: 0.72rem;
+  letter-spacing: 0.05em;
+  color: var(--text);
+  min-width: 220px;
+  max-width: 340px;
+  display: flex;
+  align-items: center;
+  gap: 0.6em;
+}
+
+.toast.toast-success { border-color: var(--green); }
+.toast.toast-error   { border-color: var(--red); }
+.toast.toast-info    { border-color: var(--border); }
+
+.toast .toast-icon {
+  flex-shrink: 0;
+}
+
+.toast.toast-success .toast-icon { color: var(--green); }
+.toast.toast-error   .toast-icon { color: var(--red); }
+
+/* ============================================================
+   EMPTY STATE
+   ============================================================ */
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
+  color: var(--muted);
+  text-align: center;
+  gap: 0.5rem;
+}
+
+.empty-state .empty-icon {
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+  opacity: 0.4;
+}
+
+.empty-state .empty-text {
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* ============================================================
+   LOADING / BLINK CURSOR
+   ============================================================ */
+
+.cursor-blink {
+  display: inline-block;
+  width: 0.5em;
+  background: var(--green);
+  animation: blink 1s step-end infinite;
+  vertical-align: text-bottom;
+  height: 1em;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+
+.loading-dots::after {
+  content: '...';
+  animation: dots 1.5s steps(4, end) infinite;
+  display: inline-block;
+  width: 1.5em;
+  overflow: hidden;
+  vertical-align: bottom;
+}
+
+@keyframes dots {
+  0%  { width: 0; }
+  25% { width: 0.4em; }
+  50% { width: 0.8em; }
+  75% { width: 1.2em; }
+  100%{ width: 0; }
+}
+
+/* Terminal title flicker on login */
+@keyframes flicker {
+  0%,  97%,  100% { opacity: 1; }
+  98%              { opacity: 0.85; }
+  99%              { opacity: 1; }
+  99.5%            { opacity: 0.7; }
+}
+
+/* ============================================================
+   RESPONSIVE ADJUSTMENTS
+   ============================================================ */
+
+@media (max-width: 640px) {
+  #topbar {
+    padding: 0 0.75rem;
+  }
+
+  #topbar .topbar-meta {
+    gap: 0.75rem;
+    font-size: 0.65rem;
+  }
+
+  #tabs {
+    padding: 0 0.5rem;
+    overflow-x: auto;
+  }
+
+  #tabs .tab-btn {
+    padding: 0 0.75rem;
+    font-size: 0.65rem;
+    white-space: nowrap;
+  }
+
+  #tab-content {
+    padding: 1rem 0.75rem;
+  }
+
+  .nodes-grid {
+    grid-template-columns: 1fr;
+  }
+
+  #login-screen .login-title {
+    font-size: 2rem;
+    letter-spacing: 0.15em;
+  }
+
+  .modal-box {
+    min-width: unset;
+    padding: 1rem 1.25rem;
+  }
+
+  .leaderboard-table th,
+  .leaderboard-table td {
+    padding: 0.4rem 0.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .clan-topic-row .topic-players {
+    flex-direction: column;
+  }
+
+  .clan-player-cell {
+    min-width: unset;
+    width: 100%;
+  }
+}
+
+/* ============================================================
+   QUESTION LIST INSIDE TOPIC CARDS
+   ============================================================ */
+
+.question-list {
+  display: flex;
+  flex-direction: column;
+  margin-top: 8px;
+  border-top: 1px solid var(--border);
+}
+
+.question-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 4px 0;
+  cursor: pointer;
+  gap: 8px;
+}
+
+.question-row:hover {
+  background: rgba(0, 255, 65, 0.03);
+}
+
+/* Source badge — bracketed monospace label */
+.question-source-badge {
+  display: inline;
+  font-family: var(--font);
+  font-size: 0.65rem;
+  letter-spacing: 0.06em;
+  flex-shrink: 0;
+}
+
+.source-lc   { color: #00bcd4; }  /* cyan    — LeetCode  */
+.source-lb   { color: #f4d03f; }  /* gold    — Love Babbar */
+.source-a2oj { color: #e056fd; }  /* magenta — A2OJ      */
+.source-cf   { color: #ff6b35; }  /* orange  — Codeforces */
+
+/* Question name — fills remaining space, truncates */
+.question-name {
+  flex: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--text);
+  font-size: 0.75rem;
+  letter-spacing: 0.03em;
+}
+
+/* Difficulty label */
+.question-difficulty {
+  color: var(--muted);
+  font-size: 0.65rem;
+  letter-spacing: 0.06em;
+  min-width: 80px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.diff-easy   { color: #00ff41; }
+.diff-medium { color: #f4d03f; }
+.diff-hard   { color: #e74c3c; }
+
+/* Checkbox — monospace tick, no shrink */
+.question-checkbox {
+  font-family: var(--font);
+  font-size: 0.75rem;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.question-checkbox.done     { color: #00ff41; }
+.question-checkbox.not-done { color: #555555; }
+
+/* Progress text beneath the list */
+.card-progress-text {
+  font-size: 0.65rem;
+  color: var(--muted);
+  letter-spacing: 0.06em;
+  margin: 4px 0;
+}
+
+/* Mark-complete button — full-width, terminal green, no radius */
+.mark-complete-btn {
+  width: 100%;
+  padding: 0.35rem 0;
+  font-family: var(--font);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--green);
+  background: transparent;
+  border: 1px solid var(--green);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.mark-complete-btn:hover {
+  background: var(--green);
+  color: #000000;
+}
+
+.mark-complete-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}

@@ -1,0 +1,54 @@
+{
+  "topicId": "binary_search",
+  "source": "lovebabbar",
+  "questions": [
+    {
+      "id": "lb_bs_1",
+      "name": "Binary Search",
+      "difficulty": "easy",
+      "url": "https://leetcode.com/problems/binary-search/",
+      "tags": ["binary-search"],
+      "babbarIndex": 1
+    },
+    {
+      "id": "lb_bs_2",
+      "name": "Search in Rotated Sorted Array",
+      "difficulty": "medium",
+      "url": "https://leetcode.com/problems/search-in-rotated-sorted-array/",
+      "tags": ["binary-search", "array"],
+      "babbarIndex": 2
+    },
+    {
+      "id": "lb_bs_3",
+      "name": "Find Minimum in Rotated Sorted Array",
+      "difficulty": "medium",
+      "url": "https://leetcode.com/problems/find-minimum-in-rotated-sorted-array/",
+      "tags": ["binary-search", "array"],
+      "babbarIndex": 3
+    },
+    {
+      "id": "lb_bs_4",
+      "name": "Median of Two Sorted Arrays",
+      "difficulty": "hard",
+      "url": "https://leetcode.com/problems/median-of-two-sorted-arrays/",
+      "tags": ["binary-search", "divide-and-conquer"],
+      "babbarIndex": 4
+    },
+    {
+      "id": "lb_bs_5",
+      "name": "Capacity to Ship Packages Within D Days",
+      "difficulty": "medium",
+      "url": "https://leetcode.com/problems/capacity-to-ship-packages-within-d-days/",
+      "tags": ["binary-search"],
+      "babbarIndex": 5
+    },
+    {
+      "id": "lb_bs_6",
+      "name": "Koko Eating Bananas",
+      "difficulty": "medium",
+      "url": "https://leetcode.com/problems/koko-eating-bananas/",
+      "tags": ["binary-search"],
+      "babbarIndex": 6
+    }
+  ]
+}

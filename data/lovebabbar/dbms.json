@@ -1,0 +1,38 @@
+{
+  "topicId": "dbms",
+  "source": "lovebabbar",
+  "questions": [
+    {
+      "id": "lb_db_1",
+      "name": "Second Highest Salary",
+      "difficulty": "medium",
+      "url": "https://leetcode.com/problems/second-highest-salary/",
+      "tags": ["sql", "dbms"],
+      "babbarIndex": 1
+    },
+    {
+      "id": "lb_db_2",
+      "name": "Rank Scores",
+      "difficulty": "medium",
+      "url": "https://leetcode.com/problems/rank-scores/",
+      "tags": ["sql", "dbms"],
+      "babbarIndex": 2
+    },
+    {
+      "id": "lb_db_3",
+      "name": "Normalization (1NF to BCNF)",
+      "difficulty": "medium",
+      "url": "https://www.geeksforgeeks.org/normal-forms-in-dbms/",
+      "tags": ["dbms", "theory"],
+      "babbarIndex": 3
+    },
+    {
+      "id": "lb_db_4",
+      "name": "Transactions and ACID Properties",
+      "difficulty": "medium",
+      "url": "https://www.geeksforgeeks.org/acid-properties-in-dbms/",
+      "tags": ["dbms", "theory"],
+      "babbarIndex": 4
+    }
+  ]
+}

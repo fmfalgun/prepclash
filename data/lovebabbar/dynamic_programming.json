@@ -1,0 +1,62 @@
+{
+  "topicId": "dynamic_programming",
+  "source": "lovebabbar",
+  "questions": [
+    {
+      "id": "lb_dp_1",
+      "name": "Climbing Stairs",
+      "difficulty": "easy",
+      "url": "https://leetcode.com/problems/climbing-stairs/",
+      "tags": ["dp"],
+      "babbarIndex": 1
+    },
+    {
+      "id": "lb_dp_2",
+      "name": "Coin Change",
+      "difficulty": "medium",
+      "url": "https://leetcode.com/problems/coin-change/",
+      "tags": ["dp"],
+      "babbarIndex": 2
+    },
+    {
+      "id": "lb_dp_3",
+      "name": "Longest Common Subsequence",
+      "difficulty": "medium",
+      "url": "https://leetcode.com/problems/longest-common-subsequence/",
+      "tags": ["dp", "string"],
+      "babbarIndex": 3
+    },
+    {
+      "id": "lb_dp_4",
+      "name": "0/1 Knapsack Problem",
+      "difficulty": "medium",
+      "url": "https://www.geeksforgeeks.org/0-1-knapsack-problem-dp-10/",
+      "tags": ["dp"],
+      "babbarIndex": 4
+    },
+    {
+      "id": "lb_dp_5",
+      "name": "Longest Increasing Subsequence",
+      "difficulty": "medium",
+      "url": "https://leetcode.com/problems/longest-increasing-subsequence/",
+      "tags": ["dp", "binary-search"],
+      "babbarIndex": 5
+    },
+    {
+      "id": "lb_dp_6",
+      "name": "Edit Distance",
+      "difficulty": "hard",
+      "url": "https://leetcode.com/problems/edit-distance/",
+      "tags": ["dp", "string"],
+      "babbarIndex": 6
+    },
+    {
+      "id": "lb_dp_7",
+      "name": "Burst Balloons",
+      "difficulty": "hard",
+      "url": "https://leetcode.com/problems/burst-balloons/",
+      "tags": ["dp", "divide-and-conquer"],
+      "babbarIndex": 7
+    }
+  ]
+}

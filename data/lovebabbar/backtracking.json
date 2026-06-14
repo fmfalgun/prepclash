@@ -1,0 +1,46 @@
+{
+  "topicId": "backtracking",
+  "source": "lovebabbar",
+  "questions": [
+    {
+      "id": "lb_bt_1",
+      "name": "Combination Sum",
+      "difficulty": "medium",
+      "url": "https://leetcode.com/problems/combination-sum/",
+      "tags": ["backtracking"],
+      "babbarIndex": 1
+    },
+    {
+      "id": "lb_bt_2",
+      "name": "Word Search",
+      "difficulty": "medium",
+      "url": "https://leetcode.com/problems/word-search/",
+      "tags": ["backtracking", "matrix"],
+      "babbarIndex": 2
+    },
+    {
+      "id": "lb_bt_3",
+      "name": "N-Queens",
+      "difficulty": "hard",
+      "url": "https://leetcode.com/problems/n-queens/",
+      "tags": ["backtracking"],
+      "babbarIndex": 3
+    },
+    {
+      "id": "lb_bt_4",
+      "name": "Sudoku Solver",
+      "difficulty": "hard",
+      "url": "https://leetcode.com/problems/sudoku-solver/",
+      "tags": ["backtracking", "matrix"],
+      "babbarIndex": 4
+    },
+    {
+      "id": "lb_bt_5",
+      "name": "Palindrome Partitioning",
+      "difficulty": "medium",
+      "url": "https://leetcode.com/problems/palindrome-partitioning/",
+      "tags": ["backtracking", "dp"],
+      "babbarIndex": 5
+    }
+  ]
+}

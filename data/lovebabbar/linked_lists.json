@@ -1,0 +1,70 @@
+{
+  "topicId": "linked_lists",
+  "source": "lovebabbar",
+  "questions": [
+    {
+      "id": "lb_ll_1",
+      "name": "Reverse Linked List",
+      "difficulty": "easy",
+      "url": "https://leetcode.com/problems/reverse-linked-list/",
+      "tags": ["linked-list"],
+      "babbarIndex": 1
+    },
+    {
+      "id": "lb_ll_2",
+      "name": "Middle of Linked List",
+      "difficulty": "easy",
+      "url": "https://leetcode.com/problems/middle-of-the-linked-list/",
+      "tags": ["linked-list", "two-pointers"],
+      "babbarIndex": 2
+    },
+    {
+      "id": "lb_ll_3",
+      "name": "Linked List Cycle II",
+      "difficulty": "medium",
+      "url": "https://leetcode.com/problems/linked-list-cycle-ii/",
+      "tags": ["linked-list", "two-pointers"],
+      "babbarIndex": 3
+    },
+    {
+      "id": "lb_ll_4",
+      "name": "Merge Two Sorted Lists",
+      "difficulty": "easy",
+      "url": "https://leetcode.com/problems/merge-two-sorted-lists/",
+      "tags": ["linked-list"],
+      "babbarIndex": 4
+    },
+    {
+      "id": "lb_ll_5",
+      "name": "Remove Nth Node From End",
+      "difficulty": "medium",
+      "url": "https://leetcode.com/problems/remove-nth-node-from-end-of-list/",
+      "tags": ["linked-list", "two-pointers"],
+      "babbarIndex": 5
+    },
+    {
+      "id": "lb_ll_6",
+      "name": "Add Two Numbers",
+      "difficulty": "medium",
+      "url": "https://leetcode.com/problems/add-two-numbers/",
+      "tags": ["linked-list", "math"],
+      "babbarIndex": 6
+    },
+    {
+      "id": "lb_ll_7",
+      "name": "Flatten a Multilevel Doubly Linked List",
+      "difficulty": "medium",
+      "url": "https://leetcode.com/problems/flatten-a-multilevel-doubly-linked-list/",
+      "tags": ["linked-list", "dfs"],
+      "babbarIndex": 7
+    },
+    {
+      "id": "lb_ll_8",
+      "name": "LRU Cache",
+      "difficulty": "medium",
+      "url": "https://leetcode.com/problems/lru-cache/",
+      "tags": ["linked-list", "hash-table", "design"],
+      "babbarIndex": 8
+    }
+  ]
+}

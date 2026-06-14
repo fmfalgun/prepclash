@@ -1,0 +1,46 @@
+{
+  "topicId": "bubble_sort",
+  "source": "lovebabbar",
+  "questions": [
+    {
+      "id": "lb_bubble_1",
+      "name": "Sort Colors",
+      "difficulty": "medium",
+      "url": "https://leetcode.com/problems/sort-colors/",
+      "tags": ["sorting", "array"],
+      "babbarIndex": 1
+    },
+    {
+      "id": "lb_bubble_2",
+      "name": "Largest Number",
+      "difficulty": "medium",
+      "url": "https://leetcode.com/problems/largest-number/",
+      "tags": ["sorting", "string"],
+      "babbarIndex": 2
+    },
+    {
+      "id": "lb_bubble_3",
+      "name": "Minimum Number of Swaps to Sort",
+      "difficulty": "medium",
+      "url": "https://www.geeksforgeeks.org/minimum-number-swaps-required-sort-array/",
+      "tags": ["sorting", "greedy"],
+      "babbarIndex": 3
+    },
+    {
+      "id": "lb_bubble_4",
+      "name": "Relative Sort Array",
+      "difficulty": "easy",
+      "url": "https://leetcode.com/problems/relative-sort-array/",
+      "tags": ["sorting", "array"],
+      "babbarIndex": 4
+    },
+    {
+      "id": "lb_bubble_5",
+      "name": "Count Inversions in Array",
+      "difficulty": "medium",
+      "url": "https://www.geeksforgeeks.org/count-inversions-array-set-1-using-merge-sort/",
+      "tags": ["sorting", "divide-and-conquer"],
+      "babbarIndex": 5
+    }
+  ]
+}

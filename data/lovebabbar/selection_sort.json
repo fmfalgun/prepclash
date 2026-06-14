@@ -1,0 +1,46 @@
+{
+  "topicId": "selection_sort",
+  "source": "lovebabbar",
+  "questions": [
+    {
+      "id": "lb_sel_1",
+      "name": "Kth Largest Element in Array",
+      "difficulty": "medium",
+      "url": "https://leetcode.com/problems/kth-largest-element-in-an-array/",
+      "tags": ["sorting", "heap"],
+      "babbarIndex": 1
+    },
+    {
+      "id": "lb_sel_2",
+      "name": "Sort an Array",
+      "difficulty": "medium",
+      "url": "https://leetcode.com/problems/sort-an-array/",
+      "tags": ["sorting"],
+      "babbarIndex": 2
+    },
+    {
+      "id": "lb_sel_3",
+      "name": "Maximum Gap",
+      "difficulty": "hard",
+      "url": "https://leetcode.com/problems/maximum-gap/",
+      "tags": ["sorting"],
+      "babbarIndex": 3
+    },
+    {
+      "id": "lb_sel_4",
+      "name": "Wiggle Sort II",
+      "difficulty": "medium",
+      "url": "https://leetcode.com/problems/wiggle-sort-ii/",
+      "tags": ["sorting", "array"],
+      "babbarIndex": 4
+    },
+    {
+      "id": "lb_sel_5",
+      "name": "Minimum Time to Make Rope Colorful",
+      "difficulty": "medium",
+      "url": "https://leetcode.com/problems/minimum-time-to-make-rope-colorful/",
+      "tags": ["greedy", "array"],
+      "babbarIndex": 5
+    }
+  ]
+}

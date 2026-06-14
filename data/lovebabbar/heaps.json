@@ -1,0 +1,46 @@
+{
+  "topicId": "heaps",
+  "source": "lovebabbar",
+  "questions": [
+    {
+      "id": "lb_heap_1",
+      "name": "Kth Largest Element in Array",
+      "difficulty": "medium",
+      "url": "https://leetcode.com/problems/kth-largest-element-in-an-array/",
+      "tags": ["heap", "sorting"],
+      "babbarIndex": 1
+    },
+    {
+      "id": "lb_heap_2",
+      "name": "Merge K Sorted Lists",
+      "difficulty": "hard",
+      "url": "https://leetcode.com/problems/merge-k-sorted-lists/",
+      "tags": ["heap", "linked-list"],
+      "babbarIndex": 2
+    },
+    {
+      "id": "lb_heap_3",
+      "name": "Find Median from Data Stream",
+      "difficulty": "hard",
+      "url": "https://leetcode.com/problems/find-median-from-data-stream/",
+      "tags": ["heap", "design"],
+      "babbarIndex": 3
+    },
+    {
+      "id": "lb_heap_4",
+      "name": "Task Scheduler",
+      "difficulty": "medium",
+      "url": "https://leetcode.com/problems/task-scheduler/",
+      "tags": ["heap", "greedy"],
+      "babbarIndex": 4
+    },
+    {
+      "id": "lb_heap_5",
+      "name": "Top K Frequent Words",
+      "difficulty": "medium",
+      "url": "https://leetcode.com/problems/top-k-frequent-words/",
+      "tags": ["heap", "hash-table"],
+      "babbarIndex": 5
+    }
+  ]
+}

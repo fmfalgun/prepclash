@@ -1,0 +1,38 @@
+{
+  "topicId": "operating_systems",
+  "source": "lovebabbar",
+  "questions": [
+    {
+      "id": "lb_os_1",
+      "name": "LRU Cache",
+      "difficulty": "medium",
+      "url": "https://leetcode.com/problems/lru-cache/",
+      "tags": ["os", "design", "cache"],
+      "babbarIndex": 1
+    },
+    {
+      "id": "lb_os_2",
+      "name": "CPU Scheduling Algorithms",
+      "difficulty": "medium",
+      "url": "https://www.geeksforgeeks.org/cpu-scheduling-in-operating-systems/",
+      "tags": ["os", "theory"],
+      "babbarIndex": 2
+    },
+    {
+      "id": "lb_os_3",
+      "name": "Deadlock Detection",
+      "difficulty": "medium",
+      "url": "https://www.geeksforgeeks.org/deadlock-detection-recovery/",
+      "tags": ["os", "theory"],
+      "babbarIndex": 3
+    },
+    {
+      "id": "lb_os_4",
+      "name": "Page Replacement (LRU, FIFO, Optimal)",
+      "difficulty": "medium",
+      "url": "https://www.geeksforgeeks.org/page-replacement-algorithms-in-operating-systems/",
+      "tags": ["os", "theory"],
+      "babbarIndex": 4
+    }
+  ]
+}

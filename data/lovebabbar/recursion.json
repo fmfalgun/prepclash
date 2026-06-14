@@ -1,0 +1,54 @@
+{
+  "topicId": "recursion",
+  "source": "lovebabbar",
+  "questions": [
+    {
+      "id": "lb_rec_1",
+      "name": "Subsets",
+      "difficulty": "medium",
+      "url": "https://leetcode.com/problems/subsets/",
+      "tags": ["recursion", "backtracking"],
+      "babbarIndex": 1
+    },
+    {
+      "id": "lb_rec_2",
+      "name": "Permutations",
+      "difficulty": "medium",
+      "url": "https://leetcode.com/problems/permutations/",
+      "tags": ["recursion", "backtracking"],
+      "babbarIndex": 2
+    },
+    {
+      "id": "lb_rec_3",
+      "name": "Pow(x, n)",
+      "difficulty": "medium",
+      "url": "https://leetcode.com/problems/powx-n/",
+      "tags": ["recursion", "math"],
+      "babbarIndex": 3
+    },
+    {
+      "id": "lb_rec_4",
+      "name": "Letter Combinations of a Phone Number",
+      "difficulty": "medium",
+      "url": "https://leetcode.com/problems/letter-combinations-of-a-phone-number/",
+      "tags": ["recursion", "backtracking"],
+      "babbarIndex": 4
+    },
+    {
+      "id": "lb_rec_5",
+      "name": "Generate Parentheses",
+      "difficulty": "medium",
+      "url": "https://leetcode.com/problems/generate-parentheses/",
+      "tags": ["recursion", "string"],
+      "babbarIndex": 5
+    },
+    {
+      "id": "lb_rec_6",
+      "name": "Flood Fill",
+      "difficulty": "easy",
+      "url": "https://leetcode.com/problems/flood-fill/",
+      "tags": ["recursion", "dfs"],
+      "babbarIndex": 6
+    }
+  ]
+}

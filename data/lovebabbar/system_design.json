@@ -1,0 +1,38 @@
+{
+  "topicId": "system_design",
+  "source": "lovebabbar",
+  "questions": [
+    {
+      "id": "lb_sd_1",
+      "name": "LFU Cache",
+      "difficulty": "hard",
+      "url": "https://leetcode.com/problems/lfu-cache/",
+      "tags": ["system-design", "design"],
+      "babbarIndex": 1
+    },
+    {
+      "id": "lb_sd_2",
+      "name": "Design Browser History",
+      "difficulty": "medium",
+      "url": "https://leetcode.com/problems/design-browser-history/",
+      "tags": ["system-design", "design"],
+      "babbarIndex": 2
+    },
+    {
+      "id": "lb_sd_3",
+      "name": "Design URL Shortener",
+      "difficulty": "hard",
+      "url": "https://www.geeksforgeeks.org/system-design-url-shortening-service/",
+      "tags": ["system-design", "theory"],
+      "babbarIndex": 3
+    },
+    {
+      "id": "lb_sd_4",
+      "name": "Design Rate Limiter",
+      "difficulty": "hard",
+      "url": "https://www.geeksforgeeks.org/system-design-rate-limiter/",
+      "tags": ["system-design", "theory"],
+      "babbarIndex": 4
+    }
+  ]
+}
