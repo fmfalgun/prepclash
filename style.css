@@ -1,5 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap');
-
 /* ============================================================
    RESET & BASE
    ============================================================ */
@@ -60,6 +58,11 @@ body {
 * {
   scrollbar-width: thin;
   scrollbar-color: var(--border) var(--bg);
+}
+
+:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 2px;
 }
 
 a {
@@ -168,6 +171,7 @@ ol {
   letter-spacing: 0.3em;
   color: var(--green);
   margin-bottom: 0.5rem;
+  animation: flicker 4s infinite;
 }
 #login-screen .tagline {
   font-size: clamp(0.65rem, 2vw, 0.85rem);
@@ -198,14 +202,6 @@ ol {
   color: var(--bg);
 }
 
-#login-screen .login-decoration {
-  margin-bottom: 2.5rem;
-  color: var(--border);
-  font-size: 0.75rem;
-  letter-spacing: 0.1em;
-  user-select: none;
-}
-
 /* ============================================================
    TOP BAR
    ============================================================ */
@@ -225,7 +221,7 @@ ol {
   border-bottom: 1px solid var(--border);
 }
 
-#topbar .topbar-brand {
+#topbar-title {
   font-size: 0.8rem;
   font-weight: 700;
   letter-spacing: 0.2em;
@@ -236,34 +232,16 @@ ol {
   gap: 0.5rem;
 }
 
-#topbar .topbar-brand .topbar-sep {
-  color: var(--border);
-  font-weight: 400;
-}
-
-#topbar .topbar-meta {
+#topbar-player {
   display: flex;
   align-items: center;
   gap: 1.5rem;
   font-size: 0.75rem;
-  color: var(--text);
+  color: var(--green);
   letter-spacing: 0.05em;
 }
 
-#topbar .topbar-meta .topbar-player {
-  color: var(--green);
-}
-
-#topbar .topbar-meta .topbar-xp {
-  color: var(--gold);
-}
-
-#topbar .topbar-meta .topbar-xp-label {
-  color: var(--muted);
-  margin-right: 0.25em;
-}
-
-#topbar .btn-logout {
+#logout-btn {
   padding: 0.3rem 0.75rem;
   font-size: 0.7rem;
   font-weight: 700;
@@ -275,7 +253,7 @@ ol {
   transition: color 0.15s, border-color 0.15s;
 }
 
-#topbar .btn-logout:hover {
+#logout-btn:hover {
   color: var(--red);
   border-color: var(--red);
 }
@@ -332,7 +310,6 @@ ol {
 #tab-content {
   margin-top: calc(44px + 38px); /* topbar + tabs */
   min-height: calc(100vh - 44px - 38px);
-  padding: 1.5rem;
   overflow-y: auto;
 }
 
@@ -626,103 +603,245 @@ ol {
 }
 
 /* ============================================================
-   LEADERBOARD TABLE
+   LEADERBOARD ROWS
    ============================================================ */
 
-.leaderboard-table {
+.lb-rows {
+  display: flex;
+  flex-direction: column;
   width: 100%;
-  border-collapse: collapse;
+}
+
+.lb-row {
+  display: grid;
+  grid-template-columns: 3.5rem 4rem 1fr 7rem 7rem 6rem;
+  align-items: center;
+  padding: 0.55rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
   font-size: 0.78rem;
   letter-spacing: 0.04em;
-}
-
-.leaderboard-table thead tr {
-  border-bottom: 1px solid var(--border);
-}
-
-.leaderboard-table th {
-  padding: 0.5rem 0.75rem;
-  text-align: left;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: var(--muted);
-  font-size: 0.68rem;
-}
-
-.leaderboard-table td {
-  padding: 0.5rem 0.75rem;
-  border-bottom: 1px solid var(--border);
-  vertical-align: middle;
-  color: var(--text);
-}
-
-.leaderboard-table tbody tr {
-  background: var(--bg);
   transition: background 0.1s;
 }
 
-.leaderboard-table tbody tr:hover {
-  background: var(--surface);
-}
-
-/* Rank column */
-.leaderboard-table .col-rank {
-  color: var(--green);
-  font-weight: 700;
-  font-size: 0.82rem;
-  width: 3rem;
-  text-align: center;
-}
-
-/* Top 3 rank styling */
-.leaderboard-table tbody tr:nth-child(1) .col-rank { color: var(--gold); }
-.leaderboard-table tbody tr:nth-child(2) .col-rank { color: var(--text); }
-.leaderboard-table tbody tr:nth-child(3) .col-rank { color: var(--muted); }
-
-/* Player name */
-.leaderboard-table .col-player {
-  font-weight: 700;
-  letter-spacing: 0.06em;
-}
-
-/* XP column */
-.leaderboard-table .col-xp {
-  color: var(--gold);
-  font-weight: 700;
-  text-align: right;
-}
-
-/* Delta column */
-.leaderboard-table .col-delta {
-  text-align: right;
-  font-weight: 700;
-  width: 5rem;
-}
-
-.leaderboard-table .col-delta.delta-up   { color: var(--green); }
-.leaderboard-table .col-delta.delta-down { color: var(--red); }
-.leaderboard-table .col-delta.delta-same { color: var(--muted); }
-
-/* Domain / misc columns */
-.leaderboard-table .col-domain {
-  color: var(--muted);
-  font-size: 0.7rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
-
-/* Current user row highlight */
-.leaderboard-table tbody tr.row-self {
+.lb-row:hover {
   background: #0a1a0a;
 }
 
-.leaderboard-table tbody tr.row-self td {
-  border-bottom-color: var(--border);
+.lb-row-self {
+  background: #0a1a0a;
 }
 
 /* ============================================================
-   CLAN CAPITAL
+   CLAN CAPITAL — cc-* classes
+   ============================================================ */
+
+.cc-root {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  font-family: var(--font);
+}
+
+.cc-header {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 0.75rem 1rem;
+}
+
+.cc-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--green);
+  margin-bottom: 0.3rem;
+}
+
+.cc-lvl {
+  color: var(--muted);
+  font-weight: 400;
+}
+
+.cc-progress-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.75rem;
+}
+
+.cc-progress-label {
+  color: var(--muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-size: 0.72rem;
+}
+
+.cc-bar {
+  color: var(--green);
+  letter-spacing: 0.02em;
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.cc-bar-inner {
+  color: var(--green);
+}
+
+.cc-pct {
+  color: var(--gold);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.cc-summary {
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 0.4rem 0;
+}
+
+.cc-summary-count {
+  color: var(--green);
+  font-weight: 700;
+}
+
+.cc-controls {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.cc-refresh-btn {
+  padding: 0.35rem 0.9rem;
+  font-family: var(--font);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.cc-refresh-btn:hover {
+  color: var(--green);
+  border-color: var(--green);
+}
+
+.cc-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.cc-group-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 0.3rem 0;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.cc-topic-block {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 0.65rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.cc-topic-name {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text);
+  margin-bottom: 0.25rem;
+}
+
+.cc-player-row {
+  font-size: 0.75rem;
+  letter-spacing: 0.03em;
+  display: flex;
+  align-items: center;
+  gap: 0.4em;
+  flex-wrap: wrap;
+  padding: 0.1rem 0;
+}
+
+.cc-tree-prefix {
+  color: var(--border);
+  flex-shrink: 0;
+  white-space: pre;
+}
+
+.cc-player-name {
+  color: var(--text);
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.cc-status {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.cc-status-completed  { color: #00ff41; }
+.cc-status-inprogress { color: #ffaa00; }
+.cc-status-locked     { color: #444444; }
+
+.cc-proof-link {
+  color: var(--gold);
+  font-size: 0.7rem;
+  letter-spacing: 0.03em;
+  word-break: break-all;
+}
+
+.cc-proof-link:hover {
+  text-decoration: underline;
+}
+
+.cc-no-activity {
+  font-size: 0.72rem;
+  color: var(--muted);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.25rem 0;
+}
+
+.cc-loading {
+  font-size: 0.78rem;
+  color: var(--muted);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 2rem 1rem;
+  text-align: center;
+  animation: flicker 2s infinite;
+}
+
+.cc-error {
+  font-size: 0.78rem;
+  color: #ff4444;
+  letter-spacing: 0.08em;
+  padding: 2rem 1rem;
+  text-align: center;
+  border: 1px solid #ff4444;
+  background: var(--surface);
+}
+
+/* ============================================================
+   CLAN CAPITAL — legacy layout helpers (kept for compatibility)
    ============================================================ */
 
 .clan-topic-grid {
@@ -842,14 +961,8 @@ ol {
   margin-bottom: 0.25rem;
 }
 
-.modal-box .modal-subtitle {
-  font-size: 0.68rem;
-  color: var(--muted);
-  letter-spacing: 0.06em;
-  margin-bottom: 1.25rem;
-}
-
-.modal-box .modal-label {
+.modal-box .modal-label,
+label.modal-label {
   display: block;
   font-size: 0.68rem;
   font-weight: 700;
@@ -859,7 +972,8 @@ ol {
   margin-bottom: 0.35rem;
 }
 
-.modal-box .modal-input {
+.modal-box .modal-input,
+#modal-proof-input {
   width: 100%;
   background: var(--bg);
   border: 1px solid var(--border);
@@ -869,13 +983,17 @@ ol {
   letter-spacing: 0.04em;
   outline: none;
   transition: border-color 0.15s;
+  font-family: var(--font);
+  margin-top: 0.35rem;
 }
 
-.modal-box .modal-input:focus {
+.modal-box .modal-input:focus,
+#modal-proof-input:focus {
   border-color: var(--green);
 }
 
-.modal-box .modal-input::placeholder {
+.modal-box .modal-input::placeholder,
+#modal-proof-input::placeholder {
   color: var(--muted);
 }
 
@@ -886,7 +1004,8 @@ ol {
   justify-content: flex-end;
 }
 
-.modal-box .btn-modal-cancel {
+.modal-box .btn-modal-cancel,
+#modal-cancel {
   padding: 0.45rem 1rem;
   font-size: 0.72rem;
   font-weight: 700;
@@ -896,14 +1015,17 @@ ol {
   background: transparent;
   border: 1px solid var(--border);
   transition: color 0.15s, border-color 0.15s;
+  font-family: var(--font);
 }
 
-.modal-box .btn-modal-cancel:hover {
+.modal-box .btn-modal-cancel:hover,
+#modal-cancel:hover {
   color: var(--red);
   border-color: var(--red);
 }
 
-.modal-box .btn-modal-submit {
+.modal-box .btn-modal-submit,
+#modal-confirm {
   padding: 0.45rem 1rem;
   font-size: 0.72rem;
   font-weight: 700;
@@ -913,30 +1035,20 @@ ol {
   background: transparent;
   border: 1px solid var(--green);
   transition: background 0.15s, color 0.15s;
+  font-family: var(--font);
 }
 
-.modal-box .btn-modal-submit:hover {
+.modal-box .btn-modal-submit:hover,
+#modal-confirm:hover {
   background: var(--green);
   color: #000000;
 }
 
-.modal-box .btn-modal-close {
-  position: absolute;
-  top: 0.75rem;
-  right: 0.75rem;
-  background: transparent;
-  border: none;
-  color: var(--muted);
+.modal-error {
+  color: #ff4444;
   font-size: 0.8rem;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  line-height: 1;
-  padding: 0.1rem 0.3rem;
-  transition: color 0.15s;
-}
-
-.modal-box .btn-modal-close:hover {
-  color: var(--red);
+  margin-top: 0.5rem;
+  letter-spacing: 0.04em;
 }
 
 /* ============================================================
@@ -1142,21 +1254,15 @@ ol {
   50%       { opacity: 0; }
 }
 
-.loading-dots::after {
-  content: '...';
-  animation: dots 1.5s steps(4, end) infinite;
-  display: inline-block;
-  width: 1.5em;
-  overflow: hidden;
-  vertical-align: bottom;
+@keyframes dots {
+  0%, 20%  { content: '.'; }
+  40%, 60% { content: '..'; }
+  80%, 100%{ content: '...'; }
 }
 
-@keyframes dots {
-  0%  { width: 0; }
-  25% { width: 0.4em; }
-  50% { width: 0.8em; }
-  75% { width: 1.2em; }
-  100%{ width: 0; }
+.loading-dots::after {
+  content: '.';
+  animation: dots 1.2s steps(1) infinite;
 }
 
 /* Terminal title flicker on login */
@@ -1176,7 +1282,7 @@ ol {
     padding: 0 0.75rem;
   }
 
-  #topbar .topbar-meta {
+  #topbar-player {
     gap: 0.75rem;
     font-size: 0.65rem;
   }
@@ -1190,10 +1296,6 @@ ol {
     padding: 0 0.75rem;
     font-size: 0.65rem;
     white-space: nowrap;
-  }
-
-  #tab-content {
-    padding: 1rem 0.75rem;
   }
 
   .nodes-grid {
@@ -1210,8 +1312,9 @@ ol {
     padding: 1rem 1.25rem;
   }
 
-  .leaderboard-table th,
-  .leaderboard-table td {
+  .lb-row {
+    grid-template-columns: 3rem 3rem 1fr 0 5rem 5rem;
+    font-size: 0.7rem;
     padding: 0.4rem 0.5rem;
   }
 }

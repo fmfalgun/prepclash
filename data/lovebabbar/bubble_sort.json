@@ -37,9 +37,10 @@
     {
       "id": "lb_bubble_5",
       "name": "Count Inversions in Array",
-      "difficulty": "medium",
+      "difficulty": "hard",
       "url": "https://www.geeksforgeeks.org/count-inversions-array-set-1-using-merge-sort/",
       "tags": ["sorting", "divide-and-conquer"],
+      "note": "Advanced difficulty — attempt after completing Tier 1",
       "babbarIndex": 5
     }
   ]

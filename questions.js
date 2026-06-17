@@ -17,7 +17,9 @@
     selection_sort:       ['sortings'],
     linked_lists:         ['data structures'],
     binary_search:        ['binary search'],
-    recursion:            ['divide and conquer'],
+    // H1: CF has no "recursion" tag; 'divide and conquer' maps to mergesort/binary-exp, not basic recursion.
+    // Skip CF for recursion and rely solely on Love Babbar data.
+    recursion:            [],
     trees:                ['trees', 'dfs and similar'],
     hashing:              ['hashing'],
     two_pointers:         ['two pointers'],
@@ -25,13 +27,17 @@
     heaps:                ['data structures'],
     backtracking:         ['backtracking'],
     dynamic_programming:  ['dp'],
-    tries:                ['string suffix structures'],
+    // H2: CF has no "trie" tag; 'string suffix structures' means suffix arrays, not tries.
+    // Skip CF for tries and rely solely on Love Babbar data.
+    tries:                [],
     advanced_graphs:      ['shortest paths'],
     operating_systems:    [],
     dbms:                 [],
     computer_networks:    [],
-    oop:                  ['implementation'],
-    system_design:        ['implementation'],
+    // H3: OOP and system design are conceptual — 'implementation' returns thousands of unrelated problems.
+    // Skip CF for both and rely solely on Love Babbar data (same as OS, DBMS, CN).
+    oop:                  [],
+    system_design:        [],
   };
 
   // ---------------------------------------------------------------------------
@@ -44,6 +50,7 @@
     2: [1200, 1500],
     3: [1400, 1700],
     4: [1600, 2000],
+    // Core CS topics (OS, DBMS, CN, OOP, System Design) have empty CF_TAGS and skip CF — this band is unused for now
     5: [1000, 1400],
   };
 
@@ -52,7 +59,8 @@
   // ---------------------------------------------------------------------------
 
   function ratingToDifficulty(rating) {
-    if (!rating) return 'medium';
+    // L12: falsy rating (unrated/null/undefined) returns 'unrated', not 'medium'
+    if (!rating) return 'unrated';
     if (rating <= 1200) return 'easy';
     if (rating <= 1600) return 'medium';
     return 'hard';
@@ -71,9 +79,28 @@
   }
 
   // ---------------------------------------------------------------------------
+  // M19: Base path — derived from this script's own src attribute so the LB
+  // fetch works both on localhost and on GitHub Pages (/prepclash/ subpath).
+  // ---------------------------------------------------------------------------
+
+  var _basePath = (function () {
+    var scripts = document.querySelectorAll('script[src]');
+    for (var i = 0; i < scripts.length; i++) {
+      if (scripts[i].src.indexOf('questions.js') !== -1) {
+        return scripts[i].src.replace('questions.js', '');
+      }
+    }
+    return './';
+  }());
+
+  // ---------------------------------------------------------------------------
   // Internal caches
   // ---------------------------------------------------------------------------
 
+  // C1/C2: _cfCache has three states:
+  //   null  — not yet fetched (initial)
+  //   false — fetch was attempted and failed (negative sentinel; prevents infinite retry storm)
+  //   object — successful result from CF API
   var _cfCache = null;          // full CF problemset response (fetched once)
   var _lbCache = {};            // per-topicId LB question arrays
 
@@ -82,8 +109,14 @@
   // ---------------------------------------------------------------------------
 
   function fetchCFProblemset() {
-    if (_cfCache !== null) {
+    // C1/C2: Skip if we already have a result (object) or already know it failed (false sentinel).
+    // Only retry when _cfCache is null (never attempted).
+    if (_cfCache !== null && _cfCache !== false) {
       return Promise.resolve(_cfCache);
+    }
+    // C2: If previous fetch failed (_cfCache === false), do not retry — return null immediately.
+    if (_cfCache === false) {
+      return Promise.resolve(null);
     }
 
     return fetch('https://codeforces.com/api/problemset.problems')
@@ -101,7 +134,10 @@
         return _cfCache;
       })
       .catch(function (err) {
-        console.warn('[Questions] Codeforces API fetch failed:', err);
+        // C1: Log a meaningful error so the failure is visible in the console.
+        // C2: Set sentinel to false so subsequent calls skip the fetch entirely.
+        console.error('[Questions] Codeforces API fetch failed (CF problems will be unavailable):', err);
+        _cfCache = false;
         return null;
       });
   }
@@ -111,6 +147,7 @@
   // ---------------------------------------------------------------------------
 
   function getCFProblemsForTopic(topicId, tier) {
+    // C1: Return empty array gracefully if fetch failed (false) or was never attempted (null)
     if (!_cfCache) return [];
 
     var requiredTags = CF_TAGS[topicId];
@@ -163,7 +200,9 @@
       return Promise.resolve(_lbCache[topicId]);
     }
 
-    return fetch('./data/lovebabbar/' + topicId + '.json')
+    // M19: Use _basePath (derived from script src) instead of relative './' to avoid
+    // breakage when the page is served from a subpath (e.g. GitHub Pages /prepclash/).
+    return fetch(_basePath + 'data/lovebabbar/' + topicId + '.json')
       .then(function (res) {
         if (!res.ok) {
           // 404 or similar — gracefully return []
@@ -273,12 +312,17 @@
     getLBQuestionsForTopic: getLBQuestionsForTopic,
     getQuestionGroupStats:  getQuestionGroupStats,
 
-    // Expose cache for debugging / advanced consumers
-    _cfCache: null,   // alias kept; actual cache is module-local _cfCache
-
     // Allow callers to inspect/test internals
     _getCFCache: function () { return _cfCache; },
     _getLBCache: function () { return _lbCache; },
   };
+
+  // L11: Expose _cfCache as a live getter so it reflects the actual module-local variable
+  // (the old static `_cfCache: null` property was a dead alias that never updated).
+  Object.defineProperty(window.Questions, '_cfCache', {
+    get: function () { return _cfCache; },
+    enumerable: true,
+    configurable: true,
+  });
 
 }());

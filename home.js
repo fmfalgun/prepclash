@@ -5,6 +5,10 @@
 (function () {
   'use strict';
 
+  // M11 — render generation guard: prevents a stale slow render from
+  // overwriting a faster second render triggered by rapid tab switching.
+  var _homeRenderGen = 0;
+
   // ---------------------------------------------------------------------------
   // Constants / palette
   // ---------------------------------------------------------------------------
@@ -86,15 +90,17 @@
       : 0;
 
     // FOUNDATIONS — Core CS fundamentals
+    // system_design is scored under DESIGN, not FOUNDATIONS
     var foundations_ids = ['operating_systems', 'dbms', 'computer_networks', 'oop'];
     var FOUNDATIONS = (foundations_ids.filter(function (id) { return completedSet.has(id); }).length / foundations_ids.length) * 100;
 
-    // DESIGN — architecture thinking
-    var design_ids = ['system_design', 'advanced_graphs'];
+    // DESIGN — architecture thinking (H8: advanced_graphs removed — it is a
+    // Tier 4 DSA topic already counted in the DIFFICULTY axis)
+    var design_ids = ['system_design'];
     var DESIGN = (design_ids.filter(function (id) { return completedSet.has(id); }).length / design_ids.length) * 100;
 
-    // CONSISTENCY — activity this week (50 XP/week = 100)
-    var CONSISTENCY = Math.min(((xpThisWeek || 0) / 50) * 100, 100);
+    // CONSISTENCY — activity this week (200 XP/week = 100%; ~4–8 topics/week)
+    var CONSISTENCY = Math.min(((xpThisWeek || 0) / 200) * 100, 100);
 
     // DOMAIN — overall XP progress (500 XP = 100)
     var DOMAIN = Math.min(((xpTotal || 0) / 500) * 100, 100);
@@ -248,7 +254,7 @@
 
     var steps = [
       ['01', 'LOGIN WITH GOOGLE', 'your account is created automatically'],
-      ['02', 'SELECT YOUR DOMAIN', 'CYBERSEC / AI/ML / CORE CS'],
+      ['02', 'SELECT YOUR DOMAIN', 'CHOOSE YOUR DOMAIN in the Village tab to specialise your learning path'],
       ['03', 'OPEN YOUR VILLAGE', 'your personal skill tree'],
       ['04', 'UNLOCK TOPICS', 'complete prereqs to unlock next tier'],
       ['05', 'SOLVE QUESTIONS', 'LB and Codeforces problems per topic'],
@@ -388,12 +394,13 @@
     var rankEl = el('div', {
       fontSize: '0.78rem',
       fontWeight: '700',
-      color: rank === 1 ? C.gold : C.green,
+      color: rank === 1 ? C.gold : (rank !== null ? C.green : C.muted),
       letterSpacing: '0.1em',
       flexShrink: '0',
       textAlign: 'right'
     });
-    rankEl.textContent = 'RANK: #' + rank;
+    // H10: show N/A for users not yet on the leaderboard
+    rankEl.textContent = rank !== null ? 'RANK: #' + rank : 'RANK: N/A';
 
     topRow.appendChild(avatarBox);
     topRow.appendChild(nameBlock);
@@ -534,7 +541,7 @@
 
   function buildRadarSection(scores) {
     // ----- Canvas -----
-    var SIZE = 320;
+    var SIZE = 340;  // C12: increased from 320 to give labels breathing room
     var canvas = document.createElement('canvas');
     canvas.width  = SIZE;
     canvas.height = SIZE;
@@ -558,18 +565,20 @@
     ctx.clearRect(0, 0, SIZE, SIZE);
 
     // -- Layer 1: Outer tick ring --
+    // M20: moved ring to r=152 (thin 4px band) so it sits outside label zone
+    // (labels now at r=125 after C12 fix, hex outer vertex at R=120)
     ctx.beginPath();
-    ctx.arc(cx, cy, 138, 0, Math.PI * 2);
+    ctx.arc(cx, cy, 152, 0, Math.PI * 2);
     ctx.strokeStyle = '#1e1e1e';
-    ctx.lineWidth = 14;
+    ctx.lineWidth = 4;
     ctx.stroke();
 
     var totalTicks = 60;
     for (var t = 0; t < totalTicks; t++) {
       var tickAngle = (t / totalTicks) * 360;
       var isMajor = (t % 10 === 0);
-      var innerR  = isMajor ? 120 : 126;
-      var outerR  = 132;
+      var innerR  = isMajor ? 148 : 150;
+      var outerR  = 156;
       ctx.globalAlpha = isMajor ? 1.0 : 0.4;
       ctx.beginPath();
       var pInner = anglePoint(tickAngle, innerR);
@@ -638,8 +647,10 @@
     });
 
     // -- Layer 6: Axis labels --
+    // C12: label radius reduced from 155 to 125 so top/bottom labels stay
+    // on-screen. At r=125: top label y=170-125=45, bottom label y=170+125=295.
     STATS.forEach(function (stat) {
-      var p     = anglePoint(stat.angle, 155);
+      var p     = anglePoint(stat.angle, 125);
       var grade = toGrade(scores[stat.key]);
 
       ctx.font         = "700 10px 'JetBrains Mono', 'Courier New', monospace";
@@ -979,9 +990,12 @@
     var level       = (clanMeta && clanMeta.level)   ? clanMeta.level   : 1;
     var totalXP     = (clanMeta && clanMeta.totalXP) ? clanMeta.totalXP : 0;
 
-    var xpForNextLevel = level * 10;
-    var xpInThisLevel  = totalXP - ((level - 1) * 10);
-    var pct  = xpForNextLevel > 0 ? Math.min(1, xpInThisLevel / xpForNextLevel) : 0;
+    // C11: use fixed 10-completion bands, matching db.js::updateClanCapitalLevel
+    // which uses Math.floor(total/10)+1. Each band is exactly 10 wide.
+    var BAND = 10;
+    var xpInThisLevel  = totalXP - ((level - 1) * BAND);
+    var xpForNextLevel = BAND;
+    var pct  = Math.min(1, xpInThisLevel / xpForNextLevel);
     var bar  = progressBar(Math.round(pct * 10), 10, 10);
     var pctDisplay = Math.round(pct * 100);
 
@@ -1116,6 +1130,9 @@
   window.renderHome = function (container) {
     if (!container) return;
 
+    // M11: bump generation so any in-flight render from a prior call becomes stale
+    var myGen = ++_homeRenderGen;
+
     container.innerHTML = '';
     container.style.fontFamily = C.font;
 
@@ -1147,8 +1164,9 @@
       var leaderboard = results[2] || [];
       var clanMeta    = results[3] || {};
 
-      // Compute rank
-      var rank = 1;
+      // Compute rank — H10: default to null so new users not in the leaderboard
+      // show as N/A instead of incorrectly showing as #1.
+      var rank = null;
       for (var i = 0; i < leaderboard.length; i++) {
         var entry = leaderboard[i];
         if (entry.id === uid || entry.userId === uid) {
@@ -1156,6 +1174,9 @@
           break;
         }
       }
+
+      // M11: abort if a newer renderHome call has already taken over
+      if (_homeRenderGen !== myGen) return;
 
       // Compute tier stats (for stat card)
       var tierStats   = computeTierStats(userTopics);

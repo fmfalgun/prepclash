@@ -12,6 +12,7 @@
   var _unsubscribe    = null;  // Firestore real-time listener teardown
   var _container      = null;  // last container passed to renderVillage
   var _collapsedTiers = {};    // { tierNum: true } means collapsed
+  var _renderGen      = 0;     // M2: generation counter to discard stale renders
 
   // -------------------------------------------------------------------------
   // Helpers
@@ -110,7 +111,7 @@
   // Proof modal
   // -------------------------------------------------------------------------
 
-  function showProofModal(topic, userId, container) {
+  function showProofModal(topic, userId) {
     // Remove any existing modal first.
     var existing = document.getElementById("vc-modal-overlay");
     if (existing) existing.parentNode.removeChild(existing);
@@ -195,11 +196,9 @@
       })
       .then(function () {
         close();
-        // Re-render village with the same container.
-        // The real-time listener will fire automatically; no extra call needed.
-        // But we call renderVillage anyway so that users without listener feel
-        // immediate feedback (listener + render are both safe to call together).
-        if (_container) renderVillage(_container);
+        // C7/C8: Do NOT call renderVillage here. The onUserTopicsChange snapshot
+        // listener will fire automatically after the Firestore write and trigger
+        // _refreshCards(), which is the single source of truth for UI updates.
       })
       .catch(function (err) {
         proofError.textContent = "Error: " + (err.message || "save failed");
@@ -237,15 +236,30 @@
     domains.forEach(function (d) {
       var btn = document.createElement("button");
       btn.textContent = d.label;
+      btn.className = "domain-btn";
       btn.style.cssText = [
         "background:transparent;border:1px solid #00ff41;color:#00ff41;",
         "font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;",
         "letter-spacing:1px;padding:8px 16px;cursor:pointer;"
       ].join("");
       btn.addEventListener("click", function () {
+        // M3: Disable all domain buttons while the write is in flight.
+        container.querySelectorAll(".domain-btn").forEach(function (b) {
+          b.disabled = true;
+        });
         window.DB.updateUserProfile(userId, { domain: d.key })
           .then(function () {
+            // Re-enable buttons (renderVillage will replace this DOM anyway).
+            container.querySelectorAll(".domain-btn").forEach(function (b) {
+              b.disabled = false;
+            });
             if (_container) renderVillage(_container);
+          })
+          .catch(function (err) {
+            console.error("updateUserProfile (domain) error:", err);
+            container.querySelectorAll(".domain-btn").forEach(function (b) {
+              b.disabled = false;
+            });
           });
       });
       btnRow.appendChild(btn);
@@ -280,7 +294,12 @@
     }
 
     questions.forEach(function (q) {
-      var qId        = q.id || q.questionId || q.name; // flexible id resolution
+      // H14: Use only q.id — never fall back to q.name (would create "undefined" Firestore keys).
+      if (!q.id) {
+        console.warn("Question missing id, skipping:", q);
+        return;
+      }
+      var qId        = q.id;
       var isDone     = !!done[qId];
       var badgeInfo  = sourceBadgeInfo(q.source);
       var color      = sourceBadgeColor(q.source);
@@ -291,9 +310,10 @@
       var totalComp  = qStats.totalCompletions || 0;
 
       var row = document.createElement("div");
+      // L7: No border-radius on question rows (terminal aesthetic).
       row.style.cssText = [
         "display:flex;align-items:center;gap:6px;",
-        "padding:4px 2px;cursor:pointer;border-radius:2px;",
+        "padding:4px 2px;cursor:pointer;",
         "font-size:11px;letter-spacing:0.5px;",
         "transition:background 0.1s;"
       ].join("");
@@ -363,6 +383,8 @@
         (function (currentState) {
           cbEl.addEventListener("click", function (e) {
             e.stopPropagation();
+            // C7/C8: Do NOT call renderVillage here. The snapshot listener
+            // (_refreshCards) handles all DOM updates after writes.
             window.DB.markQuestionDone(
               userId, topic.id, qId, !currentState,
               {
@@ -371,11 +393,6 @@
                 displayName:  window.currentUser ? window.currentUser.displayName : ""
               }
             )
-            .then(function () {
-              if (_container && document.body.contains(_container)) {
-                renderVillage(_container);
-              }
-            })
             .catch(function (err) {
               console.error("markQuestionDone error:", err);
             });
@@ -428,8 +445,9 @@
     var done      = questionsDone || {};
     var doneCount = 0;
     qList.forEach(function (q) {
-      var qId = q.id || q.questionId || q.name;
-      if (done[qId]) doneCount++;
+      // H14: only use q.id; skip questions without one
+      if (!q.id) return;
+      if (done[q.id]) doneCount++;
     });
 
     // Completion threshold: use global default (questions.js may supply a per-topic
@@ -466,7 +484,8 @@
       "font-size:13px;font-weight:700;letter-spacing:1px;",
       "color:", isLocked ? "#555555" : "#e0e0e0", ";"
     ].join("");
-    nameEl.textContent = (isLocked ? "🔒 " : "⚡ ") + topic.name.toUpperCase();
+    // L8: No emoji prefixes — the status badge below already communicates lock/progress state.
+    nameEl.textContent = topic.name.toUpperCase();
     headerRow.appendChild(nameEl);
 
     if (!isLocked) {
@@ -486,7 +505,7 @@
       tagEl.textContent = "✓ COMPLETED";
     } else if (displayStatus === "in_progress") {
       tagEl.style.color = "#f4d03f";
-      tagEl.textContent = "⚡ IN PROGRESS";
+      tagEl.textContent = "> IN PROGRESS";
     } else if (displayStatus === "available") {
       tagEl.style.color = "#f4d03f";
       tagEl.textContent = "○ AVAILABLE";
@@ -501,7 +520,8 @@
       var proofEl = document.createElement("div");
       proofEl.style.cssText = "font-size:10px;margin-bottom:8px;word-break:break-all;";
       var proofLink = document.createElement("a");
-      proofLink.href = esc(proofUrl);
+      // H15: Set href via DOM property (not esc()) — the DOM handles encoding correctly.
+      proofLink.href = proofUrl;
       proofLink.target = "_blank";
       proofLink.rel = "noopener noreferrer";
       proofLink.style.cssText = "color:#00ff41;text-decoration:none;";
@@ -585,7 +605,9 @@
       });
       completeBtn.addEventListener("click", function (e) {
         e.stopPropagation();
-        showProofModal(topic, userId, _container);
+        // C7/C8: Pass only topic + userId — no container needed since we no longer
+        // call renderVillage from inside the modal.
+        showProofModal(topic, userId);
       });
       card.appendChild(completeBtn);
     }
@@ -605,11 +627,88 @@
   }
 
   // -------------------------------------------------------------------------
+  // _refreshCards — lightweight in-place update triggered by the snapshot.
+  //
+  // Receives the latest userTopics array from onUserTopicsChange, re-fetches
+  // per-question done state for visible topics, then replaces each card's DOM
+  // node in-place. Does NOT tear down or re-create the snapshot listener.
+  // -------------------------------------------------------------------------
+
+  function _refreshCards(userTopics) {
+    if (!_container || !document.body.contains(_container)) {
+      // Container gone — clean up listener.
+      if (typeof _unsubscribe === "function") { _unsubscribe(); _unsubscribe = null; }
+      return;
+    }
+
+    var userId = window.currentUser ? window.currentUser.uid : null;
+    if (!userId) return;
+
+    var statusMap    = buildStatusMap(userTopics);
+    var doneIds      = completedIds(statusMap);
+    var unlockStatus = window.getUnlockStatus(doneIds);
+
+    var allTopics     = window.TOPICS || [];
+    var visibleTopics = allTopics.filter(function (t) {
+      return unlockStatus.unlocked.has(t.id) ||
+             (statusMap[t.id] && statusMap[t.id].status === "completed") ||
+             (statusMap[t.id] && statusMap[t.id].status === "in_progress");
+    });
+
+    var topicDataFetches = visibleTopics.map(function (t) {
+      return Promise.all([
+        window.Questions.getQuestionsForTopic(t.id, "all"),
+        window.DB.getQuestionsDone(userId, t.id)
+      ])
+      .then(function (pair) {
+        return { topicId: t.id, questions: pair[0] || [], done: pair[1] || {} };
+      })
+      .catch(function (err) {
+        // M1: Log fetch errors instead of silently swallowing them.
+        console.error("Failed to load topic data for", t.id, err);
+        return { topicId: t.id, questions: [], done: {} };
+      });
+    });
+
+    Promise.all(topicDataFetches).then(function (topicResults) {
+      // Guard: if another full renderVillage started while we were fetching, abort.
+      if (!_container || !document.body.contains(_container)) return;
+
+      var questionsByTopic = {};
+      var questionsDoneMap = {};
+      topicResults.forEach(function (r) {
+        questionsByTopic[r.topicId] = r.questions;
+        questionsDoneMap[r.topicId] = r.done;
+      });
+
+      // Walk every card in the container and replace it with a freshly built one.
+      // Cards are identified by their data-topic-id attribute set during initial render.
+      var allTopicsList = window.TOPICS || [];
+      allTopicsList.forEach(function (topic) {
+        var oldCard = _container.querySelector('[data-topic-id="' + topic.id + '"]');
+        if (!oldCard || !oldCard.parentNode) return;
+
+        var questions     = questionsByTopic[topic.id] || null;
+        var questionsDone = questionsDoneMap[topic.id]  || {};
+
+        var newCard = buildCard(topic, statusMap, unlockStatus, userId, questions, questionsDone, {}, false);
+        newCard.setAttribute("data-topic-id", topic.id);
+        oldCard.parentNode.replaceChild(newCard, oldCard);
+      });
+    });
+  }
+
+  // -------------------------------------------------------------------------
   // Main render function — exposed as window.renderVillage
   // -------------------------------------------------------------------------
 
   function renderVillage(container) {
     _container = container;
+
+    // M2: Increment generation so any in-flight async callbacks from a previous
+    // render call bail out before writing to the DOM.
+    var myGen = ++_renderGen;
+
     var userId = window.currentUser ? window.currentUser.uid : null;
 
     if (!userId) {
@@ -626,6 +725,9 @@
       window.DB.getUserTopics(userId)
     ])
     .then(function (results) {
+      // M2: Stale render guard — another renderVillage call superseded us.
+      if (_renderGen !== myGen) return Promise.reject({ _stale: true });
+
       var profile    = results[0] || {};
       var userTopics = results[1] || [];
 
@@ -655,12 +757,17 @@
         .then(function (pair) {
           return { topicId: t.id, questions: pair[0] || [], done: pair[1] || {} };
         })
-        .catch(function () {
+        .catch(function (err) {
+          // M1: Log fetch errors instead of silently swallowing them.
+          console.error("Failed to load topic data for", t.id, err);
           return { topicId: t.id, questions: [], done: {} };
         });
       });
 
       return Promise.all(topicDataFetches).then(function (topicResults) {
+        // M2: Guard again after the async question fetch.
+        if (_renderGen !== myGen) return Promise.reject({ _stale: true });
+
         // Build lookup maps
         var questionsByTopic  = {};
         var questionsDoneMap  = {};
@@ -681,6 +788,10 @@
       });
     })
     .then(function (ctx) {
+      // M2: ctx is undefined if we returned early above — shouldn't reach here
+      // but guard anyway.
+      if (!ctx) return;
+
       var profile          = ctx.profile;
       var statusMap        = ctx.statusMap;
       var unlockStatus     = ctx.unlockStatus;
@@ -851,11 +962,17 @@
           var questionsDone = questionsDoneMap[topic.id] || {};
           // loading=false — all question data arrived before we rendered
           var card = buildCard(topic, statusMap, unlockStatus, userId, questions, questionsDone, {}, false);
+          // Tag each card with its topic id so _refreshCards can find it by query.
+          card.setAttribute("data-topic-id", topic.id);
           row.appendChild(card);
 
           // Register for Step 2 group-stats update (visible topics only)
           if (questions && questions.length > 0) {
-            var qIds = questions.map(function (q) { return q.id || q.questionId || q.name; });
+            // H14: only use q.id; filter out any questions without one.
+            var qIds = questions.reduce(function (acc, q) {
+              if (q.id) { acc.push(q.id); }
+              return acc;
+            }, []);
             cardRegistry.push({ card: card, topic: topic, questions: questions, questionsDone: questionsDone, questionIds: qIds });
           }
         });
@@ -896,11 +1013,13 @@
 
         window.Questions.getQuestionGroupStats(allQIds)
           .then(function (groupStats) {
+            // M2: Bail if a newer render has replaced our DOM.
+            if (_renderGen !== myGen) return;
             if (!groupStats) return;
 
             // Re-render each registered card in-place with updated group stats.
             cardRegistry.forEach(function (entry) {
-              var parent     = entry.card.parentNode;
+              var parent = entry.card.parentNode;
               if (!parent) return; // card was removed from DOM
 
               var newCard = buildCard(
@@ -913,6 +1032,7 @@
                 groupStats,
                 false
               );
+              newCard.setAttribute("data-topic-id", entry.topic.id);
               parent.replaceChild(newCard, entry.card);
               entry.card = newCard; // update registry ref
             });
@@ -923,26 +1043,25 @@
       }
 
       // ------------------------------------------------------------------
-      // Set up (or refresh) real-time listener
+      // C7/C8: Set up real-time listener ONCE per renderVillage call.
+      // The callback calls _refreshCards (lightweight, no new listener),
+      // never renderVillage.  The _skipFirst flag avoids re-rendering the
+      // same data that was just fetched synchronously in Step 1 above.
       // ------------------------------------------------------------------
       if (_unsubscribe) {
         _unsubscribe();
         _unsubscribe = null;
       }
 
-      // onSnapshot fires immediately once with current data — skip that first fire
-      // to avoid an infinite renderVillage loop. Only re-render on real changes.
       var _skipFirst = true;
-      _unsubscribe = window.DB.onUserTopicsChange(userId, function () {
+      _unsubscribe = window.DB.onUserTopicsChange(userId, function (freshTopics) {
         if (_skipFirst) { _skipFirst = false; return; }
-        if (_container && document.body.contains(_container)) {
-          renderVillage(_container);
-        } else {
-          if (_unsubscribe) { _unsubscribe(); _unsubscribe = null; }
-        }
+        _refreshCards(freshTopics);
       });
     })
     .catch(function (err) {
+      // Swallow the sentinel we throw for stale renders.
+      if (err && err._stale) return;
       container.innerHTML = [
         '<div style="color:#e74c3c;font-family:\'JetBrains Mono\',monospace;padding:24px;">',
           "ERROR: " + esc(err.message || "Failed to load village data."),
@@ -956,5 +1075,10 @@
   // -------------------------------------------------------------------------
 
   window.renderVillage = renderVillage;
+
+  // M5: Teardown — called when navigating away from the Village tab.
+  window.destroyVillage = function () {
+    if (typeof _unsubscribe === "function") { _unsubscribe(); _unsubscribe = null; }
+  };
 
 }());

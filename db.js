@@ -21,7 +21,7 @@
         joinedAt: firebase.firestore.FieldValue.serverTimestamp(),
       };
       return ref.set(profile).then(function () {
-        return profile;
+        return Object.assign({}, profile, { joinedAt: new Date() });
       });
     });
   }
@@ -75,35 +75,22 @@
       .collection("topics")
       .doc(topicId);
 
-    // Fetch existing topic and user profile first
-    return Promise.all([topicRef.get(), userRef.get()]).then(function (results) {
-      var topicSnap = results[0];
-      var userSnap = results[1];
-
+    // Fetch the topic doc first (outside the transaction — only needed for
+    // prevStatus and questionsDoneMap; these fields are only written by this
+    // user so a non-transactional read is safe here).
+    return topicRef.get().then(function (topicSnap) {
       var prevStatus = topicSnap.exists ? topicSnap.data().status : "locked";
-      var userData = userSnap.exists ? userSnap.data() : {};
 
-      var xpTotal = userData.xpTotal || 0;
-      var xpThisWeek = userData.xpThisWeek || 0;
-      var topicsCompleted = userData.topicsCompleted || 0;
-
-      // Only award XP when transitioning into "completed"
       var xpDelta = 0;
       var completedCountDelta = 0;
       if (status === "completed" && prevStatus !== "completed") {
         xpDelta = xpValue;
         completedCountDelta = 1;
       }
-      // If reverting from completed, subtract XP
       if (prevStatus === "completed" && status !== "completed") {
         xpDelta = -xpValue;
         completedCountDelta = -1;
       }
-
-      var newXpTotal = Math.max(0, xpTotal + xpDelta);
-      var newXpThisWeek = Math.max(0, xpThisWeek + xpDelta);
-      var newVillageLvl = Math.floor(newXpTotal / 100) + 1;
-      var newTopicsCompleted = Math.max(0, topicsCompleted + completedCountDelta);
 
       var topicData = {
         topicName: topicName,
@@ -114,7 +101,6 @@
       };
       if (status === "completed" && prevStatus !== "completed") {
         topicData.completedAt = firebase.firestore.FieldValue.serverTimestamp();
-        // Snapshot the current questionsDone count for denormalization
         var questionsDoneMap =
           topicSnap.exists && topicSnap.data().questionsDone
             ? topicSnap.data().questionsDone
@@ -125,52 +111,69 @@
         topicData.completedAt = null;
       }
 
-      var userUpdate = {
-        xpTotal: newXpTotal,
-        xpThisWeek: newXpThisWeek,
-        villageLvl: newVillageLvl,
-        topicsCompleted: newTopicsCompleted,
-      };
+      // Use a transaction so concurrent calls cannot double-count XP (C9).
+      // The transaction returns displayName so the clan write can use it.
+      return db.runTransaction(function (transaction) {
+        return transaction.get(userRef).then(function (userSnap) {
+          var userData = userSnap.exists ? userSnap.data() : {};
 
-      var leaderboardData = {
-        userId: userId,
-        displayName: userData.displayName || "",
-        domain: userData.domain || "",
-        xpTotal: newXpTotal,
-        xpThisWeek: newXpThisWeek,
-        topicsCompleted: newTopicsCompleted,
-        lastUpdated: firebase.firestore.FieldValue.serverTimestamp(),
-      };
+          var xpTotal = userData.xpTotal || 0;
+          var xpThisWeek = userData.xpThisWeek || 0;
+          var topicsCompleted = userData.topicsCompleted || 0;
 
-      var completionEntry = {};
-      if (status === "completed") {
-        completionEntry["completions." + userId] = {
-          status: status,
-          proofUrl: proofUrl,
-          completedAt: firebase.firestore.FieldValue.serverTimestamp(),
-          displayName: userData.displayName || "",
+          var newXpTotal = Math.max(0, xpTotal + xpDelta);
+          var newXpThisWeek = Math.max(0, xpThisWeek + xpDelta);
+          var newVillageLvl = Math.floor(newXpTotal / 100) + 1;
+          var newTopicsCompleted = Math.max(0, topicsCompleted + completedCountDelta);
+
+          var userUpdate = {
+            xpTotal: newXpTotal,
+            xpThisWeek: newXpThisWeek,
+            villageLvl: newVillageLvl,
+            topicsCompleted: newTopicsCompleted,
+          };
+
+          var leaderboardData = {
+            userId: userId,
+            displayName: userData.displayName || "",
+            domain: userData.domain || "",
+            xpTotal: newXpTotal,
+            xpThisWeek: newXpThisWeek,
+            topicsCompleted: newTopicsCompleted,
+            lastUpdated: firebase.firestore.FieldValue.serverTimestamp(),
+          };
+
+          transaction.set(userRef, userUpdate, { merge: true });
+          transaction.set(leaderboardRef, leaderboardData, { merge: true });
+
+          // Return displayName so the post-transaction clan write can use it.
+          return userData.displayName || "";
+        });
+      }).then(function (displayName) {
+        // Build the clan completion entry (H6: single merged set, no chained update).
+        var completionValue;
+        if (status === "completed") {
+          completionValue = {
+            status: status,
+            proofUrl: proofUrl,
+            completedAt: firebase.firestore.FieldValue.serverTimestamp(),
+            displayName: displayName,
+          };
+        } else {
+          completionValue = firebase.firestore.FieldValue.delete();
+        }
+
+        var clanTopicData = {
+          topicName: topicName,
+          tier: tier,
         };
-      } else {
-        // Use FieldValue.delete() to remove the user's completion entry
-        completionEntry["completions." + userId] =
-          firebase.firestore.FieldValue.delete();
-      }
+        clanTopicData["completions." + userId] = completionValue;
 
-      var clanTopicBase = {
-        topicName: topicName,
-        tier: tier,
-      };
-
-      return Promise.all([
-        topicRef.set(topicData, { merge: true }),
-        userRef.set(userUpdate, { merge: true }),
-        leaderboardRef.set(leaderboardData, { merge: true }),
-        clanTopicRef
-          .set(clanTopicBase, { merge: true })
-          .then(function () {
-            return clanTopicRef.update(completionEntry);
-          }),
-      ]);
+        return Promise.all([
+          topicRef.set(topicData, { merge: true }),
+          clanTopicRef.set(clanTopicData, { merge: true }),
+        ]);
+      });
     });
   }
 
@@ -190,32 +193,46 @@
       .collection("topics")
       .doc(topicId);
 
-    return topicRef.get().then(function (snap) {
-      var data = snap.exists ? snap.data() : {};
-      var questionsDone = Object.assign({}, data.questionsDone || {});
+    // H7: Use a dotted-path atomic field update instead of read-then-write-map
+    // to avoid clobbering concurrent checkmarks on the same topic.
+    var FieldValue = firebase.firestore.FieldValue;
+    var fieldPath = "questionsDone." + questionId;
+    var fieldUpdate = {};
+    fieldUpdate[fieldPath] = done ? true : FieldValue.delete();
 
-      if (done) {
-        questionsDone[questionId] = true;
-      } else {
-        delete questionsDone[questionId];
-      }
-
-      return topicRef
-        .set({ questionsDone: questionsDone }, { merge: true })
-        .then(function () {
-          return updateQuestionStat(questionId, {
-            source: source,
-            topicId: topicId,
-            questionName: questionName,
-            userId: userId,
-            displayName: displayName,
-            done: done,
+    return topicRef.update(fieldUpdate)
+      .catch(function (err) {
+        // update() fails if the document doesn't exist yet; fall back to set.
+        // Firebase compat SDK uses "firestore/not-found" but guard both forms.
+        var code = err.code || "";
+        if (code === "not-found" || code === "firestore/not-found") {
+          var setUpdate = {};
+          setUpdate[fieldPath] = done ? true : FieldValue.delete();
+          return topicRef.set({ questionsDone: {} }, { merge: true }).then(function () {
+            return topicRef.update(setUpdate);
           });
-        })
-        .then(function () {
+        }
+        throw err;
+      })
+      .then(function () {
+        return updateQuestionStat(questionId, {
+          source: source,
+          topicId: topicId,
+          questionName: questionName,
+          userId: userId,
+          displayName: displayName,
+          done: done,
+        });
+      })
+      .then(function () {
+        // Return the updated questionsDone map by reading it back so callers
+        // get a consistent count.  This is a single read after the write,
+        // not a read-modify-write, so it is safe.
+        return topicRef.get().then(function (snap) {
+          var questionsDone = (snap.exists && snap.data().questionsDone) || {};
           return { questionsDone: questionsDone, count: Object.keys(questionsDone).length };
         });
-    });
+      });
   }
 
   // ---------------------------------------------------------------------------
@@ -225,87 +242,57 @@
   function getQuestionStats(questionIds) {
     if (!questionIds || questionIds.length === 0) return Promise.resolve({});
 
-    // Batch into groups of 10 to stay within Firestore limits
-    var batches = [];
-    for (var i = 0; i < questionIds.length; i += 10) {
-      batches.push(questionIds.slice(i, i + 10));
-    }
-
-    return Promise.all(
-      batches.map(function (batch) {
-        return Promise.all(
-          batch.map(function (qid) {
-            return db
-              .collection("questionStats")
-              .doc(qid)
-              .get()
-              .then(function (snap) {
-                if (!snap.exists) {
-                  return { id: qid, totalCompletions: 0, completedBy: {} };
-                }
-                var d = snap.data();
-                return {
-                  id: qid,
-                  totalCompletions: d.totalCompletions || 0,
-                  completedBy: d.completedBy || {},
-                };
-              });
-          })
-        );
-      })
-    ).then(function (batchResults) {
-      var result = {};
-      batchResults.forEach(function (batch) {
-        batch.forEach(function (entry) {
-          result[entry.id] = {
-            totalCompletions: entry.totalCompletions,
-            completedBy: entry.completedBy,
-          };
-        });
-      });
-      return result;
+    // M18: Fire all reads in parallel via Promise.all instead of N serial calls.
+    var refs = questionIds.map(function (qid) {
+      return db.collection("questionStats").doc(qid);
     });
+
+    return Promise.all(refs.map(function (ref) { return ref.get(); }))
+      .then(function (snaps) {
+        var result = {};
+        snaps.forEach(function (snap) {
+          if (!snap.exists) {
+            result[snap.id] = { totalCompletions: 0, completedBy: {} };
+          } else {
+            var d = snap.data();
+            result[snap.id] = {
+              totalCompletions: d.totalCompletions || 0,
+              completedBy: d.completedBy || {},
+            };
+          }
+        });
+        return result;
+      });
   }
 
   function updateQuestionStat(questionId, opts) {
     // opts: { source, topicId, questionName, userId, displayName, done }
-    var source = opts.source || "";
-    var topicId = opts.topicId || "";
-    var questionName = opts.questionName || "";
     var userId = opts.userId || "";
     var displayName = opts.displayName || "";
     var done = !!opts.done;
 
+    // H4: Use FieldValue.increment to avoid read-then-write race on totalCompletions.
+    // H5: Do not write topicId/source/questionName — they can corrupt stats when
+    //     question IDs are shared across topics.
+    var FieldValue = firebase.firestore.FieldValue;
     var ref = db.collection("questionStats").doc(questionId);
 
-    return ref.get().then(function (snap) {
-      var data = snap.exists ? snap.data() : {};
-      var currentTotal = data.totalCompletions || 0;
-      var completedBy = Object.assign({}, data.completedBy || {});
+    var completedByUpdate = {};
+    if (done) {
+      completedByUpdate["completedBy." + userId] = {
+        displayName: displayName,
+        completedAt: FieldValue.serverTimestamp(),
+      };
+    } else {
+      completedByUpdate["completedBy." + userId] = FieldValue.delete();
+    }
 
-      var newTotal;
-      if (done) {
-        newTotal = currentTotal + 1;
-        completedBy[userId] = {
-          displayName: displayName,
-          completedAt: firebase.firestore.FieldValue.serverTimestamp(),
-        };
-      } else {
-        newTotal = Math.max(0, currentTotal - 1);
-        delete completedBy[userId];
-      }
+    var payload = Object.assign(
+      { totalCompletions: FieldValue.increment(done ? 1 : -1) },
+      completedByUpdate
+    );
 
-      return ref.set(
-        {
-          source: source,
-          topicId: topicId,
-          questionName: questionName,
-          totalCompletions: newTotal,
-          completedBy: completedBy,
-        },
-        { merge: true }
-      );
-    });
+    return ref.set(payload, { merge: true });
   }
 
   function onQuestionStatsChange(questionId, callback) {
@@ -432,6 +419,22 @@
       });
   }
 
+  function onClanCapitalTopicsChange(callback, onError) {
+    return db
+      .collection("clanCapital")
+      .doc("topics")
+      .collection("topics")
+      .onSnapshot(function (snap) {
+        var docs = snap.docs.map(function (doc) {
+          return Object.assign({ id: doc.id }, doc.data());
+        });
+        callback(docs);
+      }, function (err) {
+        console.error('[DB] onClanCapitalTopicsChange snapshot error:', err);
+        if (typeof onError === 'function') onError(err);
+      });
+  }
+
   // ---------------------------------------------------------------------------
   // Expose window.DB
   // ---------------------------------------------------------------------------
@@ -458,5 +461,6 @@
 
     onLeaderboardChange: onLeaderboardChange,
     onUserTopicsChange: onUserTopicsChange,
+    onClanCapitalTopicsChange: onClanCapitalTopicsChange,
   };
 })();

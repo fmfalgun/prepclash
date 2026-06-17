@@ -9,13 +9,9 @@
 
   // Internal: called by onAuthStateChanged handler each time auth state changes.
   function _notifyStateListeners(user) {
-    for (var i = 0; i < _stateChangeListeners.length; i++) {
-      try {
-        _stateChangeListeners[i](user);
-      } catch (e) {
-        console.error('[auth] state change listener error:', e);
-      }
-    }
+    setTimeout(function() {
+      _stateChangeListeners.forEach(function(cb) { try { cb(user); } catch(e) { console.error(e); } });
+    }, 0);
   }
 
   // Internal: called once when Firebase auth state is first known.
@@ -61,9 +57,10 @@
     if (_authReady) {
       // Auth already resolved — call immediately but asynchronously so the
       // caller's surrounding code finishes executing first.
+      var captured = window.currentUser; // capture NOW, not when timeout fires
       setTimeout(function () {
         try {
-          callback(window.currentUser);
+          callback(captured);
         } catch (e) {
           console.error('[auth] onAuthReady callback error:', e);
         }
@@ -93,9 +90,9 @@
    * Returns the Promise from firebase.auth().signOut().
    */
   window.signOut = function () {
+    window.currentUser = null; // clear immediately, don't wait for Firebase callback
     return firebase.auth().signOut().catch(function (err) {
       console.error('[auth] signOut error:', err);
-      throw err;
     });
   };
 
@@ -109,6 +106,9 @@
       throw new TypeError('[auth] onAuthStateChange: listener must be a function');
     }
     _stateChangeListeners.push(listener);
+    return function() {
+      _stateChangeListeners = _stateChangeListeners.filter(function(fn) { return fn !== listener; });
+    };
   };
 
 }());

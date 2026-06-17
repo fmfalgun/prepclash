@@ -3,7 +3,7 @@
   "source": "lovebabbar",
   "questions": [
     {
-      "id": "lb_graph_1",
+      "id": "lb_graphs_1",
       "name": "Number of Islands",
       "difficulty": "medium",
       "url": "https://leetcode.com/problems/number-of-islands/",
@@ -11,7 +11,7 @@
       "babbarIndex": 1
     },
     {
-      "id": "lb_graph_2",
+      "id": "lb_graphs_2",
       "name": "Clone Graph",
       "difficulty": "medium",
       "url": "https://leetcode.com/problems/clone-graph/",
@@ -19,7 +19,7 @@
       "babbarIndex": 2
     },
     {
-      "id": "lb_graph_3",
+      "id": "lb_graphs_3",
       "name": "Course Schedule",
       "difficulty": "medium",
       "url": "https://leetcode.com/problems/course-schedule/",
@@ -27,7 +27,7 @@
       "babbarIndex": 3
     },
     {
-      "id": "lb_graph_4",
+      "id": "lb_graphs_4",
       "name": "Word Ladder",
       "difficulty": "hard",
       "url": "https://leetcode.com/problems/word-ladder/",
@@ -35,7 +35,7 @@
       "babbarIndex": 4
     },
     {
-      "id": "lb_graph_5",
+      "id": "lb_graphs_5",
       "name": "Rotting Oranges",
       "difficulty": "medium",
       "url": "https://leetcode.com/problems/rotting-oranges/",
@@ -43,7 +43,7 @@
       "babbarIndex": 5
     },
     {
-      "id": "lb_graph_6",
+      "id": "lb_graphs_6",
       "name": "Pacific Atlantic Water Flow",
       "difficulty": "medium",
       "url": "https://leetcode.com/problems/pacific-atlantic-water-flow/",

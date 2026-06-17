@@ -15,6 +15,11 @@
     return name.slice(0, 2).toUpperCase();
   }
 
+  // L13: Thousands separator for XP values.
+  function formatXP(n) {
+    return (n || 0).toLocaleString();
+  }
+
   function domainLabel(domain) {
     var map = {
       cybersec: "CYBERSEC",
@@ -27,12 +32,14 @@
   }
 
   function deltaHtml(xpThisWeek) {
+    // L14: TODO: xpThisWeek requires a weekly Cloud Function reset — see db.js updateWeeklyXP.
+    // Until that is implemented the "THIS WEEK" column shows accumulated total.
     var val = xpThisWeek || 0;
     if (val > 0) {
-      return '<span style="color:var(--green)">&#8593; +' + val + "</span>";
+      return '<span style="color:var(--green)">&#8593; +' + formatXP(val) + "</span>";
     }
     if (val < 0) {
-      return '<span style="color:var(--red)">&#8595; ' + val + "</span>";
+      return '<span style="color:var(--red)">&#8595; ' + formatXP(val) + "</span>";
     }
     return '<span style="color:var(--muted)">&#8594; +0</span>';
   }
@@ -128,8 +135,9 @@
     var xpCell = document.createElement("div");
     xpCell.style.cssText =
       "color:var(--gold);font-weight:700;text-align:right";
+    // L13: Use thousands separator for XP values.
     xpCell.textContent =
-      xpDisplay + " XP";
+      formatXP(xpDisplay) + " XP";
     if (topicsCount > 0) {
       var topicsSpan = document.createElement("span");
       topicsSpan.style.cssText =
@@ -286,7 +294,8 @@
       "color:var(--muted)",
     ].join(";");
 
-    ["RANK", "PLAYER", "", "DOMAIN", "XP", "THIS WEEK"].forEach(function (h) {
+    // M16: Header order matches data columns exactly: RANK, avatar (unlabeled), PLAYER, DOMAIN, XP, THIS WEEK.
+    ["RANK", "", "PLAYER", "DOMAIN", "XP", "THIS WEEK"].forEach(function (h) {
       var cell = document.createElement("div");
       cell.textContent = h;
       if (h === "XP" || h === "THIS WEEK") {
@@ -366,5 +375,10 @@
   // ─── Expose ──────────────────────────────────────────────────────────────────
 
   window.renderLeaderboard = renderLeaderboard;
+
+  // M11: Teardown — call when unmounting the leaderboard to stop the listener.
+  window.destroyLeaderboard = function () {
+    if (typeof _unsubscribe === 'function') { _unsubscribe(); _unsubscribe = null; }
+  };
 
 })();

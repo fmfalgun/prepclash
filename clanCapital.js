@@ -29,7 +29,14 @@
 
   // Progress bar config
   var BAR_LEN = 10;
-  var COMPLETIONS_PER_LEVEL = 5;
+  // C10: Match db.js::updateClanCapitalLevel() which uses divisor of 10.
+  var COMPLETIONS_PER_LEVEL = 10;
+
+  // ---------------------------------------------------------------------------
+  // Real-time listener state (M13)
+  // ---------------------------------------------------------------------------
+
+  var _ccUnsubscribe = null;
 
   // ---------------------------------------------------------------------------
   // Helpers
@@ -55,7 +62,7 @@
     return null;
   }
 
-  // Build a map of topicId -> firestore data from getClanCapitalTopics() results
+  // Build a map of topicId -> firestore data from onClanCapitalTopicsChange results
   function buildTopicMap(firestoreDocs) {
     var map = {};
     for (var i = 0; i < firestoreDocs.length; i++) {
@@ -88,14 +95,28 @@
   // Render helpers — build HTML strings
   // ---------------------------------------------------------------------------
 
+  // C10/M14: level comes from getClanCapitalMeta(); localLevel is the fallback.
   function renderHeader(level, totalCompletions) {
     var completionsInLevel = totalCompletions % COMPLETIONS_PER_LEVEL;
     var bar  = progressBar(completionsInLevel, COMPLETIONS_PER_LEVEL);
     var pct  = Math.round((completionsInLevel / COMPLETIONS_PER_LEVEL) * 100);
 
+    // C13: Add [ GO TO VILLAGE ] button so users can contribute completions there.
     return (
       '<div class="cc-header">' +
-        '<div class="cc-title">CLAN CAPITAL <span class="cc-lvl">// LVL ' + level + '</span></div>' +
+        '<div class="cc-title-row" style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">' +
+          '<div class="cc-title">CLAN CAPITAL <span class="cc-lvl">// LVL ' + level + '</span></div>' +
+          '<button class="cc-village-btn" style="' +
+            'font-family:var(--font);font-size:0.72rem;font-weight:700;' +
+            'letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;' +
+            'background:transparent;border:1px solid var(--green);color:var(--green);' +
+            'padding:0.25rem 0.6rem;">' +
+            '[ GO TO VILLAGE ]' +
+          '</button>' +
+        '</div>' +
+        '<div class="cc-village-hint" style="font-size:0.7rem;color:var(--muted);margin-top:0.25rem;letter-spacing:0.06em;">' +
+          '// Complete topics in VILLAGE to contribute here.' +
+        '</div>' +
         '<div class="cc-progress-row">' +
           '<span class="cc-progress-label">PROGRESS TO LVL ' + (level + 1) + ':&nbsp;</span>' +
           '<span class="cc-bar">' + bar + '</span>' +
@@ -133,7 +154,8 @@
       statusTag   = "COMPLETED";
       statusClass = "cc-status-completed";
     } else if (status === "in_progress") {
-      barFill     = progressBar(4, BAR_LEN);
+      // M15: Show empty bar for in_progress — actual progress unknown at clan level.
+      barFill     = progressBar(0, BAR_LEN);
       statusTag   = "IN PROGRESS";
       statusClass = "cc-status-inprogress";
     } else {
@@ -236,59 +258,97 @@
   }
 
   // ---------------------------------------------------------------------------
-  // Main render
+  // Inner render — called from the real-time listener callback (M13)
+  // ---------------------------------------------------------------------------
+
+  function _renderClanCapitalContent(container, firestoreDocs, metaLevel) {
+    var topicMap         = buildTopicMap(firestoreDocs);
+    var totalCompletions = countTotalCompletions(firestoreDocs);
+    // C10/M14: prefer authoritative level from meta; fall back to local computation.
+    var level = (typeof metaLevel === 'number' && metaLevel >= 1)
+      ? metaLevel
+      : Math.floor(totalCompletions / COMPLETIONS_PER_LEVEL) + 1;
+
+    // Split clan topic IDs into groups
+    var coreCSIds  = [];
+    var advDSAIds  = [];
+
+    for (var i = 0; i < CLAN_TOPIC_IDS.length; i++) {
+      var id  = CLAN_TOPIC_IDS[i];
+      var def = topicDef(id);
+      if (def && def.tier === 5) {
+        coreCSIds.push(id);
+      } else {
+        advDSAIds.push(id);
+      }
+    }
+
+    var html =
+      '<div class="cc-root">' +
+        renderHeader(level, totalCompletions) +
+        renderCommonTopicsSummary(firestoreDocs) +
+        renderGroup(GROUP_CORE_CS, coreCSIds, topicMap) +
+        renderGroup(GROUP_ADV_DSA, advDSAIds, topicMap) +
+      '</div>';
+
+    container.innerHTML = html;
+
+    // C13: Wire up the [ GO TO VILLAGE ] button.
+    var villageBtn = container.querySelector('.cc-village-btn');
+    if (villageBtn) {
+      villageBtn.addEventListener('click', function () {
+        var villageTab = document.querySelector('.tab-btn[data-tab="village"]');
+        if (villageTab) villageTab.click();
+      });
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Main render — sets up real-time listener (M13) and meta fetch (M14)
   // ---------------------------------------------------------------------------
 
   function renderClanCapital(container) {
     if (!container) return;
 
+    // M13: Tear down any existing listener before re-mounting.
+    if (_ccUnsubscribe) { _ccUnsubscribe(); _ccUnsubscribe = null; }
+
     // Show loading state immediately
     container.innerHTML = '<div class="cc-loading">// LOADING CLAN CAPITAL DATA...</div>';
 
-    window.DB.getClanCapitalTopics().then(function (firestoreDocs) {
+    // M14: Fetch authoritative level from /clanCapital/meta once at render time.
+    // The meta level is used on the first data delivery and kept in closure.
+    var _metaLevel = null;
 
-      var topicMap         = buildTopicMap(firestoreDocs);
-      var totalCompletions = countTotalCompletions(firestoreDocs);
-      var level            = Math.floor(totalCompletions / COMPLETIONS_PER_LEVEL) + 1;
+    window.DB.getClanCapitalMeta().then(function (meta) {
+      _metaLevel = (meta && typeof meta.level === 'number') ? meta.level : null;
+      // If the listener has already delivered data, re-render with the real level.
+      // (The listener callback stores the latest docs so we can re-render.)
+    }).catch(function () {
+      // Meta fetch failed — _metaLevel stays null; local computation used as fallback.
+    });
 
-      // Split clan topic IDs into groups
-      var coreCSIds  = [];
-      var advDSAIds  = [];
+    // Latest docs cache so meta arrival can trigger a re-render.
+    var _latestDocs = null;
 
-      for (var i = 0; i < CLAN_TOPIC_IDS.length; i++) {
-        var id  = CLAN_TOPIC_IDS[i];
-        var def = topicDef(id);
-        if (def && def.tier === 5) {
-          coreCSIds.push(id);
-        } else {
-          advDSAIds.push(id);
-        }
-      }
-
-      var html =
-        '<div class="cc-root">' +
-          renderHeader(level, totalCompletions) +
-          renderCommonTopicsSummary(firestoreDocs) +
-          '<div class="cc-controls">' +
-            '<button class="cc-refresh-btn">[↻ REFRESH]</button>' +
-          '</div>' +
-          renderGroup(GROUP_CORE_CS, coreCSIds, topicMap) +
-          renderGroup(GROUP_ADV_DSA, advDSAIds, topicMap) +
-        '</div>';
-
-      container.innerHTML = html;
-
-      // Wire up the refresh button
-      var btn = container.querySelector(".cc-refresh-btn");
-      if (btn) {
-        btn.addEventListener("click", function () {
-          renderClanCapital(container);
-        });
-      }
-
-    }).catch(function (err) {
+    // M13: Subscribe to real-time updates.
+    _ccUnsubscribe = window.DB.onClanCapitalTopicsChange(function (docs) {
+      _latestDocs = docs;
+      _renderClanCapitalContent(container, docs, _metaLevel);
+    }, function (err) {
       container.innerHTML =
-        '<div class="cc-error">// ERROR LOADING CLAN CAPITAL: ' + esc(String(err && err.message ? err.message : err)) + '</div>';
+        '<div class="cc-error">// ERROR LOADING CLAN CAPITAL: ' +
+        esc(String(err && err.message ? err.message : err)) + '</div>';
+    });
+
+    // M14: When meta arrives after the first snapshot, re-render with real level.
+    window.DB.getClanCapitalMeta().then(function (meta) {
+      _metaLevel = (meta && typeof meta.level === 'number') ? meta.level : null;
+      if (_latestDocs !== null) {
+        _renderClanCapitalContent(container, _latestDocs, _metaLevel);
+      }
+    }).catch(function () {
+      // Meta unavailable — already using local fallback.
     });
   }
 

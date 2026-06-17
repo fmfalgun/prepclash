@@ -19,9 +19,11 @@
   // ---------------------------------------------------------------------------
 
   function getDifficultyXP(difficulty) {
-    if (difficulty === "easy")   return 2;
-    if (difficulty === "medium") return 5;
-    if (difficulty === "hard")   return 10;
+    if (difficulty === "easy")     return 2;
+    if (difficulty === "medium")   return 5;
+    if (difficulty === "hard")     return 10;
+    // L12: 'unrated' (CF problems with no rating) earn a low XP value
+    if (difficulty === "unrated")  return 1;
     return 0;
   }
 
@@ -104,7 +106,7 @@
       name: "Recursion",
       tier: 1,
       xp: 10,
-      prerequisites: ["stack", "queue"],
+      prerequisites: ["stack"],
       unlocks: ["trees", "backtracking", "dynamic_programming"]
     },
 
@@ -134,7 +136,7 @@
       tier: 2,
       xp: 25,
       prerequisites: ["arrays", "binary_search"],
-      unlocks: []
+      unlocks: ["hashing"]
     },
 
     // --- TIER 3 (xp: 25, unlock: complete prerequisites) --------------------
@@ -154,7 +156,7 @@
       tier: 3,
       xp: 25,
       prerequisites: ["trees", "hashing"],
-      unlocks: []
+      unlocks: ["advanced_graphs"]
     },
 
     {
@@ -163,7 +165,7 @@
       tier: 3,
       xp: 25,
       prerequisites: ["recursion", "trees"],
-      unlocks: []
+      unlocks: ["dynamic_programming"]
     },
 
     // --- TIER 4 (xp: 50, unlock: complete prerequisites) --------------------
@@ -173,7 +175,7 @@
       name: "Dynamic Programming",
       tier: 4,
       xp: 50,
-      prerequisites: ["recursion", "graphs"],
+      prerequisites: ["recursion", "backtracking"],
       unlocks: []
     },
 
@@ -191,7 +193,7 @@
       name: "Advanced Graphs",
       tier: 4,
       xp: 50,
-      prerequisites: ["graphs"],
+      prerequisites: ["graphs", "heaps"],
       unlocks: []
     },
 
@@ -286,6 +288,10 @@
   // ---------------------------------------------------------------------------
 
   function getUnlockStatus(completedIds) {
+    if (!Array.isArray(completedIds)) {
+      completedIds = completedIds ? [completedIds] : [];
+    }
+
     // Normalise input to a plain object map for O(1) lookup
     var completedSet = {};
     if (completedIds && completedIds.length) {
