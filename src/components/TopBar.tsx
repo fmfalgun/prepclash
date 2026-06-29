@@ -1,7 +1,7 @@
 import { useStore } from '../store/useStore'
 import { rank, streak } from '../store/selectors'
 
-const TABS = ['HOME', 'VILLAGE', 'ARENA', 'WORKOUT', 'CLAN', 'LADDER'] as const
+const TABS = ['HOME', 'VILLAGE', 'ARENA', 'STUDY', 'READING', 'WORKOUT', 'CLAN', 'LADDER'] as const
 
 export function TopBar() {
   const data     = useStore(s => s.data)

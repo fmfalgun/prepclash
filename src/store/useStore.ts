@@ -9,6 +9,8 @@ import { ARENA, ARENA_AXIS_MAP } from '../data/arena'
 import { pushToFirebase, deleteAccount as fbDeleteAccount } from '../lib/firebase'
 import { seedWorkoutData, TOJI } from '../data/workoutTemplate'
 import { computeSession, computePBs, est1rm } from '../lib/workoutStats'
+import { syncCfProfile } from '../lib/codeforces'
+import { A2OJ_DEFS } from '../data/a2oj'
 import type { ArenaQuestion } from '../data/arena'
 
 function freshDraft(): Draft {
@@ -112,6 +114,8 @@ interface AppState {
   solveQuestion: () => void
   saveName: () => void
   setCfHandle: (handle: string) => void
+  syncCf: () => void
+  bumpA2oj: (id: string, delta: number) => void
   setClanId: (clanId: string | null) => void
   resetData: () => void
   onSignedIn: (user: FbUser) => void
@@ -268,7 +272,7 @@ export const useStore = create<AppState>()(
             d.momentum += gain
             addWeekXp(d, gain)
             bumpActivity(d, Math.round(gain * 1.4))
-            d.logs.unshift({ type: 'reading', title: 'read ' + amt + ' ' + def.unit + ' · ' + def.title, mins: 0, gain, date: todayKey(), ts: Date.now() })
+            d.logs.unshift({ type: 'reading', title: 'read ' + amt + ' ' + def.unit + ' · ' + def.title, mins: 0, gain, date: todayKey(), ts: Date.now(), amount: amt, unit: def.unit, bookId: def.id })
           })
           toast_('+' + gain + ' momentum · intel absorbed')
           set({ modal: null, draft: freshDraft() })
@@ -429,6 +433,41 @@ export const useStore = create<AppState>()(
         setCfHandle: (handle: string) => {
           persist_(d => { d.cf.handle = handle.trim() })
           toast_('cf handle saved')
+        },
+
+        syncCf: async () => {
+          const handle = get().data.cf.handle.trim()
+          if (!handle) { toast_('set a cf handle first'); return }
+          set({ cfPulling: true })
+          try {
+            const cf = await syncCfProfile(handle)
+            persist_(d => { d.cf = { ...cf, error: null } })
+            toast_('cf synced · ' + (cf.rating || '—') + ' rating')
+          } catch (e) {
+            persist_(d => { d.cf.error = 'sync failed' })
+            toast_('sync failed · check handle')
+          } finally {
+            set({ cfPulling: false })
+          }
+        },
+
+        bumpA2oj: (id: string, delta: number) => {
+          const def = A2OJ_DEFS.find(d => d.id === id)
+          if (!def) return
+          persist_(d => {
+            const entry = d.a2oj.find(x => x.id === id)
+            const cur = entry ? entry.solved : 0
+            const next = Math.max(0, Math.min(def.total, cur + delta))
+            if (entry) entry.solved = next
+            else d.a2oj.push({ id, solved: next })
+            if (delta > 0) {
+              d.momentum += 4
+              addWeekXp(d, 4)
+              bumpActivity(d, 8)
+              d.skillXp.cp = (d.skillXp.cp || 0) + 0.5
+              d.logs.unshift({ type: 'arena', title: 'a2oj · ' + def.name, mins: 0, gain: 4, date: todayKey(), ts: Date.now() })
+            }
+          })
         },
 
         setClanId: (clanId: string | null) => {

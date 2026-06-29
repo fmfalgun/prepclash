@@ -9,6 +9,8 @@ import { Arena } from './screens/Arena'
 import { Clan } from './screens/Clan'
 import { Ladder } from './screens/Ladder'
 import { Workout } from './screens/Workout'
+import { Study } from './screens/Study'
+import { Reading } from './screens/Reading'
 import { StudyModal } from './components/modals/StudyModal'
 import { ReadingModal } from './components/modals/ReadingModal'
 import { NodeModal } from './components/modals/NodeModal'
@@ -66,6 +68,8 @@ export default function App() {
         {tab === 'home'    && <Home />}
         {tab === 'village' && <Village />}
         {tab === 'arena'   && <Arena />}
+        {tab === 'study'   && <Study />}
+        {tab === 'reading' && <Reading />}
         {tab === 'workout' && <Workout />}
         {tab === 'clan'    && <Clan />}
         {tab === 'ladder'  && <Ladder />}

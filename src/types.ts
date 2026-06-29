@@ -9,6 +9,9 @@ export interface LogEntry {
   date: string
   ts: number
   proof?: string
+  amount?: number
+  unit?: string
+  bookId?: string
 }
 
 export interface CfState {

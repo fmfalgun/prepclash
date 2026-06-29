@@ -3,8 +3,9 @@ import { Radar } from '../components/Radar'
 import { Heatmap } from '../components/Heatmap'
 import { PALETTES } from '../data/palettes'
 import { COURSE_DEFS } from '../data/skills'
-import { allSkills, allBookDefs, skillScore, overallScore, cpScore, level, rank, streak, todayGain } from '../store/selectors'
+import { allSkills, allBookDefs, skillScore, overallScore, level, rank, streak, todayGain } from '../store/selectors'
 import { weekXpNow, ago } from '../lib/dates'
+import { CompetitiveCard } from '../components/CompetitiveCard'
 
 const LOG_ICONS: Record<string, string> = { study: '⚡', workout: '⚔', reading: '📖', node: '◈', arena: '▶', course: '✓' }
 
@@ -148,14 +149,9 @@ export function Home() {
 
         {/* RIGHT — Courses, workout, palette */}
         <div>
-          {/* CP Score / Codeforces */}
-          <div style={{ background: 'rgba(var(--rgb),.03)', border: '1px solid rgba(var(--rgb),.1)', borderRadius: 7, padding: 16, marginBottom: 18 }}>
-            <div style={{ font: "500 9px 'Roboto Mono'", letterSpacing: '.08em', color: 'var(--mut)', marginBottom: 10 }}>COMPETITIVE PROG</div>
-            <div style={{ font: "500 36px/1 'Lexend Deca'", color: 'var(--ink)' }}>{cpScore(data)}</div>
-            <div style={{ font: "400 9px 'Roboto Mono'", color: 'var(--dim2)', marginTop: 4 }}>CP SCORE</div>
-            <div style={{ marginTop: 10, font: "400 10px 'Roboto Mono'", color: 'var(--txt)' }}>
-              {data.cf.handle && <span>CF: <span style={{ color: 'var(--a2)' }}>{data.cf.rating || '—'}</span></span>}
-            </div>
+          {/* CP / CF panel */}
+          <div style={{ marginBottom: 18 }}>
+            <CompetitiveCard />
           </div>
 
           {/* Courses */}
