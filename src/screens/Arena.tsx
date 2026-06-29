@@ -50,7 +50,7 @@ export function Arena() {
     <div style={{ maxWidth: 1100, margin: '0 auto', padding: '28px 26px 80px', display: 'flex', gap: 24, alignItems: 'flex-start' }}>
       {/* Topic rail */}
       <div style={{ width: 200, flexShrink: 0 }}>
-        <div style={{ font: "700 9px 'Share Tech Mono'", letterSpacing: '.22em', color: 'var(--mut)', marginBottom: 12 }}>TOPICS</div>
+        <div style={{ font: "500 9px 'Roboto Mono'", letterSpacing: '.22em', color: 'var(--mut)', marginBottom: 12 }}>TOPICS</div>
         {topics.map(t => {
           const on = activeTopic === t
           const def = ARENA[t]
@@ -66,15 +66,15 @@ export function Arena() {
                 background: on ? 'rgba(var(--a2rgb),.1)' : 'transparent',
               }}
             >
-              <div style={{ font: "700 11px 'Rajdhani'", color: on ? 'var(--a2)' : 'var(--ink)', letterSpacing: '.06em' }}>{def?.name || t.toUpperCase()}</div>
-              <div style={{ font: "400 8px 'Share Tech Mono'", color: 'var(--mut)', marginTop: 4 }}>{solv}/{tot} solved</div>
+              <div style={{ font: "500 11px 'Lexend Deca'", color: on ? 'var(--a2)' : 'var(--ink)', letterSpacing: '.06em' }}>{def?.name || t.toUpperCase()}</div>
+              <div style={{ font: "400 8px 'Roboto Mono'", color: 'var(--mut)', marginTop: 4 }}>{solv}/{tot} solved</div>
             </div>
           )
         })}
 
         {/* CF pull */}
         <div style={{ marginTop: 18, border: '1px solid rgba(var(--rgb),.12)', borderRadius: 6, padding: 14 }}>
-          <div style={{ font: "700 9px 'Share Tech Mono'", letterSpacing: '.2em', color: 'var(--mut)', marginBottom: 8 }}>CF PULL</div>
+          <div style={{ font: "500 9px 'Roboto Mono'", letterSpacing: '.08em', color: 'var(--mut)', marginBottom: 8 }}>CF PULL</div>
           <input
             value={cfTagDraft}
             onChange={e => setCfTag(e.target.value)}
@@ -84,7 +84,7 @@ export function Arena() {
           <button
             onClick={pullCf}
             disabled={cfPulling}
-            style={{ cursor: 'pointer', width: '100%', border: '1px solid rgba(var(--a2rgb),.25)', background: 'rgba(var(--a2rgb),.08)', color: 'var(--a2)', font: "700 9px 'Share Tech Mono'", letterSpacing: '.1em', padding: 9, borderRadius: 4 }}
+            style={{ cursor: 'pointer', width: '100%', border: '1px solid rgba(var(--a2rgb),.25)', background: 'rgba(var(--a2rgb),.08)', color: 'var(--a2)', font: "500 9px 'Roboto Mono'", letterSpacing: '.1em', padding: 9, borderRadius: 4 }}
           >{cfPulling ? 'LOADING…' : 'PULL FROM CF'}</button>
         </div>
       </div>
@@ -93,8 +93,8 @@ export function Arena() {
       <div style={{ flex: 1 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
           <div>
-            <div style={{ font: "700 20px 'Rajdhani'", color: 'var(--ink)', letterSpacing: '.04em' }}>{topicDef?.name || activeTopic.toUpperCase()}</div>
-            <div style={{ font: "400 9px 'Share Tech Mono'", color: 'var(--mut)', marginTop: 3 }}>
+            <div style={{ font: "500 20px 'Lexend Deca'", color: 'var(--ink)', letterSpacing: '.04em' }}>{topicDef?.name || activeTopic.toUpperCase()}</div>
+            <div style={{ font: "400 9px 'Roboto Mono'", color: 'var(--mut)', marginTop: 3 }}>
               {solved.length}/{questions.length} solved · +{topicXp} XP earned
             </div>
           </div>
@@ -120,19 +120,19 @@ export function Arena() {
                 <span style={{ fontSize: 14, width: 20, textAlign: 'center', opacity: isSolved ? 1 : 0.3 }}>
                   {isSolved ? '✓' : '○'}
                 </span>
-                <span style={{ flex: 1, font: "500 12px 'Inter'", color: isSolved ? 'var(--txt)' : 'var(--ink)', textDecoration: isSolved ? 'line-through' : 'none', textDecorationColor: 'var(--mut)' }}>
+                <span style={{ flex: 1, font: "500 12px 'Lexend Deca'", color: isSolved ? 'var(--txt)' : 'var(--ink)', textDecoration: isSolved ? 'line-through' : 'none', textDecorationColor: 'var(--mut)' }}>
                   {q.title}
                 </span>
-                <span style={{ font: "700 9px 'Share Tech Mono'", ...ps, padding: '3px 8px', borderRadius: 3 }}>{q.diff}</span>
-                <span style={{ font: "700 10px 'Rajdhani'", color: 'var(--a2)' }}>+{q.xp}</span>
-                {q.live && <span style={{ font: "400 8px 'Share Tech Mono'", color: 'var(--dim2)' }}>CF</span>}
+                <span style={{ font: "500 9px 'Roboto Mono'", ...ps, padding: '3px 8px', borderRadius: 3 }}>{q.diff}</span>
+                <span style={{ font: "500 10px 'Lexend Deca'", color: 'var(--a2)' }}>+{q.xp}</span>
+                {q.live && <span style={{ font: "400 8px 'Roboto Mono'", color: 'var(--dim2)' }}>CF</span>}
               </div>
             )
           })}
         </div>
 
         {questions.length === 0 && (
-          <div style={{ font: "400 10px 'Share Tech Mono'", color: 'var(--dim2)', textAlign: 'center', padding: 40 }}>
+          <div style={{ font: "400 10px 'Roboto Mono'", color: 'var(--dim2)', textAlign: 'center', padding: 40 }}>
             No questions for this topic yet. Pull from Codeforces.
           </div>
         )}

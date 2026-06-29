@@ -31,7 +31,7 @@ export function ReadingModal() {
               key={def.id}
               onClick={() => setDraft(d => ({ ...d, book: def.id }))}
               style={{
-                cursor: 'pointer', font: "500 11px 'Share Tech Mono'", padding: '9px 12px', borderRadius: 4,
+                cursor: 'pointer', font: "500 11px 'Roboto Mono'", padding: '9px 12px', borderRadius: 4,
                 background: on ? 'rgba(var(--a2rgb),.12)' : 'rgba(var(--rgb),.04)',
                 border: on ? '1px solid var(--a2)' : '1px solid rgba(var(--rgb),.14)',
                 color: on ? 'var(--a2)' : 'var(--txt)',
@@ -56,7 +56,7 @@ export function ReadingModal() {
         </div>
         <div style={{ flex: 1 }}>
           <ModalLabel>MOMENTUM</ModalLabel>
-          <div style={{ backgroundColor: 'var(--bg0)', border: '1px solid rgba(var(--a2rgb),.25)', borderRadius: 4, padding: '9px 10px', font: "700 15px 'Rajdhani'", color: 'var(--a2)' }}>
+          <div style={{ backgroundColor: 'var(--bg0)', border: '1px solid rgba(var(--a2rgb),.25)', borderRadius: 4, padding: '9px 10px', font: "500 15px 'Lexend Deca'", color: 'var(--a2)' }}>
             +{gain}
           </div>
         </div>
@@ -88,7 +88,7 @@ export function ReadingModal() {
           </select>
           <button
             onClick={addBook}
-            style={{ cursor: 'pointer', border: '1px solid var(--a2)', background: 'rgba(var(--a2rgb),.1)', color: 'var(--a2)', font: "700 11px 'Rajdhani'", letterSpacing: '.08em', padding: '0 16px', borderRadius: 4 }}
+            style={{ cursor: 'pointer', border: '1px solid var(--a2)', background: 'rgba(var(--a2rgb),.1)', color: 'var(--a2)', font: "500 11px 'Lexend Deca'", letterSpacing: '.08em', padding: '0 16px', borderRadius: 4 }}
           >ADD BOOK</button>
         </div>
       </div>

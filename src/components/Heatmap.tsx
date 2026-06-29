@@ -39,7 +39,6 @@ export function Heatmap({ data, cell = 13, gap = 3 }: Props) {
           height: cell,
           borderRadius: 2,
           background: colors[L],
-          boxShadow: L >= 3 ? `0 0 5px rgba(${P.rgb},.45)` : 'none',
         }}
       />
     )

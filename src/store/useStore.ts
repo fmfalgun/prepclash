@@ -1,22 +1,19 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { Data, Draft, ModalType, Palette, PublicOperative, ClanDoc, FbUser } from '../types'
+import type { Data, Draft, ModalType, Palette, PublicOperative, ClanDoc, FbUser, SchedExercise, ScheduleDay, WorkoutSession } from '../types'
 import { SKILL_DEFS, DEFAULT_KEYWORDS, COURSE_DEFS, BOOK_DEFS } from '../data/skills'
 import { todayKey, addWeekXp, bumpActivity } from '../lib/dates'
-import { studyGain, studySkillXp, workoutGain, readGain, fmtWeight } from '../lib/momentum'
+import { studyGain, studySkillXp, readGain } from '../lib/momentum'
 import { flatNodes, nodeById } from '../data/village'
 import { ARENA, ARENA_AXIS_MAP } from '../data/arena'
 import { pushToFirebase } from '../lib/firebase'
+import { seedWorkoutData, TOJI } from '../data/workoutTemplate'
+import { computeSession, computePBs, est1rm } from '../lib/workoutStats'
 import type { ArenaQuestion } from '../data/arena'
-
-function blankEx() {
-  return { name: '', sets: '4', reps: '10', weight: '7.5', mode: 'kg/hand' }
-}
 
 function freshDraft(): Draft {
   return {
     title: '', mins: 30, selected: [], newKwLabel: '', newKwSkill: 'python', newCatName: '',
-    sessionName: '', exercises: [blankEx(), blankEx(), blankEx()],
     book: 'wahh', readAmount: 10, nbTitle: '', nbUnit: 'pages', nbTotal: '', nbSkill: 'web',
   }
 }
@@ -25,7 +22,7 @@ function seedData(): Data {
   const skillXp: Record<string, number> = {}
   SKILL_DEFS.forEach(s => { skillXp[s.id] = 0 })
   return {
-    profile: { name: 'OPERATIVE', handle: '', uid: null },
+    profile: { name: 'operative', handle: '', uid: null },
     skillXp,
     keywords: DEFAULT_KEYWORDS.map(([label, skill]) => ({ label, skill })),
     extraSkills: [],
@@ -34,7 +31,6 @@ function seedData(): Data {
     customDefs: [],
     logs: [],
     momentum: 0,
-    workouts: [],
     cf: { handle: '', rating: null, maxRating: null, rank: '', solved: null, contests: null, lastSync: null, error: null },
     a2oj: [],
     village: {},
@@ -44,8 +40,11 @@ function seedData(): Data {
     activity: {},
     kwCounts: {},
     clanId: null,
+    workoutLab: seedWorkoutData(),
   }
 }
+
+type LogDraft = { dayId: string; exercises: SchedExercise[]; durationMin: number }
 
 interface AppState {
   data: Data
@@ -70,6 +69,12 @@ interface AppState {
   clans: ClanDoc[]
   selectedPlayer: PublicOperative | null
   selectedClan: ClanDoc | null
+  // Workout Lab state
+  logDraft: LogDraft | null
+  editDraft: ScheduleDay[] | null
+  editNote: string
+  selEx: string
+  openSession: string | null
 
   setTab: (tab: string) => void
   setModal: (modal: ModalType) => void
@@ -95,7 +100,6 @@ interface AppState {
   setSelectedClan: (c: ClanDoc | null) => void
 
   submitStudy: () => void
-  submitWorkout: () => void
   submitReading: () => void
   addBook: () => void
   togglePhase: (cid: string, idx: number) => void
@@ -112,6 +116,26 @@ interface AppState {
   resetData: () => void
   onSignedIn: (user: FbUser) => void
   onSignedOut: () => void
+
+  // Workout Lab actions
+  openLog: () => void
+  openEdit: () => void
+  pickDay: (dayId: string) => void
+  addLogEx: () => void
+  removeLogEx: (idx: number) => void
+  updateLogEx: (idx: number, field: string, value: string | number) => void
+  setLogDuration: (v: number) => void
+  submitSession: () => void
+  saveSchedule: () => void
+  setSelEx: (name: string) => void
+  toggleSession: (id: string) => void
+  setEditNote: (note: string) => void
+  updateEditDay: (di: number, field: string, value: string) => void
+  updateEditEx: (di: number, ei: number, field: string, value: string | number) => void
+  addEditEx: (di: number) => void
+  removeEditEx: (di: number, ei: number) => void
+  removeEditDay: (di: number) => void
+  addEditDay: () => void
 }
 
 export const useStore = create<AppState>()(
@@ -120,12 +144,8 @@ export const useStore = create<AppState>()(
       function requireAuth(): boolean {
         const { fbUser, fbReady } = get()
         if (!fbUser) {
-          if (!fbReady) {
-            toast_('FIREBASE NOT CONNECTED YET')
-          } else {
-            set({ modal: 'connect' })
-            toast_('SIGN IN TO LOG PROGRESS')
-          }
+          if (!fbReady) toast_('firebase not connected yet')
+          else { set({ modal: 'connect' }); toast_('sign in to log progress') }
           return false
         }
         return true
@@ -149,6 +169,12 @@ export const useStore = create<AppState>()(
         return [...(ARENA[topic]?.questions || []), ...(get().liveQuestions[topic] || [])]
       }
 
+      function draftForDay(dayId: string): LogDraft {
+        const days = get().data.workoutLab?.schedule.days || TOJI
+        const day = days.find(d => d.id === dayId) || days[0]
+        return { dayId: day.id, exercises: day.exercises.map(e => ({ ...e })), durationMin: 55 }
+      }
+
       return {
         data: seedData(),
         tab: 'home',
@@ -165,13 +191,18 @@ export const useStore = create<AppState>()(
         fbConfigDraft: '',
         fbMode: 'offline',
         fbError: null,
-        nameDraft: 'OPERATIVE',
+        nameDraft: 'operative',
         fbReady: false,
         fbUser: null,
         operatives: [],
         clans: [],
         selectedPlayer: null,
         selectedClan: null,
+        logDraft: null,
+        editDraft: null,
+        editNote: '',
+        selEx: '',
+        openSession: null,
 
         setTab: (tab) => set({ tab }),
         setModal: (modal) => set({ modal }),
@@ -203,7 +234,7 @@ export const useStore = create<AppState>()(
           if (!requireAuth()) return
           const { draft, data } = get()
           const title = (draft.title || '').trim()
-          if (!title) { toast_('DESCRIBE THE WORK FIRST'); return }
+          if (!title) { toast_('describe the work first'); return }
           const mins = Math.max(1, parseInt(String(draft.mins)) || 0)
           const sel = draft.selected
           const skillsHit = [...new Set(sel.map(l => data.keywords.find(k => k.label === l)?.skill).filter(Boolean))] as string[]
@@ -217,27 +248,7 @@ export const useStore = create<AppState>()(
             bumpActivity(d, mins)
             d.logs.unshift({ type: 'study', title, mins, keywords: sel, gain, date: todayKey(), ts: Date.now() })
           })
-          toast_('+' + gain + ' MOMENTUM · EFFORT LOGGED')
-          set({ modal: null, draft: freshDraft() })
-        },
-
-        submitWorkout: () => {
-          if (!requireAuth()) return
-          const { draft } = get()
-          const ex = draft.exercises.filter(e => (e.name || '').trim())
-          if (!ex.length) { toast_('ADD AT LEAST ONE EXERCISE'); return }
-          const name = (draft.sessionName || '').trim() || 'Session'
-          const gain = workoutGain(ex.length)
-          const rows = ex.map(e => ({ name: e.name.trim(), sr: (e.sets || '?') + '×' + (e.reps || '?'), weight: fmtWeight(e) }))
-          persist_(d => {
-            d.skillXp.physique = (d.skillXp.physique || 0) + Math.max(2, ex.length)
-            d.momentum += gain
-            addWeekXp(d, gain)
-            bumpActivity(d, ex.length * 8 + 10)
-            d.workouts.unshift({ date: todayKey(), name, exercises: rows })
-            d.logs.unshift({ type: 'workout', title: 'Split — ' + name + ' · ' + ex.length + ' ex', mins: 0, gain, date: todayKey(), ts: Date.now() })
-          })
-          toast_('+' + gain + ' MOMENTUM · TRAIN HARD')
+          toast_('+' + gain + ' momentum · effort logged')
           set({ modal: null, draft: freshDraft() })
         },
 
@@ -256,16 +267,16 @@ export const useStore = create<AppState>()(
             d.momentum += gain
             addWeekXp(d, gain)
             bumpActivity(d, Math.round(gain * 1.4))
-            d.logs.unshift({ type: 'reading', title: 'Read ' + amt + ' ' + def.unit + ' · ' + def.title, mins: 0, gain, date: todayKey(), ts: Date.now() })
+            d.logs.unshift({ type: 'reading', title: 'read ' + amt + ' ' + def.unit + ' · ' + def.title, mins: 0, gain, date: todayKey(), ts: Date.now() })
           })
-          toast_('+' + gain + ' MOMENTUM · INTEL ABSORBED')
+          toast_('+' + gain + ' momentum · intel absorbed')
           set({ modal: null, draft: freshDraft() })
         },
 
         addBook: () => {
           const { draft } = get()
           const title = (draft.nbTitle || '').trim()
-          if (!title) { toast_('ENTER A TITLE'); return }
+          if (!title) { toast_('enter a title'); return }
           const total = Math.max(1, parseInt(draft.nbTotal) || 0) || 100
           const id = 'book_' + title.toLowerCase().replace(/[^a-z0-9]+/g, '_').slice(0, 24) + '_' + Math.floor(Math.random() * 999)
           persist_(d => {
@@ -274,7 +285,7 @@ export const useStore = create<AppState>()(
             d.books.push({ id, done: 0 })
           })
           set(s => ({ draft: { ...s.draft, book: id, nbTitle: '', nbTotal: '' } }))
-          toast_('BOOK ADDED')
+          toast_('book added')
         },
 
         togglePhase: (cid, idx) => {
@@ -298,7 +309,7 @@ export const useStore = create<AppState>()(
               d.momentum = Math.max(0, d.momentum - 15)
             }
           })
-          if (completed) toast_('PHASE CLEARED · +15')
+          if (completed) toast_('phase cleared · +15')
         },
 
         addKeyword: () => {
@@ -320,7 +331,7 @@ export const useStore = create<AppState>()(
             }
           })
           set(s => ({ draft: { ...s.draft, selected: [...s.draft.selected, label], newKwLabel: '', newCatName: '', newKwSkill: sk === '__new__' ? 'python' : s.draft.newKwSkill } }))
-          toast_('KEYWORD ADDED')
+          toast_('keyword added')
         },
 
         toggleKeyword: (label) => {
@@ -347,16 +358,16 @@ export const useStore = create<AppState>()(
           const n = nodeById(activeNode)
           if (!n) return
           const proof = (proofDraft || '').trim()
-          if (!proof || !/^https?:\/\//i.test(proof)) { toast_('VALID PROOF URL REQUIRED'); return }
+          if (!proof || !/^https?:\/\//i.test(proof)) { toast_('valid proof url required'); return }
           persist_(d => {
             d.village[activeNode] = { cleared: true, proof, ts: Date.now() }
             d.skillXp[n.axis] = (d.skillXp[n.axis] || 0) + n.xp
             d.momentum += n.xp
             addWeekXp(d, n.xp)
             bumpActivity(d, n.xp)
-            d.logs.unshift({ type: 'node', title: 'VILLAGE · ' + n.name + ' cleared', mins: 0, gain: n.xp, date: todayKey(), ts: Date.now(), proof })
+            d.logs.unshift({ type: 'node', title: 'village · ' + n.name + ' cleared', mins: 0, gain: n.xp, date: todayKey(), ts: Date.now(), proof })
           })
-          toast_('NODE CLEARED · +' + n.xp + ' XP')
+          toast_('node cleared · +' + n.xp + ' xp')
           set({ modal: null, activeNode: null, proofDraft: '' })
         },
 
@@ -380,7 +391,7 @@ export const useStore = create<AppState>()(
           if (data.arena[qid]) {
             if (!requireAuth()) return
             persist_(d => { delete d.arena[qid] })
-            toast_('UNMARKED')
+            toast_('unmarked')
             return
           }
           set({ modal: 'question', activeQ: { topic, qid }, proofDraft: '' })
@@ -393,16 +404,16 @@ export const useStore = create<AppState>()(
           const q = topicQuestions(activeQ.topic).find(x => x.id === activeQ.qid)
           if (!q) return
           const proof = (proofDraft || '').trim()
-          if (!proof || !/^https?:\/\//i.test(proof)) { toast_('VALID PROOF URL REQUIRED'); return }
+          if (!proof || !/^https?:\/\//i.test(proof)) { toast_('valid proof url required'); return }
           persist_(d => {
             d.arena[activeQ.qid] = { proof, ts: Date.now() }
             d.skillXp[ARENA_AXIS_MAP[activeQ.topic] || 'web'] = (d.skillXp[ARENA_AXIS_MAP[activeQ.topic] || 'web'] || 0) + Math.max(1, Math.round(q.xp / 6))
             d.momentum += q.xp
             addWeekXp(d, q.xp)
             bumpActivity(d, q.xp)
-            d.logs.unshift({ type: 'arena', title: 'ARENA · ' + q.title, mins: 0, gain: q.xp, date: todayKey(), ts: Date.now(), proof })
+            d.logs.unshift({ type: 'arena', title: 'arena · ' + q.title, mins: 0, gain: q.xp, date: todayKey(), ts: Date.now(), proof })
           })
-          toast_('SOLVED · +' + q.xp + ' XP')
+          toast_('solved · +' + q.xp + ' xp')
           set({ modal: null, activeQ: null, proofDraft: '' })
         },
 
@@ -411,12 +422,12 @@ export const useStore = create<AppState>()(
           const n = (nameDraft || '').trim()
           if (!n) return
           persist_(d => { d.profile.name = n })
-          toast_('NAME SAVED')
+          toast_('name saved')
         },
 
         setCfHandle: (handle: string) => {
           persist_(d => { d.cf.handle = handle.trim() })
-          toast_('CF HANDLE SAVED')
+          toast_('cf handle saved')
         },
 
         setClanId: (clanId: string | null) => {
@@ -424,22 +435,195 @@ export const useStore = create<AppState>()(
         },
 
         resetData: () => {
-          if (!confirm('Reset all progress?')) return
+          if (!confirm('reset all progress?')) return
           const fresh = seedData()
           set({ data: fresh, draft: freshDraft(), modal: null, nameDraft: fresh.profile.name })
-          toast_('RESET')
+          toast_('reset')
         },
 
         onSignedIn: (user: FbUser) => {
           set({ fbUser: user, fbMode: 'online', nameDraft: user.name || get().data.profile.name })
           persist_(d => {
             d.profile.uid = user.uid
-            if (user.name && d.profile.name === 'OPERATIVE') d.profile.name = user.name
+            if (user.name && d.profile.name === 'operative') d.profile.name = user.name
           })
         },
 
         onSignedOut: () => {
           set({ fbUser: null, fbMode: 'offline' })
+        },
+
+        // --- Workout Lab ---
+
+        openLog: () => {
+          const wl = get().data.workoutLab
+          const days = wl?.schedule.days || TOJI
+          const sessions = wl?.sessions || []
+          const suggestedId = days[sessions.length % days.length].id
+          set({ modal: 'log', logDraft: draftForDay(suggestedId), openSession: null })
+        },
+
+        openEdit: () => {
+          const days = get().data.workoutLab?.schedule.days || TOJI
+          set({ modal: 'edit', editDraft: JSON.parse(JSON.stringify(days)), editNote: '' })
+        },
+
+        pickDay: (dayId) => {
+          set({ logDraft: draftForDay(dayId) })
+        },
+
+        addLogEx: () => {
+          set(s => {
+            if (!s.logDraft) return {}
+            return { logDraft: { ...s.logDraft, exercises: [...s.logDraft.exercises, { name: '', sets: 3, reps: 10, weight: 0, mode: 'kg/hand' as const }] } }
+          })
+        },
+
+        removeLogEx: (idx) => {
+          set(s => {
+            if (!s.logDraft) return {}
+            const exercises = s.logDraft.exercises.filter((_, i) => i !== idx)
+            return { logDraft: { ...s.logDraft, exercises: exercises.length ? exercises : [{ name: '', sets: 3, reps: 10, weight: 0, mode: 'kg/hand' as const }] } }
+          })
+        },
+
+        updateLogEx: (idx, field, value) => {
+          set(s => {
+            if (!s.logDraft) return {}
+            const exercises = s.logDraft.exercises.map((e, i) => i === idx ? { ...e, [field]: value } : e)
+            return { logDraft: { ...s.logDraft, exercises } }
+          })
+        },
+
+        setLogDuration: (v) => {
+          set(s => s.logDraft ? { logDraft: { ...s.logDraft, durationMin: v } } : {})
+        },
+
+        submitSession: () => {
+          const { logDraft, data } = get()
+          if (!logDraft) return
+          const exs: SchedExercise[] = logDraft.exercises
+            .filter(e => (e.name || '').trim())
+            .map(e => ({
+              name: (e.name as string).trim(),
+              sets: parseInt(String(e.sets)) || 0,
+              reps: parseInt(String(e.reps)) || 0,
+              weight: parseFloat(String(e.weight)) || 0,
+              mode: e.mode,
+            }))
+          if (!exs.length) { get().showToast('add at least one exercise'); return }
+
+          const days = data.workoutLab?.schedule.days || TOJI
+          const day = days.find(d => d.id === logDraft.dayId) || days[0]
+          const m = computeSession(exs)
+          const before = computePBs(data.workoutLab?.sessions || []).best
+          let prCount = 0
+          exs.forEach(e => {
+            const orm = est1rm(e)
+            if (orm && (!before[e.name] || orm > before[e.name].orm + 0.01)) prCount++
+          })
+
+          const sess: WorkoutSession = {
+            id: 's' + Date.now(), ts: Date.now(), date: todayKey(),
+            dayId: logDraft.dayId, dayName: day.name, muscle: day.muscle,
+            exercises: exs, durationMin: logDraft.durationMin,
+            volume: m.volume, totalReps: m.totalReps, totalSets: m.totalSets,
+          }
+          const gain = 8 + exs.length * 3
+          persist_(d => {
+            if (!d.workoutLab) d.workoutLab = seedWorkoutData()
+            d.workoutLab.sessions.push(sess)
+            d.momentum += gain
+            addWeekXp(d, gain)
+            bumpActivity(d, gain * 2)
+            d.logs.unshift({ type: 'workout', title: 'workout · ' + day.name, mins: logDraft.durationMin, gain, date: todayKey(), ts: Date.now() })
+          })
+          const msg = prCount ? `session logged · ★ ${prCount} new pr${prCount > 1 ? 's' : ''}!` : `session logged · ${m.volume}kg moved`
+          get().showToast(msg)
+          set({ modal: null, logDraft: null, selEx: exs[0]?.name || get().selEx })
+        },
+
+        saveSchedule: () => {
+          const { editDraft, editNote } = get()
+          if (!editDraft) return
+          const days = editDraft
+            .map(d => ({
+              id: d.id || 'd' + Math.random().toString(36).slice(2, 7),
+              name: (d.name || 'Day').trim(),
+              muscle: (d.muscle || '—').trim(),
+              exercises: d.exercises.filter(e => (e.name || '').trim()).map(e => ({
+                name: (e.name as string).trim(),
+                sets: parseInt(String(e.sets)) || 0,
+                reps: parseInt(String(e.reps)) || 0,
+                weight: parseFloat(String(e.weight)) || 0,
+                mode: e.mode,
+              })),
+            }))
+          if (!days.length) { get().showToast('need at least one day'); return }
+          const note = (editNote || '').trim() || 'updated schedule'
+          persist_(d => {
+            if (!d.workoutLab) d.workoutLab = seedWorkoutData()
+            const v = d.workoutLab.schedule.version + 1
+            d.workoutLab.schedule = { version: v, updatedAt: Date.now(), days }
+            d.workoutLab.history.unshift({ version: v, note, ts: Date.now() })
+          })
+          const nextV = (get().data.workoutLab?.schedule.version || 1)
+          get().showToast(`schedule saved · v${nextV}`)
+          set({ modal: null, editDraft: null })
+        },
+
+        setSelEx: (name) => set({ selEx: name }),
+        toggleSession: (id) => set(s => ({ openSession: s.openSession === id ? null : id })),
+        setEditNote: (note) => set({ editNote: note }),
+
+        updateEditDay: (di, field, value) => {
+          set(s => {
+            if (!s.editDraft) return {}
+            return { editDraft: s.editDraft.map((d, i) => i === di ? { ...d, [field]: value } : d) }
+          })
+        },
+
+        updateEditEx: (di, ei, field, value) => {
+          set(s => {
+            if (!s.editDraft) return {}
+            return {
+              editDraft: s.editDraft.map((d, i) => i !== di ? d : {
+                ...d, exercises: d.exercises.map((e, j) => j === ei ? { ...e, [field]: value } : e)
+              })
+            }
+          })
+        },
+
+        addEditEx: (di) => {
+          set(s => {
+            if (!s.editDraft) return {}
+            return {
+              editDraft: s.editDraft.map((d, i) => i === di ? {
+                ...d, exercises: [...d.exercises, { name: '', sets: 3, reps: 10, weight: 0, mode: 'kg/hand' as const }]
+              } : d)
+            }
+          })
+        },
+
+        removeEditEx: (di, ei) => {
+          set(s => {
+            if (!s.editDraft) return {}
+            return {
+              editDraft: s.editDraft.map((d, i) => i === di ? {
+                ...d, exercises: d.exercises.filter((_, j) => j !== ei)
+              } : d)
+            }
+          })
+        },
+
+        removeEditDay: (di) => {
+          set(s => s.editDraft ? { editDraft: s.editDraft.filter((_, i) => i !== di) } : {})
+        },
+
+        addEditDay: () => {
+          set(s => s.editDraft ? {
+            editDraft: [...s.editDraft, { id: 'd' + Date.now(), name: 'new day', muscle: '—', exercises: [{ name: '', sets: 3, reps: 10, weight: 0, mode: 'kg/hand' as const }] }]
+          } : {})
         },
       }
     },

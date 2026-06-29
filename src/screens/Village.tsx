@@ -20,7 +20,7 @@ export function Village() {
     <div style={{ maxWidth: 1100, margin: '0 auto', padding: '28px 26px 80px' }}>
       {/* Progress bar */}
       <div style={{ marginBottom: 32 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', font: "700 9px 'Share Tech Mono'", letterSpacing: '.2em', color: 'var(--mut)', marginBottom: 8 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', font: "500 9px 'Roboto Mono'", letterSpacing: '.08em', color: 'var(--mut)', marginBottom: 8 }}>
           <span>VILLAGE PROGRESS</span>
           <span style={{ color: 'var(--a2)' }}>{clearedCount} / {total} NODES</span>
         </div>
@@ -31,7 +31,7 @@ export function Village() {
 
       {VILLAGE.map((tier, ti) => (
         <div key={ti} style={{ marginBottom: 40 }}>
-          <div style={{ font: "700 10px 'Share Tech Mono'", letterSpacing: '.25em', color: 'var(--mut)', marginBottom: 16 }}>
+          <div style={{ font: "500 10px 'Roboto Mono'", letterSpacing: '.25em', color: 'var(--mut)', marginBottom: 16 }}>
             {TIER_LABELS[ti] || 'TIER ' + (ti + 1)}
           </div>
           <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
@@ -72,22 +72,22 @@ function NodeCard({ n, data, onClick }: { n: VillageNode; data: any; onClick: ()
       }}
     >
       {cleared && (
-        <div style={{ position: 'absolute', top: 10, right: 12, font: "700 12px 'Share Tech Mono'", color: axisColor }}>✓</div>
+        <div style={{ position: 'absolute', top: 10, right: 12, font: "500 12px 'Roboto Mono'", color: axisColor }}>✓</div>
       )}
       {locked && (
         <div style={{ position: 'absolute', top: 10, right: 12, fontSize: 13 }}>🔒</div>
       )}
 
-      <div style={{ font: "700 9px 'Share Tech Mono'", letterSpacing: '.18em', color: axisColor, marginBottom: 6 }}>
+      <div style={{ font: "500 9px 'Roboto Mono'", letterSpacing: '.18em', color: axisColor, marginBottom: 6 }}>
         {n.axis.toUpperCase()}
       </div>
-      <div style={{ font: "700 15px/1.2 'Rajdhani'", color: cleared ? 'var(--ink)' : unlocked ? 'var(--ink)' : 'var(--txt)', letterSpacing: '.03em', marginBottom: 8 }}>
+      <div style={{ font: "500 15px/1.2 'Lexend Deca'", color: cleared ? 'var(--ink)' : unlocked ? 'var(--ink)' : 'var(--txt)', letterSpacing: '.03em', marginBottom: 8 }}>
         {n.name}
       </div>
-      <div style={{ font: "400 9.5px 'Inter'", color: 'var(--mut)', lineHeight: 1.5, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+      <div style={{ font: "400 9.5px 'Lexend Deca'", color: 'var(--mut)', lineHeight: 1.5, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
         {n.desc}
       </div>
-      <div style={{ marginTop: 12, font: "700 10px 'Rajdhani'", color: cleared ? axisColor : 'var(--dim2)' }}>
+      <div style={{ marginTop: 12, font: "500 10px 'Lexend Deca'", color: cleared ? axisColor : 'var(--dim2)' }}>
         +{n.xp} XP
       </div>
     </div>

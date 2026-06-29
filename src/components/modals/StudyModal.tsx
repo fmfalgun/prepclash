@@ -42,7 +42,7 @@ export function StudyModal() {
         </div>
         <div style={{ flex: 1 }}>
           <ModalLabel>MOMENTUM</ModalLabel>
-          <div style={{ backgroundColor: 'var(--bg0)', border: '1px solid rgba(var(--a2rgb),.25)', borderRadius: 4, padding: '9px 10px', font: "700 15px 'Rajdhani'", color: 'var(--a2)' }}>
+          <div style={{ backgroundColor: 'var(--bg0)', border: '1px solid rgba(var(--a2rgb),.25)', borderRadius: 4, padding: '9px 10px', font: "500 15px 'Lexend Deca'", color: 'var(--a2)' }}>
             +{gain}
           </div>
         </div>
@@ -57,7 +57,7 @@ export function StudyModal() {
               key={k.label}
               onClick={() => toggleKeyword(k.label)}
               style={{
-                cursor: 'pointer', font: "500 11px 'Share Tech Mono'", padding: '6px 11px', borderRadius: 4, userSelect: 'none',
+                cursor: 'pointer', font: "500 11px 'Roboto Mono'", padding: '6px 11px', borderRadius: 4, userSelect: 'none',
                 background: on ? 'rgba(var(--a2rgb),.16)' : 'rgba(var(--rgb),.05)',
                 border: on ? '1px solid var(--a2)' : '1px solid rgba(var(--rgb),.16)',
                 color: on ? 'var(--a2)' : 'var(--txt)',
@@ -68,7 +68,7 @@ export function StudyModal() {
         })}
       </div>
       {selSkillHint && (
-        <div style={{ font: "400 9px 'Share Tech Mono'", color: 'var(--dim2)', marginTop: 8 }}>
+        <div style={{ font: "400 9px 'Roboto Mono'", color: 'var(--dim2)', marginTop: 8 }}>
           axes: {selSkillHint}
         </div>
       )}
@@ -92,7 +92,7 @@ export function StudyModal() {
           </select>
           <button
             onClick={addKeyword}
-            style={{ cursor: 'pointer', border: '1px solid var(--a2)', background: 'rgba(var(--a2rgb),.1)', color: 'var(--a2)', font: "700 12px 'Rajdhani'", letterSpacing: '.08em', padding: '0 16px', borderRadius: 4 }}
+            style={{ cursor: 'pointer', border: '1px solid var(--a2)', background: 'rgba(var(--a2rgb),.1)', color: 'var(--a2)', font: "500 12px 'Lexend Deca'", letterSpacing: '.08em', padding: '0 16px', borderRadius: 4 }}
           >ADD</button>
         </div>
         {creating && (

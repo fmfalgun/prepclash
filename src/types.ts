@@ -22,6 +22,55 @@ export interface CfState {
   error: string | null
 }
 
+export type WeightMode = 'kg/hand' | 'kg total' | 'lb/hand' | 'bodyweight' | 'cardio'
+
+export interface SchedExercise {
+  name: string
+  sets: number
+  reps: number
+  weight: number
+  mode: WeightMode
+}
+
+export interface ScheduleDay {
+  id: string
+  name: string
+  muscle: string
+  exercises: SchedExercise[]
+}
+
+export interface ScheduleTemplate {
+  version: number
+  updatedAt: number
+  days: ScheduleDay[]
+}
+
+export interface ScheduleHistoryEntry {
+  version: number
+  note: string
+  ts: number
+}
+
+export interface WorkoutSession {
+  id: string
+  ts: number
+  date: string
+  dayId: string
+  dayName: string
+  muscle: string
+  exercises: SchedExercise[]
+  durationMin: number
+  volume: number
+  totalReps: number
+  totalSets: number
+}
+
+export interface WorkoutData {
+  schedule: ScheduleTemplate
+  history: ScheduleHistoryEntry[]
+  sessions: WorkoutSession[]
+}
+
 export interface Data {
   profile: { name: string; handle: string; uid: string | null }
   skillXp: Record<string, number>
@@ -32,7 +81,7 @@ export interface Data {
   customDefs: { id: string; title: string; unit: string; total: number; skill: string }[]
   logs: LogEntry[]
   momentum: number
-  workouts: { date: string; name: string; exercises: { name: string; sr: string; weight: string }[] }[]
+  workoutLab?: WorkoutData
   cf: CfState
   a2oj: { id: string; solved: number }[]
   village: Record<string, { cleared: true; proof: string; ts: number }>
@@ -63,7 +112,7 @@ export interface LiveQuestion {
   live?: boolean
 }
 
-export type ModalType = 'study' | 'workout' | 'reading' | 'node' | 'question' | 'connect' | null
+export type ModalType = 'study' | 'reading' | 'node' | 'question' | 'connect' | 'log' | 'edit' | null
 
 export interface Draft {
   title: string
@@ -72,8 +121,6 @@ export interface Draft {
   newKwLabel: string
   newKwSkill: string
   newCatName: string
-  sessionName: string
-  exercises: { name: string; sets: string; reps: string; weight: string; mode: string }[]
   book: string
   readAmount: number
   nbTitle: string

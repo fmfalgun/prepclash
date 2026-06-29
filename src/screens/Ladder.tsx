@@ -16,9 +16,9 @@ export function Ladder() {
     <div style={{ maxWidth: 860, margin: '0 auto', padding: '28px 26px 80px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 28 }}>
         <div>
-          <div style={{ font: "700 9px 'Share Tech Mono'", letterSpacing: '.3em', color: 'var(--mut)' }}>GLOBAL</div>
-          <div style={{ font: "700 30px 'Rajdhani'", color: 'var(--ink)' }}>LADDER</div>
-          <div style={{ font: "400 9px 'Share Tech Mono'", color: 'var(--dim2)', marginTop: 4 }}>
+          <div style={{ font: "500 9px 'Roboto Mono'", letterSpacing: '.12em', color: 'var(--mut)' }}>GLOBAL</div>
+          <div style={{ font: "500 30px 'Lexend Deca'", color: 'var(--ink)' }}>LADDER</div>
+          <div style={{ font: "400 9px 'Roboto Mono'", color: 'var(--dim2)', marginTop: 4 }}>
             {sorted.length} operative{sorted.length !== 1 ? 's' : ''} · click any card for full profile
           </div>
         </div>
@@ -30,7 +30,7 @@ export function Ladder() {
               cursor: 'pointer',
               border: '1px solid rgba(var(--a2rgb),.35)',
               background: 'rgba(var(--a2rgb),.08)', color: 'var(--a2)',
-              font: "700 11px 'Rajdhani'", letterSpacing: '.1em',
+              font: "500 11px 'Lexend Deca'", letterSpacing: '.1em',
               padding: '12px 20px', borderRadius: 5,
             }}
           >SIGN IN TO PARTICIPATE →</button>
@@ -38,13 +38,13 @@ export function Ladder() {
       </div>
 
       {fbMode === 'offline' && (
-        <div style={{ font: "400 10px 'Share Tech Mono'", color: 'var(--mut)', textAlign: 'center', padding: '30px 0', borderBottom: '1px solid rgba(var(--rgb),.08)', marginBottom: 24 }}>
+        <div style={{ font: "400 10px 'Roboto Mono'", color: 'var(--mut)', textAlign: 'center', padding: '30px 0', borderBottom: '1px solid rgba(var(--rgb),.08)', marginBottom: 24 }}>
           Connecting to Firebase…
         </div>
       )}
 
       {/* Column headers */}
-      <div style={{ display: 'flex', gap: 12, padding: '0 16px', marginBottom: 8, font: "700 8px 'Share Tech Mono'", letterSpacing: '.18em', color: 'var(--dim2)' }}>
+      <div style={{ display: 'flex', gap: 12, padding: '0 16px', marginBottom: 8, font: "500 8px 'Roboto Mono'", letterSpacing: '.18em', color: 'var(--dim2)' }}>
         <span style={{ width: 28 }}>#</span>
         <span style={{ width: 48 }} />
         <span style={{ flex: 1 }}>OPERATIVE</span>
@@ -64,12 +64,12 @@ export function Ladder() {
 
       {sorted.length === 0 && fbMode === 'online' && (
         <div style={{ textAlign: 'center', padding: '60px 20px' }}>
-          <div style={{ font: "700 14px 'Rajdhani'", color: 'var(--mut)' }}>NO OPERATIVES YET</div>
-          <div style={{ font: "400 9px 'Share Tech Mono'", color: 'var(--dim2)', marginTop: 8 }}>Be the first — sign in and start logging progress.</div>
+          <div style={{ font: "500 14px 'Lexend Deca'", color: 'var(--mut)' }}>NO OPERATIVES YET</div>
+          <div style={{ font: "400 9px 'Roboto Mono'", color: 'var(--dim2)', marginTop: 8 }}>Be the first — sign in and start logging progress.</div>
         </div>
       )}
 
-      <div style={{ marginTop: 24, font: "400 9px 'Share Tech Mono'", color: 'var(--dim2)', textAlign: 'center', lineHeight: 1.8 }}>
+      <div style={{ marginTop: 24, font: "400 9px 'Roboto Mono'", color: 'var(--dim2)', textAlign: 'center', lineHeight: 1.8 }}>
         Ranked by total momentum · Click any row to view full operative profile
       </div>
     </div>
@@ -91,7 +91,7 @@ function PlayerRow({ op, pos, isYou, onClick }: { op: PublicOperative; pos: numb
         transition: 'border-color .15s, background .15s',
       }}
     >
-      <span style={{ width: 28, font: "700 11px 'Rajdhani'", color: pos <= 3 ? 'var(--a2)' : 'var(--mut)', flexShrink: 0 }}>
+      <span style={{ width: 28, font: "500 11px 'Lexend Deca'", color: pos <= 3 ? 'var(--a2)' : 'var(--mut)', flexShrink: 0 }}>
         {pos === 1 ? '①' : pos === 2 ? '②' : pos === 3 ? '③' : '#' + pos}
       </span>
 
@@ -99,24 +99,24 @@ function PlayerRow({ op, pos, isYou, onClick }: { op: PublicOperative; pos: numb
         width: 38, height: 38, borderRadius: 6, flexShrink: 0,
         background: color + '18', border: `1px solid ${color}`,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        font: "700 14px 'Rajdhani'", color,
+        font: "500 14px 'Lexend Deca'", color,
       }}>{initials}</div>
 
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ font: "700 13px 'Rajdhani'", color: isYou ? 'var(--a2)' : 'var(--ink)', letterSpacing: '.03em', display: 'flex', alignItems: 'center', gap: 6 }}>
+        <div style={{ font: "500 13px 'Lexend Deca'", color: isYou ? 'var(--a2)' : 'var(--ink)', letterSpacing: '.03em', display: 'flex', alignItems: 'center', gap: 6 }}>
           {op.name}
-          {isYou && <span style={{ font: "400 8px 'Share Tech Mono'", color: 'var(--mut)' }}>you</span>}
-          {op.isShowcase && <span style={{ font: "400 8px 'Share Tech Mono'", color: '#caa24a' }}>★</span>}
+          {isYou && <span style={{ font: "400 8px 'Roboto Mono'", color: 'var(--mut)' }}>you</span>}
+          {op.isShowcase && <span style={{ font: "400 8px 'Roboto Mono'", color: '#caa24a' }}>★</span>}
         </div>
-        {op.handle && <div style={{ font: "400 8px 'Share Tech Mono'", color: 'var(--dim2)' }}>{op.handle}</div>}
+        {op.handle && <div style={{ font: "400 8px 'Roboto Mono'", color: 'var(--dim2)' }}>{op.handle}</div>}
       </div>
 
-      <span style={{ width: 52, textAlign: 'center', font: "700 12px 'Rajdhani'", color: gradeColor(op.rank), flexShrink: 0 }}>{op.rank}</span>
-      <span style={{ width: 70, textAlign: 'center', font: "700 13px 'Rajdhani'", color: 'var(--txt)', flexShrink: 0 }}>{op.momentum.toLocaleString()}</span>
-      <span style={{ width: 55, textAlign: 'center', font: "700 13px 'Rajdhani'", color: 'var(--a2)', flexShrink: 0 }}>{op.overallScore}</span>
-      <span style={{ width: 50, textAlign: 'center', font: "400 9px 'Share Tech Mono'", color: 'var(--mut)', flexShrink: 0 }}>{op.streak}d</span>
-      <span style={{ width: 55, textAlign: 'center', font: "400 9px 'Share Tech Mono'", color: 'var(--dim2)', flexShrink: 0 }}>{nodes}/16</span>
-      <span style={{ width: 55, textAlign: 'center', font: "400 8px 'Share Tech Mono'", color: 'var(--dim2)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flexShrink: 0 }}>
+      <span style={{ width: 52, textAlign: 'center', font: "500 12px 'Lexend Deca'", color: gradeColor(op.rank), flexShrink: 0 }}>{op.rank}</span>
+      <span style={{ width: 70, textAlign: 'center', font: "500 13px 'Lexend Deca'", color: 'var(--txt)', flexShrink: 0 }}>{op.momentum.toLocaleString()}</span>
+      <span style={{ width: 55, textAlign: 'center', font: "500 13px 'Lexend Deca'", color: 'var(--a2)', flexShrink: 0 }}>{op.overallScore}</span>
+      <span style={{ width: 50, textAlign: 'center', font: "400 9px 'Roboto Mono'", color: 'var(--mut)', flexShrink: 0 }}>{op.streak}d</span>
+      <span style={{ width: 55, textAlign: 'center', font: "400 9px 'Roboto Mono'", color: 'var(--dim2)', flexShrink: 0 }}>{nodes}/16</span>
+      <span style={{ width: 55, textAlign: 'center', font: "400 8px 'Roboto Mono'", color: 'var(--dim2)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flexShrink: 0 }}>
         {op.clanId || '—'}
       </span>
     </div>

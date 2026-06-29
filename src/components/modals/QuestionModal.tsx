@@ -27,8 +27,8 @@ export function QuestionModal() {
           { label: 'TOPIC', value: topic.toUpperCase(), style: { color: 'var(--txt)' } },
         ].map(({ label, value, style }) => (
           <div key={label} style={{ flex: 1, background: 'rgba(var(--rgb),.05)', borderRadius: 4, padding: 10, textAlign: 'center' }}>
-            <div style={{ font: "700 9px 'Share Tech Mono'", color: 'var(--mut)' }}>{label}</div>
-            <div style={{ font: "700 14px 'Rajdhani'", marginTop: 3, ...style }}>{value}</div>
+            <div style={{ font: "500 9px 'Roboto Mono'", color: 'var(--mut)' }}>{label}</div>
+            <div style={{ font: "500 14px 'Lexend Deca'", marginTop: 3, ...style }}>{value}</div>
           </div>
         ))}
       </div>
@@ -41,7 +41,7 @@ export function QuestionModal() {
             display: 'flex', alignItems: 'center', gap: 8,
             border: '1px solid rgba(var(--a2rgb),.25)', borderRadius: 5,
             background: 'rgba(var(--a2rgb),.05)', padding: '11px 14px',
-            color: 'var(--a2)', font: "700 12px 'Rajdhani'", letterSpacing: '.05em',
+            color: 'var(--a2)', font: "500 12px 'Lexend Deca'", letterSpacing: '.05em',
             textDecoration: 'none',
           }}
         >
@@ -56,7 +56,7 @@ export function QuestionModal() {
         placeholder="https://github.com/... writeup or CTFtime URL"
         style={inputStyle}
       />
-      <div style={{ font: "400 9px 'Share Tech Mono'", color: 'var(--dim2)', marginTop: 7, lineHeight: 1.5 }}>
+      <div style={{ font: "400 9px 'Roboto Mono'", color: 'var(--dim2)', marginTop: 7, lineHeight: 1.5 }}>
         Paste a public link to your writeup or solution. No URL = no mark.
       </div>
 

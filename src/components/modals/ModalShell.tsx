@@ -5,9 +5,10 @@ interface Props {
   kicker: string
   title: string
   children: ReactNode
+  maxWidth?: number
 }
 
-export function ModalShell({ kicker, title, children }: Props) {
+export function ModalShell({ kicker, title, children, maxWidth = 580 }: Props) {
   const closeModal = useStore(s => s.closeModal)
   const palette    = useStore(s => s.data.palette)
 
@@ -16,7 +17,7 @@ export function ModalShell({ kicker, title, children }: Props) {
       onClick={closeModal}
       style={{
         position: 'fixed', inset: 0,
-        background: 'rgba(3,6,4,.82)', backdropFilter: 'blur(3px)',
+        background: 'rgba(10,11,12,.78)', backdropFilter: 'blur(4px)',
         zIndex: 50, display: 'flex', alignItems: 'flex-start', justifyContent: 'center',
         padding: '40px 20px', overflowY: 'auto',
       }}
@@ -25,24 +26,24 @@ export function ModalShell({ kicker, title, children }: Props) {
         onClick={e => e.stopPropagation()}
         className={'rtt pal-' + palette}
         style={{
-          width: '100%', maxWidth: 580,
-          background: 'linear-gradient(180deg,#0c130d,#080d09)',
-          border: '1px solid rgba(var(--a2rgb),.28)', borderRadius: 7,
-          boxShadow: '0 30px 80px rgba(0,0,0,.7),0 0 40px rgba(var(--rgb),.08)',
-          padding: 24, color: 'var(--ink)',
+          width: '100%', maxWidth,
+          background: '#252729',
+          border: '1px solid rgba(255,255,255,.08)', borderRadius: 10,
+          boxShadow: '0 24px 60px rgba(0,0,0,.55)',
+          padding: '24px 26px', color: 'var(--ink)',
         }}
       >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 18 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
           <div>
-            <div style={{ font: "700 9px 'Share Tech Mono'", letterSpacing: '.3em', color: 'var(--dim)' }}>{kicker}</div>
-            <div style={{ font: "700 24px/1.1 'Rajdhani'", color: 'var(--ink)', marginTop: 3 }}>{title}</div>
+            <div style={{ font: "400 9px 'Roboto Mono'", letterSpacing: '.18em', color: 'var(--mut)', marginBottom: 4 }}>{kicker}</div>
+            <div style={{ font: "300 22px/1.1 'Lexend Deca'", color: 'var(--ink)' }}>{title}</div>
           </div>
           <button
             onClick={closeModal}
             style={{
               cursor: 'pointer', background: 'transparent',
-              border: '1px solid rgba(var(--rgb),.2)', color: 'var(--mut)',
-              width: 30, height: 30, borderRadius: 4, fontSize: 16, lineHeight: '1',
+              border: '1px solid rgba(255,255,255,.1)', color: 'var(--mut)',
+              width: 32, height: 32, borderRadius: 6, fontSize: 14, lineHeight: '1',
             }}
           >✕</button>
         </div>
@@ -54,7 +55,7 @@ export function ModalShell({ kicker, title, children }: Props) {
 
 export function ModalLabel({ children, style }: { children: ReactNode; style?: React.CSSProperties }) {
   return (
-    <label style={{ display: 'block', font: "700 9px 'Share Tech Mono'", letterSpacing: '.2em', color: 'var(--mut)', marginBottom: 7, ...style }}>
+    <label style={{ display: 'block', font: "400 10px 'Roboto Mono'", letterSpacing: '.12em', color: 'var(--mut)', marginBottom: 6, ...style }}>
       {children}
     </label>
   )
@@ -62,8 +63,9 @@ export function ModalLabel({ children, style }: { children: ReactNode; style?: R
 
 export const inputStyle: React.CSSProperties = {
   width: '100%', backgroundColor: 'var(--bg0)',
-  border: '1px solid rgba(var(--rgb),.2)', borderRadius: 4,
-  color: 'var(--ink)', fontSize: 12, padding: '10px', outline: 'none',
+  border: '1px solid rgba(255,255,255,.1)', borderRadius: 6,
+  color: 'var(--ink)', font: "400 13px 'Roboto Mono'",
+  padding: '10px 12px', outline: 'none',
 }
 
 export function SubmitBtn({ onClick, children }: { onClick: () => void; children: ReactNode }) {
@@ -72,10 +74,9 @@ export function SubmitBtn({ onClick, children }: { onClick: () => void; children
       onClick={onClick}
       style={{
         cursor: 'pointer', width: '100%', marginTop: 20,
-        border: '1px solid var(--a2)',
-        background: 'linear-gradient(90deg,rgba(var(--rgb),.15),rgba(var(--a2rgb),.15))',
-        color: 'var(--ink)', font: "700 14px 'Rajdhani'", letterSpacing: '.12em',
-        padding: 13, borderRadius: 5, boxShadow: '0 0 18px rgba(var(--a2rgb),.2)',
+        border: 'none', background: 'var(--a)',
+        color: '#111', font: "500 13px 'Roboto Mono'",
+        padding: '13px', borderRadius: 7,
       }}
     >{children}</button>
   )

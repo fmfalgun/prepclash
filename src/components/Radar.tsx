@@ -43,7 +43,7 @@ export function Radar({ data, size = 236 }: Props) {
     const [x, y] = pt(1.22, i)
     return (
       <text key={'l' + i} x={x} y={y} fill="#7a8c82" fontSize={7.5}
-        fontFamily="'Share Tech Mono',monospace" textAnchor="middle" dominantBaseline="middle">
+        fontFamily="'Roboto Mono',monospace" textAnchor="middle" dominantBaseline="middle">
         {s.name.split(' ')[0].slice(0, 7)}
       </text>
     )
@@ -54,10 +54,9 @@ export function Radar({ data, size = 236 }: Props) {
       {rings}{spokes}
       <polygon
         points={dataPoints}
-        fill={`rgba(${P.rgb},.16)`}
+        fill={`rgba(${P.rgb},.13)`}
         stroke={P.a}
-        strokeWidth={2}
-        style={{ filter: `drop-shadow(0 0 5px rgba(${P.rgb},.55))` }}
+        strokeWidth={1.6}
       />
       {dots}{labels}
     </svg>

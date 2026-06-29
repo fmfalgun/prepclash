@@ -55,8 +55,8 @@ export function ConnectModal() {
     <ModalShell kicker="CONTROL // SYNC" title="Connect & Settings">
       {/* Status */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(var(--rgb),.05)', border: '1px solid rgba(var(--rgb),.1)', borderRadius: 5, padding: '11px 14px', marginBottom: 20 }}>
-        <span style={{ width: 8, height: 8, borderRadius: '50%', background: ms.dot, boxShadow: `0 0 6px ${ms.dot}`, flexShrink: 0 }} />
-        <span style={{ font: "400 10px 'Share Tech Mono'", color: 'var(--txt)' }}>{ms.text}</span>
+        <span style={{ width: 8, height: 8, borderRadius: '50%', background: ms.dot, flexShrink: 0 }} />
+        <span style={{ font: "400 10px 'Roboto Mono'", color: 'var(--txt)' }}>{ms.text}</span>
       </div>
 
       {/* Name */}
@@ -64,7 +64,7 @@ export function ConnectModal() {
       <div style={{ display: 'flex', gap: 8, marginBottom: 18 }}>
         <input value={nameDraft} onChange={e => setName(e.target.value)} placeholder="OPERATIVE"
           style={{ ...inputStyle, flex: 1 }} onKeyDown={e => e.key === 'Enter' && saveName()} />
-        <button onClick={saveName} style={{ cursor: 'pointer', border: '1px solid var(--a2)', background: 'rgba(var(--a2rgb),.1)', color: 'var(--a2)', font: "700 11px 'Rajdhani'", letterSpacing: '.1em', padding: '0 16px', borderRadius: 4 }}>SAVE</button>
+        <button onClick={saveName} style={{ cursor: 'pointer', border: '1px solid var(--a2)', background: 'rgba(var(--a2rgb),.1)', color: 'var(--a2)', font: "500 11px 'Lexend Deca'", letterSpacing: '.1em', padding: '0 16px', borderRadius: 4 }}>SAVE</button>
       </div>
 
       {/* Codeforces handle */}
@@ -79,10 +79,10 @@ export function ConnectModal() {
         />
         <button
           onClick={() => setCfHandle(cfDraft)}
-          style={{ cursor: 'pointer', border: '1px solid var(--a2)', background: 'rgba(var(--a2rgb),.1)', color: 'var(--a2)', font: "700 11px 'Rajdhani'", letterSpacing: '.1em', padding: '0 16px', borderRadius: 4 }}
+          style={{ cursor: 'pointer', border: '1px solid var(--a2)', background: 'rgba(var(--a2rgb),.1)', color: 'var(--a2)', font: "500 11px 'Lexend Deca'", letterSpacing: '.1em', padding: '0 16px', borderRadius: 4 }}
         >SAVE</button>
       </div>
-      <div style={{ font: "400 9px 'Share Tech Mono'", color: 'var(--dim2)', marginBottom: 18 }}>
+      <div style={{ font: "400 9px 'Roboto Mono'", color: 'var(--dim2)', marginBottom: 18 }}>
         {data.cf.handle
           ? <>Linked: <span style={{ color: 'var(--a)' }}>{data.cf.handle}</span>{data.cf.rating ? ` · ${data.cf.rating} (${data.cf.rank})` : ''}</>
           : 'Link your CF account to show rating on your public profile.'}
@@ -96,7 +96,7 @@ export function ConnectModal() {
             cursor: 'pointer', flex: 1,
             border: `1.5px solid ${data.palette === id ? P.a2 : 'rgba(255,255,255,.08)'}`,
             background: `rgba(${P.rgb},.1)`, borderRadius: 4, padding: '8px 4px',
-            color: P.a, font: "700 8px 'Share Tech Mono'", letterSpacing: '.08em',
+            color: P.a, font: "500 8px 'Roboto Mono'", letterSpacing: '.08em',
           }}>{P.name}</button>
         ))}
       </div>
@@ -107,16 +107,16 @@ export function ConnectModal() {
         <div>
           <div style={{ background: 'rgba(var(--rgb),.05)', border: '1px solid rgba(var(--rgb),.12)', borderRadius: 5, padding: '12px 14px', marginBottom: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
-              <div style={{ font: "700 12px 'Rajdhani'", color: 'var(--ink)' }}>{fbUser.name || fbUser.email}</div>
-              <div style={{ font: "400 9px 'Share Tech Mono'", color: 'var(--dim2)', marginTop: 3 }}>{fbUser.email}</div>
+              <div style={{ font: "500 12px 'Lexend Deca'", color: 'var(--ink)' }}>{fbUser.name || fbUser.email}</div>
+              <div style={{ font: "400 9px 'Roboto Mono'", color: 'var(--dim2)', marginTop: 3 }}>{fbUser.email}</div>
             </div>
-            <span style={{ font: "700 8px 'Share Tech Mono'", color: '#39ff88', border: '1px solid rgba(57,255,136,.3)', padding: '3px 8px', borderRadius: 3 }}>SIGNED IN</span>
+            <span style={{ font: "500 8px 'Roboto Mono'", color: '#39ff88', border: '1px solid rgba(57,255,136,.3)', padding: '3px 8px', borderRadius: 3 }}>SIGNED IN</span>
           </div>
-          <button onClick={handleSignOut} style={{ cursor: 'pointer', width: '100%', border: '1px solid rgba(var(--rgb),.2)', background: 'transparent', color: 'var(--mut)', font: "700 10px 'Share Tech Mono'", letterSpacing: '.1em', padding: 11, borderRadius: 5 }}>SIGN OUT</button>
+          <button onClick={handleSignOut} style={{ cursor: 'pointer', width: '100%', border: '1px solid rgba(var(--rgb),.2)', background: 'transparent', color: 'var(--mut)', font: "500 10px 'Roboto Mono'", letterSpacing: '.1em', padding: 11, borderRadius: 5 }}>SIGN OUT</button>
         </div>
       ) : (
         <div>
-          <div style={{ font: "400 9px 'Share Tech Mono'", color: 'var(--dim2)', lineHeight: 1.6, marginBottom: 10 }}>
+          <div style={{ font: "400 9px 'Roboto Mono'", color: 'var(--dim2)', lineHeight: 1.6, marginBottom: 10 }}>
             Sign in to log progress, appear on the leaderboard, and join a clan. All data is synced to Firebase.
           </div>
           <textarea value={fbConfigDraft} onChange={e => setFbConfig(e.target.value)}
@@ -131,7 +131,7 @@ export function ConnectModal() {
       {/* Danger zone */}
       <div style={{ marginTop: 14, borderTop: '1px solid rgba(255,90,90,.12)', paddingTop: 16 }}>
         <ModalLabel>DANGER ZONE</ModalLabel>
-        <button onClick={resetData} style={{ cursor: 'pointer', border: '1px solid rgba(255,90,90,.25)', background: 'rgba(255,90,90,.05)', color: '#c0746f', font: "700 10px 'Share Tech Mono'", letterSpacing: '.12em', padding: 10, width: '100%', borderRadius: 4 }}>RESET ALL LOCAL PROGRESS</button>
+        <button onClick={resetData} style={{ cursor: 'pointer', border: '1px solid rgba(255,90,90,.25)', background: 'rgba(255,90,90,.05)', color: '#c0746f', font: "500 10px 'Roboto Mono'", letterSpacing: '.12em', padding: 10, width: '100%', borderRadius: 4 }}>RESET ALL LOCAL PROGRESS</button>
       </div>
     </ModalShell>
   )
