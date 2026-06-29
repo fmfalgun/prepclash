@@ -41,6 +41,7 @@ export interface Data {
   palette: Palette
   activity: Record<string, number>
   kwCounts: Record<string, number>
+  clanId?: string | null
 }
 
 export interface ClanMember {
@@ -79,4 +80,44 @@ export interface Draft {
   nbUnit: string
   nbTotal: string
   nbSkill: string
+}
+
+// Public profile stored in Firestore — readable by everyone
+export interface PublicOperative {
+  uid: string
+  name: string
+  handle: string
+  palette: Palette
+  momentum: number
+  rank: string
+  overallScore: number
+  streak: number
+  weekXp: number
+  clanId: string | null
+  skillXp: Record<string, number>
+  // village: node id → cleared ts (proof hidden from public)
+  village: Record<string, { cleared: boolean; ts: number }>
+  // arena: question id → solved ts (proof hidden)
+  arena: Record<string, { ts: number }>
+  cf: { handle: string; rating: number | null; rank: string; solved: number | null }
+  lastSeen: number
+  createdAt?: number
+  isShowcase?: boolean
+}
+
+export interface ClanDoc {
+  id: string
+  name: string
+  tag: string
+  description: string
+  founderUid: string
+  memberCount: number
+  createdAt: number
+}
+
+export interface FbUser {
+  uid: string
+  name: string | null
+  email: string | null
+  photoURL: string | null
 }

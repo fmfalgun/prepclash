@@ -1,12 +1,11 @@
-import type { Data, ClanMember } from '../types'
+import type { Data, ClanMember, PublicOperative, ClanDoc, FbUser } from '../types'
 import { rankFor } from './grades'
 import { flatNodes } from '../data/village'
 import { AVATAR_COLORS } from '../data/palettes'
+import { SKILL_DEFS } from '../data/skills'
 
 export const FB_KEY = 'prepclash_fb_config'
 
-// Embedded default config from the existing Firebase project.
-// Firebase web API keys are inherently public — they're rate-limited by security rules.
 const DEFAULT_FB_CONFIG = {
   apiKey: 'AIzaSyC4LLupF2uFCxfqOsy0GkHzwdaO3SlWnvE',
   authDomain: 'prepclash-51f1a.firebaseapp.com',
@@ -24,32 +23,27 @@ let fb: {
   fsMod: Record<string, unknown>
 } | null = null
 
-export function loadFbConfigRaw(): string {
-  try {
-    return localStorage.getItem(FB_KEY) || JSON.stringify(DEFAULT_FB_CONFIG)
-  } catch { return JSON.stringify(DEFAULT_FB_CONFIG) }
-}
+export type FbMode = 'offline' | 'online' | 'error'
 
-export function loadFbConfig(): Record<string, string> | null {
+export function loadFbConfig(): Record<string, string> {
   try {
-    const raw = loadFbConfigRaw()
-    return raw ? JSON.parse(raw) : null
-  } catch { return null }
+    const raw = localStorage.getItem(FB_KEY)
+    return raw ? JSON.parse(raw) : DEFAULT_FB_CONFIG
+  } catch { return DEFAULT_FB_CONFIG }
 }
 
 export function saveFbConfigRaw(raw: string) {
   try { localStorage.setItem(FB_KEY, raw) } catch {}
 }
 
-export type FbMode = 'offline' | 'online' | 'error'
+// --- Init ---
 
 export async function initFirebase(
   onMode: (mode: FbMode, err?: string) => void,
-  onUser: (uid: string | null, name: string | null) => void,
+  onUser: (user: FbUser | null) => void,
   onClan: (members: ClanMember[]) => void,
 ): Promise<void> {
   const cfg = loadFbConfig()
-  if (!cfg) { onMode('offline'); return }
   try {
     const [appMod, authMod, fsMod] = await Promise.all([
       import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js' as string),
@@ -57,26 +51,25 @@ export async function initFirebase(
       import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js' as string),
     ]) as [Record<string, unknown>, Record<string, unknown>, Record<string, unknown>]
 
-    // Avoid re-initializing if the app already exists
     let app: unknown
     try {
-      app = (appMod.initializeApp as (cfg: unknown) => unknown)(cfg)
+      app = (appMod.initializeApp as (c: unknown) => unknown)(cfg)
     } catch {
       app = (appMod.getApp as () => unknown)()
     }
-    const auth = (authMod.getAuth as (app: unknown) => unknown)(app)
-    const db   = (fsMod.getFirestore as (app: unknown) => unknown)(app)
 
+    const auth = (authMod.getAuth as (a: unknown) => unknown)(app)
+    const db   = (fsMod.getFirestore as (a: unknown) => unknown)(app)
     fb = { auth, db, authMod, fsMod }
     onMode('online')
 
     ;(authMod.onAuthStateChanged as (auth: unknown, cb: (u: unknown) => void) => void)(auth, (u: unknown) => {
       if (u) {
-        const user = u as { uid: string; displayName?: string }
-        onUser(user.uid, user.displayName || null)
+        const user = u as { uid: string; displayName: string | null; email: string | null; photoURL: string | null }
+        onUser({ uid: user.uid, name: user.displayName, email: user.email, photoURL: user.photoURL })
         subscribeClan(onClan)
       } else {
-        onUser(null, null)
+        onUser(null)
       }
     })
   } catch (e) {
@@ -89,64 +82,201 @@ export async function signInWithGoogle(): Promise<void> {
   if (!fb) throw new Error('Firebase not initialized')
   const { signInWithPopup, GoogleAuthProvider } = fb.authMod as Record<string, unknown>
   const prov = new (GoogleAuthProvider as new () => unknown)()
-  await (signInWithPopup as (auth: unknown, prov: unknown) => Promise<unknown>)(fb.auth, prov)
+  await (signInWithPopup as (auth: unknown, p: unknown) => Promise<unknown>)(fb.auth, prov)
 }
 
-function currentNodeName(data: Data): string {
-  const nodes = flatNodes()
-  for (const n of nodes) {
-    if (n.req.every(r => data.village[r]?.cleared) && !data.village[n.id]?.cleared) return n.name
+export async function signOut(): Promise<void> {
+  if (!fb) return
+  const { signOut: so } = fb.authMod as Record<string, unknown>
+  await (so as (auth: unknown) => Promise<void>)(fb.auth)
+}
+
+// --- Public data queries ---
+
+let opsUnsub: (() => void) | null = null
+let clansUnsub: (() => void) | null = null
+
+export function subscribeOperatives(onData: (ops: PublicOperative[]) => void): () => void {
+  if (!fb) return () => {}
+  try {
+    const { collection, onSnapshot, orderBy, query } = fb.fsMod as Record<string, unknown>
+    if (opsUnsub) opsUnsub()
+    const q = (query as (ref: unknown, ...constraints: unknown[]) => unknown)(
+      (collection as (db: unknown, name: string) => unknown)(fb.db, 'operatives'),
+      (orderBy as (field: string, dir: string) => unknown)('momentum', 'desc'),
+    )
+    opsUnsub = (onSnapshot as (ref: unknown, cb: (snap: unknown) => void) => () => void)(q, (snap: unknown) => {
+      const s = snap as { docs: { id: string; data: () => unknown }[] }
+      const ops: PublicOperative[] = s.docs.map(d => {
+        const raw = d.data() as Record<string, unknown>
+        return { uid: d.id, ...(raw as Omit<PublicOperative, 'uid'>) }
+      })
+      onData(ops)
+    })
+    return () => { if (opsUnsub) { opsUnsub(); opsUnsub = null } }
+  } catch { return () => {} }
+}
+
+export function subscribeClans(onData: (clans: ClanDoc[]) => void): () => void {
+  if (!fb) return () => {}
+  try {
+    const { collection, onSnapshot } = fb.fsMod as Record<string, unknown>
+    if (clansUnsub) clansUnsub()
+    clansUnsub = (onSnapshot as (ref: unknown, cb: (snap: unknown) => void) => () => void)(
+      (collection as (db: unknown, name: string) => unknown)(fb.db, 'clans'),
+      (snap: unknown) => {
+        const s = snap as { docs: { id: string; data: () => unknown }[] }
+        const clans: ClanDoc[] = s.docs.map(d => ({ id: d.id, ...(d.data() as Omit<ClanDoc, 'id'>) }))
+        onData(clans)
+      }
+    )
+    return () => { if (clansUnsub) { clansUnsub(); clansUnsub = null } }
+  } catch { return () => {} }
+}
+
+export async function joinClan(uid: string, clanId: string): Promise<void> {
+  if (!fb) throw new Error('Not connected')
+  const { doc, updateDoc, increment } = fb.fsMod as Record<string, unknown>
+  await (updateDoc as (ref: unknown, d: unknown) => Promise<void>)(
+    (doc as (db: unknown, col: string, id: string) => unknown)(fb.db, 'operatives', uid),
+    { clanId }
+  )
+  await (updateDoc as (ref: unknown, d: unknown) => Promise<void>)(
+    (doc as (db: unknown, col: string, id: string) => unknown)(fb.db, 'clans', clanId),
+    { memberCount: (increment as (n: number) => unknown)(1) }
+  )
+}
+
+export async function leaveClan(uid: string, clanId: string): Promise<void> {
+  if (!fb) throw new Error('Not connected')
+  const { doc, updateDoc, increment } = fb.fsMod as Record<string, unknown>
+  await (updateDoc as (ref: unknown, d: unknown) => Promise<void>)(
+    (doc as (db: unknown, col: string, id: string) => unknown)(fb.db, 'operatives', uid),
+    { clanId: null }
+  )
+  await (updateDoc as (ref: unknown, d: unknown) => Promise<void>)(
+    (doc as (db: unknown, col: string, id: string) => unknown)(fb.db, 'clans', clanId),
+    { memberCount: (increment as (n: number) => unknown)(-1) }
+  )
+}
+
+function subscribeClan(onClan: (members: ClanMember[]) => void): void {
+  if (!fb) return
+  try {
+    const { collection, onSnapshot } = fb.fsMod as Record<string, unknown>
+    ;(onSnapshot as (ref: unknown, cb: (snap: unknown) => void) => () => void)(
+      (collection as (db: unknown, name: string) => unknown)(fb.db, 'operatives'),
+      (snap: unknown) => {
+        const s = snap as { docs: { id: string; data: () => unknown }[] }
+        const members: ClanMember[] = s.docs.map((d, i) => {
+          const m = d.data() as Record<string, unknown>
+          return {
+            name: String(m.name || 'UNKNOWN'),
+            momentum: Number(m.momentum || 0),
+            rank: String(m.rank || 'E'),
+            node: currentNodeNameFromVillage((m.village as Record<string, unknown>) || {}),
+            color: AVATAR_COLORS[i % AVATAR_COLORS.length],
+            initials: String(m.name || 'OP').replace(/[^A-Za-z0-9]/g, '').slice(0, 2).toUpperCase(),
+          }
+        })
+        if (members.length) onClan(members)
+      }
+    )
+  } catch {}
+}
+
+// --- Push full operative data ---
+
+function localOverallScore(skillXp: Record<string, number>): number {
+  const all = [...SKILL_DEFS]
+  const sum = all.reduce((a, s) => a + Math.min(99, s.base + (skillXp[s.id] || 0)), 0)
+  return sum / all.length
+}
+
+function localStreak(activity: Record<string, number>): number {
+  let streak = 0
+  const today = new Date()
+  for (let i = 0; i < 365; i++) {
+    const d = new Date(today)
+    d.setDate(today.getDate() - i)
+    const k = d.toISOString().slice(0, 10)
+    if ((activity[k] || 0) > 0) streak++
+    else if (i > 0) break
   }
-  return 'Red Team Op'
+  return streak
 }
 
-function overallScore(data: Data): number {
-  const ids = Object.keys(data.skillXp)
-  if (!ids.length) return 35
-  const sum = ids.reduce((a, id) => {
-    const def = [{ id:'python',base:64},{id:'systems',base:70},{id:'network',base:52},{id:'web',base:55},{id:'exploit',base:38},{id:'cp',base:35},{id:'physique',base:46}].find(s=>s.id===id)
-    return a + Math.min(99, (def?.base ?? 30) + (data.skillXp[id] || 0))
-  }, 0)
-  return sum / ids.length
+function localWeekXp(weekly: Record<string, number>): number {
+  const now = new Date()
+  const dayOfWeek = (now.getDay() + 6) % 7
+  const monday = new Date(now)
+  monday.setDate(now.getDate() - dayOfWeek)
+  const key = monday.toISOString().slice(0, 10)
+  return weekly[key] || 0
 }
 
 export async function pushToFirebase(data: Data): Promise<void> {
   if (!fb || !data.profile.uid) return
   try {
     const { doc, setDoc } = fb.fsMod as Record<string, unknown>
+    const score = localOverallScore(data.skillXp)
+
+    // Strip proofs from village/arena for public storage
+    const village: Record<string, { cleared: boolean; ts: number }> = {}
+    for (const [k, v] of Object.entries(data.village)) {
+      village[k] = { cleared: v.cleared, ts: v.ts }
+    }
+    const arena: Record<string, { ts: number }> = {}
+    for (const [k, v] of Object.entries(data.arena)) {
+      arena[k] = { ts: v.ts }
+    }
+
+    const payload: Omit<PublicOperative, 'uid'> = {
+      name: data.profile.name,
+      handle: data.profile.handle || '',
+      palette: data.palette,
+      momentum: data.momentum,
+      rank: rankFor(score),
+      overallScore: Math.round(score),
+      streak: localStreak(data.activity),
+      weekXp: localWeekXp(data.weekly),
+      clanId: data.clanId || null,
+      skillXp: data.skillXp,
+      village,
+      arena,
+      cf: {
+        handle: data.cf.handle,
+        rating: data.cf.rating,
+        rank: data.cf.rank,
+        solved: data.cf.solved,
+      },
+      lastSeen: Date.now(),
+    }
+
     await (setDoc as (ref: unknown, d: unknown, opts: unknown) => Promise<void>)(
       (doc as (db: unknown, col: string, id: string) => unknown)(fb.db, 'operatives', data.profile.uid),
-      { name: data.profile.name, momentum: data.momentum, rank: rankFor(overallScore(data)), node: currentNodeName(data), updatedAt: Date.now() },
+      payload,
       { merge: true }
     )
   } catch {}
 }
 
-let clanUnsub: (() => void) | null = null
-
-export function subscribeClan(onClan: (members: ClanMember[]) => void): void {
-  if (!fb) return
-  try {
-    const { collection, onSnapshot } = fb.fsMod as Record<string, unknown>
-    if (clanUnsub) clanUnsub()
-    clanUnsub = (onSnapshot as (ref: unknown, cb: (snap: unknown) => void) => () => void)(
-      (collection as (db: unknown, name: string) => unknown)(fb.db, 'operatives'),
-      (snap: unknown) => {
-        const s = snap as { forEach: (cb: (d: { data: () => ClanMember }) => void) => void }
-        const live: ClanMember[] = []
-        s.forEach(d => {
-          const m = d.data()
-          if (m && typeof m === 'object') live.push({
-            name: (m as { name?: string }).name || 'UNKNOWN',
-            momentum: (m as { momentum?: number }).momentum || 0,
-            rank: (m as { rank?: string }).rank || 'E',
-            node: (m as { node?: string }).node || '—',
-            color: AVATAR_COLORS[live.length % AVATAR_COLORS.length],
-            initials: ((m as { name?: string }).name || 'OP').replace(/[^A-Za-z0-9]/g, '').slice(0, 2).toUpperCase(),
-          })
-        })
-        if (live.length) onClan(live)
-      }
-    )
-  } catch {}
+function currentNodeNameFromVillage(village: Record<string, unknown>): string {
+  const order = ['linux','net101','pyscript','recon','webbasic','tooling','webexp','netatk','crypto','dsa','privesc','adatk','expdev','c2','evasion','redops']
+  const names: Record<string, string> = {
+    linux:'Linux Fundamentals',net101:'Networking 101',pyscript:'Python Scripting',
+    recon:'Recon & OSINT',webbasic:'Web Fundamentals',tooling:'Bash & Tooling',
+    webexp:'Web Exploitation',netatk:'Network Attacks',crypto:'Crypto & PKI',
+    dsa:'DSA / Algorithms',privesc:'Privilege Escalation',adatk:'Active Directory',
+    expdev:'Exploit Development',c2:'C2 Infrastructure',evasion:'Evasion & AV/EDR',
+    redops:'Full Red Team Op',
+  }
+  const nodes = flatNodes()
+  for (const n of nodes) {
+    const cleared = (village[n.id] as { cleared?: boolean } | undefined)?.cleared
+    if (!cleared && n.req.every(r => (village[r] as { cleared?: boolean } | undefined)?.cleared)) {
+      return names[n.id] || n.id
+    }
+  }
+  return 'Red Team Op'
 }

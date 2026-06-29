@@ -1,11 +1,10 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { Data, Draft, ModalType, ClanMember, Palette } from '../types'
+import type { Data, Draft, ModalType, Palette, PublicOperative, ClanDoc, FbUser } from '../types'
 import { SKILL_DEFS, DEFAULT_KEYWORDS, COURSE_DEFS, BOOK_DEFS } from '../data/skills'
 import { seedActivity, seedWorkouts } from '../data/mock'
-import { todayKey, weekKey, addWeekXp, bumpActivity } from '../lib/dates'
+import { todayKey, addWeekXp, bumpActivity } from '../lib/dates'
 import { studyGain, studySkillXp, workoutGain, readGain, fmtWeight } from '../lib/momentum'
-import { UNIT_PT } from '../data/skills'
 import { flatNodes, nodeById } from '../data/village'
 import { ARENA, ARENA_AXIS_MAP } from '../data/arena'
 import { pushToFirebase } from '../lib/firebase'
@@ -27,7 +26,7 @@ function seedData(): Data {
   const skillXp: Record<string, number> = {}
   SKILL_DEFS.forEach(s => { skillXp[s.id] = 0 })
   return {
-    profile: { name: 'TOJI', handle: '@fmfalgun', uid: null },
+    profile: { name: 'OPERATIVE', handle: '', uid: null },
     skillXp,
     keywords: DEFAULT_KEYWORDS.map(([label, skill]) => ({ label, skill })),
     extraSkills: [],
@@ -37,14 +36,15 @@ function seedData(): Data {
     logs: [],
     momentum: 0,
     workouts: seedWorkouts(),
-    cf: { handle: 'fmfalgun', rating: null, maxRating: null, rank: '', solved: null, contests: null, lastSync: null, error: null },
-    a2oj: [{ id: 'r1400', solved: 23 }, { id: 'div2b', solved: 41 }, { id: 'r1300', solved: 67 }],
+    cf: { handle: '', rating: null, maxRating: null, rank: '', solved: null, contests: null, lastSync: null, error: null },
+    a2oj: [],
     village: {},
     arena: {},
     weekly: {},
     palette: 'toxic',
     activity: seedActivity(),
     kwCounts: {},
+    clanId: null,
   }
 }
 
@@ -65,10 +65,13 @@ interface AppState {
   fbMode: 'offline' | 'online' | 'error'
   fbError: string | null
   nameDraft: string
-  clan: ClanMember[]
-  liveClan: ClanMember[] | null
+  fbReady: boolean
+  fbUser: FbUser | null
+  operatives: PublicOperative[]
+  clans: ClanDoc[]
+  selectedPlayer: PublicOperative | null
+  selectedClan: ClanDoc | null
 
-  // Setters
   setTab: (tab: string) => void
   setModal: (modal: ModalType) => void
   closeModal: () => void
@@ -83,11 +86,15 @@ interface AppState {
   setFbConfigDraft: (v: string) => void
   setFbMode: (mode: 'offline' | 'online' | 'error', err?: string) => void
   setNameDraft: (v: string) => void
-  setLiveClan: (members: ClanMember[]) => void
   setDraft: (fn: (d: Draft) => Draft) => void
   setPalette: (p: Palette) => void
+  setFbReady: (v: boolean) => void
+  setFbUser: (user: FbUser | null) => void
+  setOperatives: (ops: PublicOperative[]) => void
+  setClans: (clans: ClanDoc[]) => void
+  setSelectedPlayer: (p: PublicOperative | null) => void
+  setSelectedClan: (c: ClanDoc | null) => void
 
-  // Game actions
   submitStudy: () => void
   submitWorkout: () => void
   submitReading: () => void
@@ -102,12 +109,27 @@ interface AppState {
   solveQuestion: () => void
   saveName: () => void
   resetData: () => void
-  updateFromFirebase: (uid: string, name: string | null) => void
+  onSignedIn: (user: FbUser) => void
+  onSignedOut: () => void
 }
 
 export const useStore = create<AppState>()(
   persist(
     (set, get) => {
+      function requireAuth(): boolean {
+        const { fbUser, fbReady } = get()
+        if (!fbUser) {
+          if (!fbReady) {
+            toast_('FIREBASE NOT CONNECTED YET')
+          } else {
+            set({ modal: 'connect' })
+            toast_('SIGN IN TO LOG PROGRESS')
+          }
+          return false
+        }
+        return true
+      }
+
       function persist_(mutator: (data: Data) => void) {
         set(state => {
           const data = JSON.parse(JSON.stringify(state.data)) as Data
@@ -123,9 +145,7 @@ export const useStore = create<AppState>()(
       }
 
       function topicQuestions(topic: string): ArenaQuestion[] {
-        const base = (ARENA[topic]?.questions) || []
-        const live = get().liveQuestions[topic] || []
-        return [...base, ...live]
+        return [...(ARENA[topic]?.questions || []), ...(get().liveQuestions[topic] || [])]
       }
 
       return {
@@ -144,9 +164,13 @@ export const useStore = create<AppState>()(
         fbConfigDraft: '',
         fbMode: 'offline',
         fbError: null,
-        nameDraft: 'TOJI',
-        clan: [],
-        liveClan: null,
+        nameDraft: 'OPERATIVE',
+        fbReady: false,
+        fbUser: null,
+        operatives: [],
+        clans: [],
+        selectedPlayer: null,
+        selectedClan: null,
 
         setTab: (tab) => set({ tab }),
         setModal: (modal) => set({ modal }),
@@ -165,20 +189,23 @@ export const useStore = create<AppState>()(
         setFbConfigDraft: (fbConfigDraft) => set({ fbConfigDraft }),
         setFbMode: (fbMode, err) => set({ fbMode, fbError: err || null }),
         setNameDraft: (nameDraft) => set({ nameDraft }),
-        setLiveClan: (liveClan) => set({ liveClan }),
         setDraft: (fn) => set(s => ({ draft: fn(s.draft) })),
         setPalette: (p) => persist_(d => { d.palette = p }),
+        setFbReady: (fbReady) => set({ fbReady }),
+        setFbUser: (fbUser) => set({ fbUser }),
+        setOperatives: (operatives) => set({ operatives }),
+        setClans: (clans) => set({ clans }),
+        setSelectedPlayer: (selectedPlayer) => set({ selectedPlayer }),
+        setSelectedClan: (selectedClan) => set({ selectedClan }),
 
         submitStudy: () => {
+          if (!requireAuth()) return
           const { draft, data } = get()
           const title = (draft.title || '').trim()
           if (!title) { toast_('DESCRIBE THE WORK FIRST'); return }
           const mins = Math.max(1, parseInt(String(draft.mins)) || 0)
           const sel = draft.selected
-          const skillsHit = [...new Set(sel.map(l => {
-            const kw = data.keywords.find(k => k.label === l)
-            return kw ? kw.skill : null
-          }).filter(Boolean))] as string[]
+          const skillsHit = [...new Set(sel.map(l => data.keywords.find(k => k.label === l)?.skill).filter(Boolean))] as string[]
           const gain = studyGain(mins, sel.length)
           persist_(d => {
             const per = studySkillXp(mins)
@@ -194,6 +221,7 @@ export const useStore = create<AppState>()(
         },
 
         submitWorkout: () => {
+          if (!requireAuth()) return
           const { draft } = get()
           const ex = draft.exercises.filter(e => (e.name || '').trim())
           if (!ex.length) { toast_('ADD AT LEAST ONE EXERCISE'); return }
@@ -206,13 +234,14 @@ export const useStore = create<AppState>()(
             addWeekXp(d, gain)
             bumpActivity(d, ex.length * 8 + 10)
             d.workouts.unshift({ date: todayKey(), name, exercises: rows })
-            d.logs.unshift({ type: 'workout', title: 'Toji split — ' + name + ' · ' + ex.length + ' exercises', mins: 0, gain, date: todayKey(), ts: Date.now() })
+            d.logs.unshift({ type: 'workout', title: 'Split — ' + name + ' · ' + ex.length + ' ex', mins: 0, gain, date: todayKey(), ts: Date.now() })
           })
           toast_('+' + gain + ' MOMENTUM · TRAIN HARD')
           set({ modal: null, draft: freshDraft() })
         },
 
         submitReading: () => {
+          if (!requireAuth()) return
           const { draft, data } = get()
           const allDefs = [...BOOK_DEFS, ...(data.customDefs || [])]
           const def = allDefs.find(b => b.id === draft.book)
@@ -248,6 +277,7 @@ export const useStore = create<AppState>()(
         },
 
         togglePhase: (cid, idx) => {
+          if (!requireAuth()) return
           const course = COURSE_DEFS.find(c => c.id === cid)
           if (!course) return
           let completed = false
@@ -271,7 +301,7 @@ export const useStore = create<AppState>()(
         },
 
         addKeyword: () => {
-          const { draft, data } = get()
+          const { draft } = get()
           const label = (draft.newKwLabel || '').trim()
           if (!label) return
           let sk = draft.newKwSkill
@@ -288,9 +318,8 @@ export const useStore = create<AppState>()(
               d.keywords.push({ label, skill: sk })
             }
           })
-          set(s => ({ draft: { ...s.draft, selected: [...s.draft.selected, label], newKwLabel: '', newCatName: '', newKwSkill: draft.newKwSkill === '__new__' ? 'python' : draft.newKwSkill } }))
+          set(s => ({ draft: { ...s.draft, selected: [...s.draft.selected, label], newKwLabel: '', newCatName: '', newKwSkill: sk === '__new__' ? 'python' : s.draft.newKwSkill } }))
           toast_('KEYWORD ADDED')
-          void data // suppress unused warning
         },
 
         toggleKeyword: (label) => {
@@ -307,11 +336,11 @@ export const useStore = create<AppState>()(
           const n = nodeById(id)
           if (!n) return
           const cleared = !!(data.village[id]?.cleared)
-          const proof = cleared ? data.village[id].proof : ''
-          set({ modal: 'node', activeNode: id, proofDraft: proof || '' })
+          set({ modal: 'node', activeNode: id, proofDraft: cleared ? data.village[id].proof : '' })
         },
 
         clearNode: () => {
+          if (!requireAuth()) return
           const { activeNode, proofDraft } = get()
           if (!activeNode) return
           const n = nodeById(activeNode)
@@ -347,8 +376,8 @@ export const useStore = create<AppState>()(
           const { data } = get()
           const q = topicQuestions(topic).find(x => x.id === qid)
           if (!q) return
-          const solved = data.arena[qid]
-          if (solved) {
+          if (data.arena[qid]) {
+            if (!requireAuth()) return
             persist_(d => { delete d.arena[qid] })
             toast_('UNMARKED')
             return
@@ -357,16 +386,16 @@ export const useStore = create<AppState>()(
         },
 
         solveQuestion: () => {
+          if (!requireAuth()) return
           const { activeQ, proofDraft } = get()
           if (!activeQ) return
           const q = topicQuestions(activeQ.topic).find(x => x.id === activeQ.qid)
           if (!q) return
           const proof = (proofDraft || '').trim()
           if (!proof || !/^https?:\/\//i.test(proof)) { toast_('VALID PROOF URL REQUIRED'); return }
-          const axis = ARENA_AXIS_MAP[activeQ.topic] || 'web'
           persist_(d => {
             d.arena[activeQ.qid] = { proof, ts: Date.now() }
-            d.skillXp[axis] = (d.skillXp[axis] || 0) + Math.max(1, Math.round(q.xp / 6))
+            d.skillXp[ARENA_AXIS_MAP[activeQ.topic] || 'web'] = (d.skillXp[ARENA_AXIS_MAP[activeQ.topic] || 'web'] || 0) + Math.max(1, Math.round(q.xp / 6))
             d.momentum += q.xp
             addWeekXp(d, q.xp)
             bumpActivity(d, q.xp)
@@ -385,18 +414,22 @@ export const useStore = create<AppState>()(
         },
 
         resetData: () => {
-          if (!confirm('Reset all progress to seeded state?')) return
+          if (!confirm('Reset all progress?')) return
           const fresh = seedData()
           set({ data: fresh, draft: freshDraft(), modal: null, nameDraft: fresh.profile.name })
           toast_('RESET')
         },
 
-        updateFromFirebase: (uid, name) => {
+        onSignedIn: (user: FbUser) => {
+          set({ fbUser: user, fbMode: 'online', nameDraft: user.name || get().data.profile.name })
           persist_(d => {
-            d.profile.uid = uid
-            if (name) d.profile.name = name
+            d.profile.uid = user.uid
+            if (user.name && d.profile.name === 'OPERATIVE') d.profile.name = user.name
           })
-          set(s => ({ nameDraft: name || s.data.profile.name }))
+        },
+
+        onSignedOut: () => {
+          set({ fbUser: null, fbMode: 'offline' })
         },
       }
     },
