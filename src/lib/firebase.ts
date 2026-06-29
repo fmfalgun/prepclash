@@ -153,8 +153,9 @@ export function subscribeClans(onData: (clans: ClanDoc[]) => void): () => void {
   } catch { return () => {} }
 }
 
-export async function joinClan(uid: string, clanId: string): Promise<void> {
+export async function joinClan(uid: string, clanId: string, currentClanId?: string | null): Promise<void> {
   if (!fb) throw new Error('Not connected')
+  if (currentClanId) throw new Error('Already in a clan — leave first')
   const { doc, updateDoc, increment } = fb.fsMod as Record<string, unknown>
   await (updateDoc as (ref: unknown, d: unknown) => Promise<void>)(
     (doc as (db: unknown, col: string, id: string) => unknown)(fb.db, 'operatives', uid),
@@ -191,6 +192,29 @@ export async function leaveClan(uid: string, clanId: string): Promise<void> {
   await (updateDoc as (ref: unknown, d: unknown) => Promise<void>)(
     (doc as (db: unknown, col: string, id: string) => unknown)(fb.db, 'clans', clanId),
     { memberCount: (increment as (n: number) => unknown)(-1) }
+  )
+}
+
+export async function deleteClan(uid: string, clanId: string): Promise<void> {
+  if (!fb) throw new Error('Not connected')
+  const { doc, deleteDoc, updateDoc } = fb.fsMod as Record<string, unknown>
+  // delete the clan doc
+  await (deleteDoc as (ref: unknown) => Promise<void>)(
+    (doc as (db: unknown, col: string, id: string) => unknown)(fb.db, 'clans', clanId)
+  )
+  // clear founder's clanId
+  await (updateDoc as (ref: unknown, d: unknown) => Promise<void>)(
+    (doc as (db: unknown, col: string, id: string) => unknown)(fb.db, 'operatives', uid),
+    { clanId: null }
+  )
+}
+
+export async function transferClanAdmin(clanId: string, newFounderUid: string): Promise<void> {
+  if (!fb) throw new Error('Not connected')
+  const { doc, updateDoc } = fb.fsMod as Record<string, unknown>
+  await (updateDoc as (ref: unknown, d: unknown) => Promise<void>)(
+    (doc as (db: unknown, col: string, id: string) => unknown)(fb.db, 'clans', clanId),
+    { founderUid: newFounderUid }
   )
 }
 

@@ -67,6 +67,14 @@ export function paletteCss(data: Data) {
   return PALETTES[data.palette] || PALETTES.toxic
 }
 
+// Clan creation eligibility — effort-based, not level-based
+// Score = momentum×0.15 + sessions×3 + activeDays×5; threshold 100
+export function clanEligibility(data: Data): { eligible: boolean; score: number; needed: number } {
+  const activeDays = Object.values(data.activity).filter(v => (v as number) > 0).length
+  const score = Math.round(data.momentum * 0.15 + data.logs.length * 3 + activeDays * 5)
+  return { eligible: score >= 100, score, needed: 100 }
+}
+
 export function isNodeCleared(data: Data, id: string): boolean {
   return !!(data.village[id]?.cleared)
 }

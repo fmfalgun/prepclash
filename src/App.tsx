@@ -18,6 +18,7 @@ import { QuestionModal } from './components/modals/QuestionModal'
 import { ConnectModal } from './components/modals/ConnectModal'
 import { LogSessionModal } from './components/modals/LogSessionModal'
 import { EditScheduleModal } from './components/modals/EditScheduleModal'
+import { OnboardingModal } from './components/modals/OnboardingModal'
 import { PlayerDetailModal } from './components/PlayerDetailModal'
 import { initFirebase, subscribeOperatives, subscribeClans } from './lib/firebase'
 
@@ -34,6 +35,11 @@ export default function App() {
   const setOperatives = useStore(s => s.setOperatives)
   const setClans      = useStore(s => s.setClans)
   const selectedPlayer = useStore(s => s.selectedPlayer)
+  const fbUser        = useStore(s => s.fbUser)
+  const data          = useStore(s => s.data)
+
+  // show onboarding for brand-new users (signed in, no activity, not yet onboarded)
+  const showOnboarding = !!fbUser && !data.onboarded && data.logs.length === 0 && Object.keys(data.village).length === 0
 
   useEffect(() => {
     const root = document.documentElement
@@ -82,6 +88,7 @@ export default function App() {
       {modal === 'log'      && <LogSessionModal />}
       {modal === 'edit'     && <EditScheduleModal />}
       {selectedPlayer && <PlayerDetailModal />}
+      {showOnboarding && <OnboardingModal />}
       <Toast />
     </div>
   )

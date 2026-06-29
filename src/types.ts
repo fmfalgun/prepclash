@@ -94,6 +94,7 @@ export interface Data {
   activity: Record<string, number>
   kwCounts: Record<string, number>
   clanId?: string | null
+  onboarded?: boolean
 }
 
 export interface ClanMember {
@@ -115,7 +116,7 @@ export interface LiveQuestion {
   live?: boolean
 }
 
-export type ModalType = 'study' | 'reading' | 'node' | 'question' | 'connect' | 'log' | 'edit' | null
+export type ModalType = 'study' | 'reading' | 'node' | 'question' | 'connect' | 'log' | 'edit' | 'onboarding' | null
 
 export interface Draft {
   title: string

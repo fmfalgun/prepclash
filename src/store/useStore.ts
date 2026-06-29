@@ -6,7 +6,8 @@ import { todayKey, addWeekXp, bumpActivity } from '../lib/dates'
 import { studyGain, studySkillXp, readGain } from '../lib/momentum'
 import { flatNodes, nodeById } from '../data/village'
 import { ARENA, ARENA_AXIS_MAP } from '../data/arena'
-import { pushToFirebase, deleteAccount as fbDeleteAccount } from '../lib/firebase'
+import { pushToFirebase, deleteAccount as fbDeleteAccount, deleteClan as fbDeleteClan, transferClanAdmin as fbTransferAdmin } from '../lib/firebase'
+import { TOJI_BOOK_DEFS } from '../data/toji'
 import { seedWorkoutData, TOJI } from '../data/workoutTemplate'
 import { computeSession, computePBs, est1rm } from '../lib/workoutStats'
 import { syncCfProfile } from '../lib/codeforces'
@@ -117,6 +118,9 @@ interface AppState {
   syncCf: () => void
   bumpA2oj: (id: string, delta: number) => void
   setClanId: (clanId: string | null) => void
+  deleteClan: (clanId: string) => void
+  transferClanAdmin: (clanId: string, toUid: string) => void
+  adoptToji: (choice: 'toji' | 'own' | 'both') => void
   resetData: () => void
   onSignedIn: (user: FbUser) => void
   onSignedOut: () => void
@@ -491,6 +495,46 @@ export const useStore = create<AppState>()(
 
         onSignedOut: () => {
           set({ fbUser: null, fbMode: 'offline' })
+        },
+
+        deleteClan: async (clanId: string) => {
+          const { fbUser } = get()
+          if (!fbUser) { toast_('not signed in'); return }
+          if (!confirm('delete this clan? all members will be removed. this cannot be undone.')) return
+          try {
+            await fbDeleteClan(fbUser.uid, clanId)
+            persist_(d => { d.clanId = null })
+            toast_('clan disbanded')
+          } catch (e) {
+            toast_('delete failed · ' + String(e).slice(0, 50))
+          }
+        },
+
+        transferClanAdmin: async (clanId: string, toUid: string) => {
+          const { fbUser } = get()
+          if (!fbUser) { toast_('not signed in'); return }
+          try {
+            await fbTransferAdmin(clanId, toUid)
+            toast_('admin transferred')
+          } catch (e) {
+            toast_('transfer failed · ' + String(e).slice(0, 50))
+          }
+        },
+
+        adoptToji: (choice: 'toji' | 'own' | 'both') => {
+          persist_(d => {
+            if (choice === 'toji' || choice === 'both') {
+              const existingIds = new Set(d.customDefs.map(x => x.id))
+              const toAdd = TOJI_BOOK_DEFS.filter(x => !existingIds.has(x.id))
+              d.customDefs.push(...toAdd)
+              const existingProgress = new Set(d.books.map(b => b.id))
+              toAdd.forEach(x => {
+                if (!existingProgress.has(x.id)) d.books.push({ id: x.id, done: 0 })
+              })
+            }
+            d.onboarded = true
+          })
+          toast_(choice === 'own' ? 'building your own library' : "toji's reading list added")
         },
 
         deleteAccount: async () => {
