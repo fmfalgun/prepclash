@@ -119,6 +119,7 @@ export interface Data {
   onboarded?: boolean
   mt: MonkeytypeState
   lc: LeetCodeState
+  ccHandle: string
 }
 
 export interface ClanMember {

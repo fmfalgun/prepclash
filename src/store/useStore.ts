@@ -6,7 +6,7 @@ import { todayKey, addWeekXp, bumpActivity } from '../lib/dates'
 import { studyGain, studySkillXp, readGain } from '../lib/momentum'
 import { flatNodes, nodeById } from '../data/village'
 import { ARENA, ARENA_AXIS_MAP } from '../data/arena'
-import { pushToFirebase, deleteAccount as fbDeleteAccount, deleteClan as fbDeleteClan, transferClanAdmin as fbTransferAdmin } from '../lib/firebase'
+import { pushToFirebase, deleteAccount as fbDeleteAccount, deleteClan as fbDeleteClan, transferClanAdmin as fbTransferAdmin, saveUserHandles, loadUserHandles } from '../lib/firebase'
 import { TOJI_BOOK_DEFS } from '../data/toji'
 import { syncMonkeytype } from '../lib/monkeytype'
 import { syncLeetCode } from '../lib/leetcode'
@@ -49,6 +49,7 @@ function seedData(): Data {
     workoutLab: seedWorkoutData(),
     mt: { handle: '', pb60: null, pb30: null, pb15: null, completed: null, lastSync: null, error: null },
     lc: { handle: '', solved: null, easy: null, medium: null, hard: null, ranking: null, lastSync: null, error: null },
+    ccHandle: '',
   }
 }
 
@@ -130,6 +131,7 @@ interface AppState {
   syncLc: () => void
   setMtHandle: (h: string) => void
   setLcHandle: (h: string) => void
+  setCcHandle: (h: string) => void
   mtPulling: boolean
   lcPulling: boolean
   resetData: () => void
@@ -460,6 +462,8 @@ export const useStore = create<AppState>()(
         setCfHandle: (handle: string) => {
           persist_(d => { d.cf.handle = handle.trim() })
           toast_('cf handle saved')
+          const uid = get().data.profile.uid
+          if (uid) saveUserHandles(uid, { cf: handle.trim() }).catch(() => {})
         },
 
         syncCf: async () => {
@@ -508,20 +512,52 @@ export const useStore = create<AppState>()(
           toast_('reset')
         },
 
-        onSignedIn: (user: FbUser) => {
+        onSignedIn: async (user: FbUser) => {
           set({ fbUser: user, fbMode: 'online', nameDraft: user.name || get().data.profile.name })
           persist_(d => {
             d.profile.uid = user.uid
             if (user.name && d.profile.name === 'operative') d.profile.name = user.name
           })
+          // Load saved platform handles from Firestore, merge if local ones are empty
+          const remote = await loadUserHandles(user.uid)
+          if (remote) {
+            set(s => ({
+              data: {
+                ...s.data,
+                cf: remote.cf && !s.data.cf.handle ? { ...s.data.cf, handle: remote.cf } : s.data.cf,
+                mt: remote.mt && !s.data.mt.handle ? { ...s.data.mt, handle: remote.mt } : s.data.mt,
+                lc: remote.lc && !s.data.lc.handle ? { ...s.data.lc, handle: remote.lc } : s.data.lc,
+                ccHandle: remote.cc && !s.data.ccHandle ? remote.cc : s.data.ccHandle,
+              },
+            }))
+          }
+          // Push current local handles back so they are available on other devices
+          const d = get().data
+          const anyHandle = d.cf.handle || d.mt.handle || d.lc.handle || d.ccHandle
+          if (anyHandle) {
+            saveUserHandles(user.uid, { cf: d.cf.handle, mt: d.mt.handle, lc: d.lc.handle, cc: d.ccHandle }).catch(() => {})
+          }
         },
 
         onSignedOut: () => {
           set({ fbUser: null, fbMode: 'offline' })
         },
 
-        setMtHandle: (h) => persist_(d => { d.mt.handle = h }),
-        setLcHandle: (h) => persist_(d => { d.lc.handle = h }),
+        setMtHandle: (h) => {
+          persist_(d => { d.mt.handle = h })
+          const uid = get().data.profile.uid
+          if (uid) saveUserHandles(uid, { mt: h }).catch(() => {})
+        },
+        setLcHandle: (h) => {
+          persist_(d => { d.lc.handle = h })
+          const uid = get().data.profile.uid
+          if (uid) saveUserHandles(uid, { lc: h }).catch(() => {})
+        },
+        setCcHandle: (h) => {
+          persist_(d => { d.ccHandle = h })
+          const uid = get().data.profile.uid
+          if (uid) saveUserHandles(uid, { cc: h }).catch(() => {})
+        },
 
         syncMt: async () => {
           const handle = get().data.mt.handle.trim()

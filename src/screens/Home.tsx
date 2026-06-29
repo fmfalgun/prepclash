@@ -58,16 +58,19 @@ export function Home() {
   const setModal   = useStore(s => s.setModal)
   const setPalette = useStore(s => s.setPalette)
   const togglePhase = useStore(s => s.togglePhase)
-  const syncMt     = useStore(s => s.syncMt)
-  const syncLc     = useStore(s => s.syncLc)
+  const syncMt      = useStore(s => s.syncMt)
+  const syncLc      = useStore(s => s.syncLc)
   const setMtHandle = useStore(s => s.setMtHandle)
   const setLcHandle = useStore(s => s.setLcHandle)
-  const mtPulling  = useStore(s => s.mtPulling)
-  const lcPulling  = useStore(s => s.lcPulling)
+  const setCcHandle = useStore(s => s.setCcHandle)
+  const mtPulling   = useStore(s => s.mtPulling)
+  const lcPulling   = useStore(s => s.lcPulling)
 
   const [mtDraft, setMtDraft] = useState(data.mt.handle || '')
   const [lcDraft, setLcDraft] = useState(data.lc.handle || '')
-  const [ccHandle, setCcHandle] = useState('')
+  const [ccDraft, setCcDraft] = useState(data.ccHandle || '')
+  const [lcEditing, setLcEditing] = useState(false)
+  const [ccEditing, setCcEditing] = useState(false)
 
   const sc   = Math.round(overallScore(data))
   const lvl  = level(data)
@@ -86,7 +89,13 @@ export function Home() {
   }
   function handleLcSync() {
     if (lcDraft !== data.lc.handle) setLcHandle(lcDraft)
-    setTimeout(() => syncLc(), 0)
+    setTimeout(() => { syncLc(); setLcEditing(false) }, 0)
+  }
+  function handleCcSave() {
+    if (ccDraft.trim()) {
+      setCcHandle(ccDraft.trim())
+      setCcEditing(false)
+    }
   }
 
   const mt = data.mt
@@ -280,73 +289,90 @@ export function Home() {
                 )}
               </PlatformCard>
 
-              {/* LeetCode */}
-              <PlatformCard
-                title="LEETCODE · PROBLEM SOLVING"
-                handle={lcDraft}
-                pulling={lcPulling}
-                onHandleChange={setLcDraft}
-                onSync={handleLcSync}
-                note={lc.error?.includes('CORS') ? 'LC blocks browser requests — try again or enter stats manually' : undefined}
-              >
-                {lc.error && !lc.error.includes('CORS')
-                  ? <div style={{ font: "400 9px 'Roboto Mono'", color: '#e06060' }}>{lc.error}</div>
-                  : lc.lastSync
-                    ? <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 8 }}>
-                        {[
-                          { l: 'solved', v: lc.solved ?? '—' },
-                          { l: 'easy',   v: lc.easy   ?? '—' },
-                          { l: 'medium', v: lc.medium  ?? '—' },
-                          { l: 'hard',   v: lc.hard    ?? '—' },
-                        ].map(({ l, v }) => (
-                          <div key={l} style={{ background: 'var(--bg0)', borderRadius: 7, padding: '8px 10px' }}>
-                            <div style={{ font: "400 8px 'Roboto Mono'", color: 'var(--mut)', marginBottom: 3 }}>{l}</div>
-                            <div style={{ font: "500 15px/1 'Roboto Mono'", color: 'var(--a)' }}>{v}</div>
-                          </div>
-                        ))}
+              {/* LeetCode — compact when handle is set (CORS blocks live fetch) */}
+              {lc.handle && !lcEditing
+                ? (
+                  <div style={{ background: 'var(--card0)', borderRadius: 10, padding: '14px 16px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                      <span style={{ font: "500 9px 'Roboto Mono'", letterSpacing: '.12em', color: 'var(--mut)' }}>LEETCODE</span>
+                      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                        <span style={{ font: "400 8px 'Roboto Mono'", color: 'var(--dim2)' }}>@{lc.handle}</span>
+                        <button onClick={() => { setLcDraft(lc.handle); setLcEditing(true) }} style={{ cursor: 'pointer', background: 'transparent', border: '1px solid rgba(255,255,255,.12)', color: 'var(--dim2)', font: "400 8px 'Roboto Mono'", padding: '2px 8px', borderRadius: 4 }}>edit</button>
                       </div>
-                    : <div style={{ font: "400 9px 'Roboto Mono'", color: 'var(--mut)' }}>enter username and sync</div>
-                }
-                {lc.lastSync && lc.ranking && (
-                  <div style={{ marginTop: 8, font: "400 9px 'Roboto Mono'", color: 'var(--mut)' }}>
-                    global rank #{lc.ranking.toLocaleString()}
+                    </div>
+                    {lc.lastSync
+                      ? <>
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 7 }}>
+                            {[
+                              { l: 'solved', v: lc.solved ?? '—' },
+                              { l: 'easy',   v: lc.easy   ?? '—' },
+                              { l: 'med',    v: lc.medium  ?? '—' },
+                              { l: 'hard',   v: lc.hard    ?? '—' },
+                            ].map(({ l, v }) => (
+                              <div key={l} style={{ background: 'var(--bg0)', borderRadius: 6, padding: '7px 8px' }}>
+                                <div style={{ font: "400 7px 'Roboto Mono'", color: 'var(--mut)', marginBottom: 2 }}>{l}</div>
+                                <div style={{ font: "500 14px/1 'Roboto Mono'", color: 'var(--a)' }}>{v}</div>
+                              </div>
+                            ))}
+                          </div>
+                          {lc.ranking && <div style={{ marginTop: 7, font: "400 8px 'Roboto Mono'", color: 'var(--mut)' }}>global rank #{lc.ranking.toLocaleString()}</div>}
+                        </>
+                      : <div style={{ font: "400 8px 'Roboto Mono'", color: 'var(--dim2)', lineHeight: 1.6 }}>
+                          {lc.error ? 'fetch blocked (CORS) — no cached data yet' : 'not yet synced'}
+                        </div>
+                    }
                   </div>
-                )}
-              </PlatformCard>
+                )
+                : (
+                  <PlatformCard
+                    title="LEETCODE · PROBLEM SOLVING"
+                    handle={lcDraft}
+                    pulling={lcPulling}
+                    onHandleChange={setLcDraft}
+                    onSync={handleLcSync}
+                    note="LC API is blocked by browsers (CORS) — sync may fail; data from last successful sync is shown"
+                  >
+                    <div style={{ font: "400 9px 'Roboto Mono'", color: 'var(--mut)' }}>enter username and sync</div>
+                  </PlatformCard>
+                )
+              }
             </div>
 
-            {/* Codeforces + CodeChef row */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+            {/* Codeforces row */}
+            <div style={{ marginBottom: 14 }}>
               <CompetitiveCard />
+            </div>
 
-              {/* CodeChef — no public browser API, link only */}
-              <div style={{ background: 'var(--card0)', borderRadius: 10, padding: '18px 20px' }}>
-                <div style={{ font: "500 9px 'Roboto Mono'", letterSpacing: '.12em', color: 'var(--mut)', marginBottom: 12 }}>CODECHEF · COMPETITIVE</div>
-                <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
-                  <input
-                    value={ccHandle}
-                    onChange={e => setCcHandle(e.target.value)}
-                    placeholder="username"
-                    style={{
-                      flex: 1, background: 'var(--bg0)', border: 'none', borderRadius: 7,
-                      color: 'var(--ink)', font: "400 12px 'Roboto Mono'", padding: '8px 11px', outline: 'none',
-                    }}
-                  />
-                  <a
-                    href={ccHandle ? `https://www.codechef.com/users/${ccHandle}` : 'https://www.codechef.com'}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      padding: '0 14px', borderRadius: 7, background: 'var(--cardHi)',
-                      color: 'var(--a2)', font: "500 11px 'Roboto Mono'", textDecoration: 'none',
-                    }}
-                  >open ↗</a>
-                </div>
-                <div style={{ font: "400 9px 'Roboto Mono'", color: 'var(--dim2)', lineHeight: 1.6 }}>
-                  CodeChef blocks browser API requests — enter your handle to open your profile page directly
-                </div>
+            {/* CodeChef — compact (no public API, link only) */}
+            <div style={{ background: 'var(--card0)', borderRadius: 10, padding: '14px 16px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ font: "500 9px 'Roboto Mono'", letterSpacing: '.12em', color: 'var(--mut)' }}>CODECHEF</span>
+                {data.ccHandle && !ccEditing
+                  ? (
+                    <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                      <span style={{ font: "400 9px 'Roboto Mono'", color: 'var(--txt)' }}>@{data.ccHandle}</span>
+                      <a href={`https://www.codechef.com/users/${data.ccHandle}`} target="_blank" rel="noopener noreferrer" style={{ font: "400 9px 'Roboto Mono'", color: 'var(--a2)', textDecoration: 'none' }}>open ↗</a>
+                      <button onClick={() => { setCcDraft(data.ccHandle); setCcEditing(true) }} style={{ cursor: 'pointer', background: 'transparent', border: '1px solid rgba(255,255,255,.12)', color: 'var(--dim2)', font: "400 8px 'Roboto Mono'", padding: '2px 8px', borderRadius: 4 }}>edit</button>
+                    </div>
+                  )
+                  : (
+                    <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                      <input
+                        value={ccDraft}
+                        onChange={e => setCcDraft(e.target.value)}
+                        onKeyDown={e => e.key === 'Enter' && handleCcSave()}
+                        placeholder="username"
+                        style={{ width: 130, background: 'var(--bg0)', border: 'none', borderRadius: 6, color: 'var(--ink)', font: "400 11px 'Roboto Mono'", padding: '6px 10px', outline: 'none' }}
+                      />
+                      <button onClick={handleCcSave} style={{ cursor: 'pointer', border: 'none', background: 'var(--a)', color: '#111', font: "500 10px 'Roboto Mono'", padding: '6px 12px', borderRadius: 6 }}>save</button>
+                      {data.ccHandle && <button onClick={() => setCcEditing(false)} style={{ cursor: 'pointer', background: 'transparent', border: '1px solid rgba(255,255,255,.12)', color: 'var(--dim2)', font: "400 8px 'Roboto Mono'", padding: '6px 10px', borderRadius: 6 }}>cancel</button>}
+                    </div>
+                  )
+                }
               </div>
+              {!data.ccHandle && !ccEditing && (
+                <div style={{ marginTop: 8, font: "400 8px 'Roboto Mono'", color: 'var(--dim2)' }}>no API access — saves handle for direct profile link</div>
+              )}
             </div>
           </div>
 

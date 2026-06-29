@@ -319,6 +319,31 @@ export async function pushToFirebase(data: Data): Promise<void> {
   } catch {}
 }
 
+export async function saveUserHandles(uid: string, handles: { cf?: string; mt?: string; lc?: string; cc?: string }): Promise<void> {
+  if (!fb) return
+  try {
+    const { doc, setDoc } = fb.fsMod as Record<string, unknown>
+    await (setDoc as (ref: unknown, d: unknown, opts: unknown) => Promise<void>)(
+      (doc as (db: unknown, col: string, id: string) => unknown)(fb.db, 'userProfiles', uid),
+      { handles, updatedAt: Date.now() },
+      { merge: true }
+    )
+  } catch {}
+}
+
+export async function loadUserHandles(uid: string): Promise<{ cf?: string; mt?: string; lc?: string; cc?: string } | null> {
+  if (!fb) return null
+  try {
+    const { doc, getDoc } = fb.fsMod as Record<string, unknown>
+    const snap = await (getDoc as (ref: unknown) => Promise<{ exists: () => boolean; data: () => unknown }>)(
+      (doc as (db: unknown, col: string, id: string) => unknown)(fb.db, 'userProfiles', uid)
+    )
+    if (!snap.exists()) return null
+    const d = snap.data() as { handles?: { cf?: string; mt?: string; lc?: string; cc?: string } }
+    return d.handles || null
+  } catch { return null }
+}
+
 function currentNodeNameFromVillage(village: Record<string, unknown>): string {
   const order = ['linux','net101','pyscript','recon','webbasic','tooling','webexp','netatk','crypto','dsa','privesc','adatk','expdev','c2','evasion','redops']
   const names: Record<string, string> = {
