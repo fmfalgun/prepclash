@@ -1,0 +1,27 @@
+{
+  "projectId": "7d90e438-c7a2-4829-bffe-60eb4654d85f",
+  "shape": "package",
+  "pkg": "prepclash-v2",
+  "globalName": "PrepClash",
+  "srcDir": "src/components",
+  "tsconfig": "tsconfig.app.json",
+  "cssEntry": "src/ds-tokens.css",
+  "runtimeFontPrefixes": ["Roboto Mono", "Lexend Deca", "Inter", "Share Tech Mono"],
+  "buildCmd": "npm run build",
+  "readmeHeader": ".design-sync/conventions.md",
+  "componentSrcMap": {
+    "Radar": "src/components/Radar.tsx",
+    "Heatmap": "src/components/Heatmap.tsx",
+    "Toast": "src/components/Toast.tsx",
+    "TopBar": "src/components/TopBar.tsx"
+  },
+  "dtsPropsFor": {
+    "Radar": "data: { palette: 'toxic'|'ember'|'ice'|'violet'; skills: Record<string,number>; study: Record<string,number>; arena: Record<string,unknown>; reading: Record<string,unknown>; workout: Record<string,unknown>; logs: unknown[]; node: Record<string,unknown>; courses: unknown[]; books: unknown[]; activity: Record<string,number>; momentum: number; }; size?: number;",
+    "Heatmap": "data: { palette: 'toxic'|'ember'|'ice'|'violet'; activity: Record<string,number>; }; cell?: number; gap?: number;",
+    "Toast": "",
+    "TopBar": ""
+  },
+  "overrides": {
+    "Heatmap": { "cardMode": "column" }
+  }
+}

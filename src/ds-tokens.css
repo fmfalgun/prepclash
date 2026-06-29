@@ -1,0 +1,50 @@
+/* PrepClash design tokens — all custom properties used by components */
+
+/* Base dark theme */
+.rtt {
+  --ink:    #eafff2;
+  --txt:    #b8d8c4;
+  --mut:    #6a7a72;
+  --dim:    #4a574f;
+  --dim2:   #38423c;
+  --bg0:    #050806;
+  --card0:  #0b110c;
+  --card1:  #070c08;
+  --cardHi: #111813;
+}
+
+/* Palette accents — set by .pal-* class on root */
+.pal-toxic  { --rgb: 57,255,136;  --a: #39ff88; --a2: #9bff39; --a2rgb: 155,255,57;  }
+.pal-ember  { --rgb: 255,90,90;   --a: #ff5a5a; --a2: #ff9f43; --a2rgb: 255,159,67;  }
+.pal-ice    { --rgb: 45,160,255;  --a: #2da0ff; --a2: #00e5ff; --a2rgb: 0,229,255;   }
+.pal-violet { --rgb: 168,85,247;  --a: #a855f7; --a2: #22d3ee; --a2rgb: 34,211,238;  }
+
+/* Global resets */
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background-color: var(--bg0, #050806);
+  color: var(--ink, #eafff2);
+  font-family: 'Inter', sans-serif;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar       { width: 9px; height: 9px; }
+::-webkit-scrollbar-track { background: var(--card1); }
+::-webkit-scrollbar-thumb { background: rgba(var(--rgb), .2); border-radius: 4px; }
+::placeholder             { color: var(--dim2); }
+
+input, textarea, select { font-family: 'Share Tech Mono', monospace; }
+
+/* Animations */
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 8px rgba(var(--rgb), .25); }
+  50%       { box-shadow: 0 0 18px rgba(var(--a2rgb), .6); }
+}
+@keyframes flash {
+  0%   { opacity: 0; transform: translateY(8px); }
+  12%  { opacity: 1; transform: translateY(0); }
+  80%  { opacity: 1; }
+  100% { opacity: 0; }
+}

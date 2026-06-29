@@ -8,3 +8,10 @@ dist/
 Thumbs.db
 .vscode/
 .idea/
+
+# design-sync generated/local state (committed: .design-sync/{config.json,NOTES.md,conventions.md,previews/})
+.ds-sync/
+ds-bundle/
+.design-sync/.cache/
+.design-sync/learnings/
+.design-sync/node_modules
