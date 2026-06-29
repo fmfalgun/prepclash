@@ -1,14 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PREPCLASH</title>
-  <meta name="description" content="PrepClash — gamified Google interview prep tracker for your friend group.">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
-  <meta property="og:title" content="PREPCLASH">
-  <meta property="og:description" content="Gamified interview prep tracker. Prepare. Compete. Conquer.">
-  <meta property="og:type" content="website">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PREPCLASH v2</title>
+  <meta name="description" content="PrepClash v2 — Red Team Progress Tracker" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>" />
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-2EVBFNKL0J"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
@@ -16,74 +13,12 @@
     gtag('js', new Date());
     gtag('config', 'G-2EVBFNKL0J');
   </script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Share+Tech+Mono&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
 </head>
 <body>
-
-  <!-- LOGIN SCREEN (shown when not logged in) -->
-  <div id="login-screen">
-    <div class="login-box">
-      <div class="logo">PREPCLASH</div>
-      <div class="tagline">PREPARE // COMPETE // CONQUER</div>
-      <div class="status-line">SYSTEM STATUS: READY</div>
-      <button id="login-btn" onclick="signInWithGoogle()">[ LOGIN WITH GOOGLE ]</button>
-    </div>
-  </div>
-
-  <!-- MAIN APP (hidden when not logged in) -->
-  <div id="app" style="display:none">
-    <div id="topbar">
-      <span id="topbar-title">PREPCLASH</span>
-      <span id="topbar-player" aria-live="polite">// PLAYER // XP: 0</span>
-      <button id="logout-btn" onclick="signOut()">[ LOGOUT ]</button>
-    </div>
-    <div id="tabs" role="tablist">
-      <button class="tab-btn active" data-tab="home" role="tab" aria-selected="true">[ HOME ]</button>
-      <button class="tab-btn" data-tab="village" role="tab" aria-selected="false">[ VILLAGE ]</button>
-      <button class="tab-btn" data-tab="clan-capital" role="tab" aria-selected="false">[ CLAN CAPITAL ]</button>
-      <button class="tab-btn" data-tab="leaderboard" role="tab" aria-selected="false">[ LEADERBOARD ]</button>
-    </div>
-    <div id="tab-content">
-      <div id="tab-home" class="tab-panel active"></div>
-      <div id="tab-village" class="tab-panel"></div>
-      <div id="tab-clan-capital" class="tab-panel"></div>
-      <div id="tab-leaderboard" class="tab-panel"></div>
-    </div>
-  </div>
-
-  <!-- MODAL (for proof link input) -->
-  <div id="modal-overlay" class="modal-overlay" style="display:none">
-    <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-      <div id="modal-title" class="modal-title"></div>
-      <label class="modal-label" for="modal-proof-input">PASTE PROOF LINK:</label>
-      <input id="modal-proof-input" type="url" placeholder="https://..." />
-      <div id="modal-error" class="modal-error" style="display:none"></div>
-      <div class="modal-actions">
-        <button id="modal-confirm" type="button">[ CONFIRM COMPLETE ]</button>
-        <button id="modal-cancel" type="button">[ CANCEL ]</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Firebase compat SDK v9 -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-
-  <!-- App scripts in load order -->
-  <script src="firebase-config.js"></script>
-  <script src="auth.js"></script>
-  <script src="db.js"></script>
-  <script src="topics.js"></script>
-  <script src="questions.js"></script>
-  <script src="village.js"></script>
-  <script src="clanCapital.js"></script>
-  <script src="leaderboard.js"></script>
-  <script src="home.js"></script>
-  <script src="app.js"></script>
-
+  <div id="root"></div>
+  <script type="module" src="/src/main.tsx"></script>
 </body>
 </html>
