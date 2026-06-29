@@ -67,6 +67,27 @@ export function ConnectModal() {
         <button onClick={saveName} style={{ cursor: 'pointer', border: '1px solid var(--a2)', background: 'rgba(var(--a2rgb),.1)', color: 'var(--a2)', font: "700 11px 'Rajdhani'", letterSpacing: '.1em', padding: '0 16px', borderRadius: 4 }}>SAVE</button>
       </div>
 
+      {/* Codeforces handle */}
+      <ModalLabel>CODEFORCES HANDLE</ModalLabel>
+      <div style={{ display: 'flex', gap: 8, marginBottom: 6 }}>
+        <input
+          value={cfDraft}
+          onChange={e => setCfDraft(e.target.value)}
+          placeholder="your_cf_handle"
+          style={{ ...inputStyle, flex: 1 }}
+          onKeyDown={e => e.key === 'Enter' && setCfHandle(cfDraft)}
+        />
+        <button
+          onClick={() => setCfHandle(cfDraft)}
+          style={{ cursor: 'pointer', border: '1px solid var(--a2)', background: 'rgba(var(--a2rgb),.1)', color: 'var(--a2)', font: "700 11px 'Rajdhani'", letterSpacing: '.1em', padding: '0 16px', borderRadius: 4 }}
+        >SAVE</button>
+      </div>
+      <div style={{ font: "400 9px 'Share Tech Mono'", color: 'var(--dim2)', marginBottom: 18 }}>
+        {data.cf.handle
+          ? <>Linked: <span style={{ color: 'var(--a)' }}>{data.cf.handle}</span>{data.cf.rating ? ` · ${data.cf.rating} (${data.cf.rank})` : ''}</>
+          : 'Link your CF account to show rating on your public profile.'}
+      </div>
+
       {/* Palette */}
       <ModalLabel>COLOR PALETTE</ModalLabel>
       <div style={{ display: 'flex', gap: 8, marginBottom: 18 }}>
@@ -104,28 +125,6 @@ export function ConnectModal() {
             style={{ ...inputStyle, resize: 'none', fontSize: 10, lineHeight: 1.5, marginBottom: 10 }}
           />
           <SubmitBtn onClick={handleGoogleAuth}>{signingIn ? 'CONNECTING…' : '⟳ SIGN IN WITH GOOGLE'}</SubmitBtn>
-        </div>
-      )}
-
-      {/* Codeforces handle */}
-      <ModalLabel style={{ marginTop: 18 }}>CODEFORCES HANDLE</ModalLabel>
-      <div style={{ display: 'flex', gap: 8, marginBottom: 6 }}>
-        <input
-          value={cfDraft}
-          onChange={e => setCfDraft(e.target.value)}
-          placeholder="your_cf_handle"
-          style={{ ...inputStyle, flex: 1 }}
-          onKeyDown={e => e.key === 'Enter' && setCfHandle(cfDraft)}
-        />
-        <button
-          onClick={() => setCfHandle(cfDraft)}
-          style={{ cursor: 'pointer', border: '1px solid var(--a2)', background: 'rgba(var(--a2rgb),.1)', color: 'var(--a2)', font: "700 11px 'Rajdhani'", letterSpacing: '.1em', padding: '0 16px', borderRadius: 4 }}
-        >SAVE</button>
-      </div>
-      {data.cf.handle && (
-        <div style={{ font: "400 9px 'Share Tech Mono'", color: 'var(--dim2)', marginBottom: 14 }}>
-          Linked: <span style={{ color: 'var(--a)' }}>{data.cf.handle}</span>
-          {data.cf.rating ? ` · ${data.cf.rating} (${data.cf.rank})` : ''}
         </div>
       )}
 

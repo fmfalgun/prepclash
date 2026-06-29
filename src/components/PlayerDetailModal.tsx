@@ -99,7 +99,7 @@ export function PlayerDetailModal() {
           <div>
             <div style={{ font: "700 9px 'Share Tech Mono'", letterSpacing: '.2em', color: 'var(--mut)', marginBottom: 10 }}>SKILL AXES</div>
             {SKILL_DEFS.map(s => {
-              const v  = Math.min(99, Math.round(s.base + (o.skillXp[s.id] || 0)))
+              const v  = Math.min(99, Math.round(o.skillXp[s.id] || 0))
               const ac = AXIS_COLORS[s.id] || P.a
               return (
                 <div key={s.id} style={{ marginBottom: 9 }}>

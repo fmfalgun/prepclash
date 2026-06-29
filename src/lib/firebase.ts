@@ -204,7 +204,7 @@ function subscribeClan(onClan: (members: ClanMember[]) => void): void {
 
 function localOverallScore(skillXp: Record<string, number>): number {
   const all = [...SKILL_DEFS]
-  const sum = all.reduce((a, s) => a + Math.min(99, s.base + (skillXp[s.id] || 0)), 0)
+  const sum = all.reduce((a, s) => a + Math.min(99, skillXp[s.id] || 0), 0)
   return sum / all.length
 }
 
