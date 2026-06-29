@@ -76,7 +76,8 @@ export function Clan() {
     finally { setSubmitting(false) }
   }
 
-  const activeClan = selectedClan || (myClanId ? clans.find(c => c.id === myClanId) : null)
+  // fallback to locally cached clan doc so it shows after sign-out
+  const activeClan = selectedClan || (myClanId ? (clans.find(c => c.id === myClanId) ?? data.myClan) : null)
   const clanMembers = activeClan ? operatives.filter(op => op.clanId === activeClan.id) : []
   const isMyActiveClan = activeClan?.id === myClanId
   const iAmFounder = !!(activeClan && fbUser && activeClan.founderUid === fbUser.uid)

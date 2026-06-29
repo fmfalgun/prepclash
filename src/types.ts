@@ -25,6 +25,27 @@ export interface CfState {
   error: string | null
 }
 
+export interface MonkeytypeState {
+  handle: string
+  pb60: number | null
+  pb30: number | null
+  pb15: number | null
+  completed: number | null
+  lastSync: number | null
+  error: string | null
+}
+
+export interface LeetCodeState {
+  handle: string
+  solved: number | null
+  easy: number | null
+  medium: number | null
+  hard: number | null
+  ranking: number | null
+  lastSync: number | null
+  error: string | null
+}
+
 export type WeightMode = 'kg/hand' | 'kg total' | 'lb/hand' | 'bodyweight' | 'cardio'
 
 export interface SchedExercise {
@@ -94,7 +115,10 @@ export interface Data {
   activity: Record<string, number>
   kwCounts: Record<string, number>
   clanId?: string | null
+  myClan?: ClanDoc | null
   onboarded?: boolean
+  mt: MonkeytypeState
+  lc: LeetCodeState
 }
 
 export interface ClanMember {

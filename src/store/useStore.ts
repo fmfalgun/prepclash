@@ -8,6 +8,8 @@ import { flatNodes, nodeById } from '../data/village'
 import { ARENA, ARENA_AXIS_MAP } from '../data/arena'
 import { pushToFirebase, deleteAccount as fbDeleteAccount, deleteClan as fbDeleteClan, transferClanAdmin as fbTransferAdmin } from '../lib/firebase'
 import { TOJI_BOOK_DEFS } from '../data/toji'
+import { syncMonkeytype } from '../lib/monkeytype'
+import { syncLeetCode } from '../lib/leetcode'
 import { seedWorkoutData, TOJI } from '../data/workoutTemplate'
 import { computeSession, computePBs, est1rm } from '../lib/workoutStats'
 import { syncCfProfile } from '../lib/codeforces'
@@ -43,7 +45,10 @@ function seedData(): Data {
     activity: {},
     kwCounts: {},
     clanId: null,
+    myClan: null,
     workoutLab: seedWorkoutData(),
+    mt: { handle: '', pb60: null, pb30: null, pb15: null, completed: null, lastSync: null, error: null },
+    lc: { handle: '', solved: null, easy: null, medium: null, hard: null, ranking: null, lastSync: null, error: null },
   }
 }
 
@@ -121,6 +126,12 @@ interface AppState {
   deleteClan: (clanId: string) => void
   transferClanAdmin: (clanId: string, toUid: string) => void
   adoptToji: (choice: 'toji' | 'own' | 'both') => void
+  syncMt: () => void
+  syncLc: () => void
+  setMtHandle: (h: string) => void
+  setLcHandle: (h: string) => void
+  mtPulling: boolean
+  lcPulling: boolean
   resetData: () => void
   onSignedIn: (user: FbUser) => void
   onSignedOut: () => void
@@ -186,7 +197,7 @@ export const useStore = create<AppState>()(
 
       return {
         data: seedData(),
-        tab: 'home',
+        tab: 'profile',
         modal: null,
         draft: freshDraft(),
         toast: null,
@@ -207,6 +218,8 @@ export const useStore = create<AppState>()(
         clans: [],
         selectedPlayer: null,
         selectedClan: null,
+        mtPulling: false,
+        lcPulling: false,
         logDraft: null,
         editDraft: null,
         editNote: '',
@@ -235,7 +248,17 @@ export const useStore = create<AppState>()(
         setFbReady: (fbReady) => set({ fbReady }),
         setFbUser: (fbUser) => set({ fbUser }),
         setOperatives: (operatives) => set({ operatives }),
-        setClans: (clans) => set({ clans }),
+        setClans: (clans) => {
+          const { data } = get()
+          const myClanId = data.clanId
+          const myClan = myClanId ? (clans.find(c => c.id === myClanId) ?? data.myClan) : null
+          if (myClan && myClan !== data.myClan) {
+            // cache clan doc in persisted data so it survives sign-out
+            set(s => ({ clans, data: { ...s.data, myClan } }))
+          } else {
+            set({ clans })
+          }
+        },
         setSelectedPlayer: (selectedPlayer) => set({ selectedPlayer }),
         setSelectedClan: (selectedClan) => set({ selectedClan }),
 
@@ -495,6 +518,35 @@ export const useStore = create<AppState>()(
 
         onSignedOut: () => {
           set({ fbUser: null, fbMode: 'offline' })
+        },
+
+        setMtHandle: (h) => persist_(d => { d.mt.handle = h }),
+        setLcHandle: (h) => persist_(d => { d.lc.handle = h }),
+
+        syncMt: async () => {
+          const handle = get().data.mt.handle.trim()
+          if (!handle) { toast_('enter a monkeytype username'); return }
+          set({ mtPulling: true })
+          try {
+            const result = await syncMonkeytype(handle)
+            persist_(d => { d.mt = { ...result, error: null } })
+          } catch (e) {
+            persist_(d => { d.mt.error = String(e).replace('Error: ', '') })
+            toast_('MT sync failed')
+          } finally { set({ mtPulling: false }) }
+        },
+
+        syncLc: async () => {
+          const handle = get().data.lc.handle.trim()
+          if (!handle) { toast_('enter a leetcode username'); return }
+          set({ lcPulling: true })
+          try {
+            const result = await syncLeetCode(handle)
+            persist_(d => { d.lc = { ...result, error: null } })
+          } catch (e) {
+            persist_(d => { d.lc.error = String(e).replace('Error: ', '') })
+            toast_('LC sync failed')
+          } finally { set({ lcPulling: false }) }
         },
 
         deleteClan: async (clanId: string) => {

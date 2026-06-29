@@ -71,7 +71,7 @@ export default function App() {
     <div className={'rtt pal-' + palette} style={{ minHeight: '100vh', background: 'var(--bg0)' }}>
       <TopBar />
       <main>
-        {tab === 'home'    && <Home />}
+        {tab === 'profile' && <Home />}
         {tab === 'village' && <Village />}
         {tab === 'arena'   && <Arena />}
         {tab === 'study'   && <Study />}
