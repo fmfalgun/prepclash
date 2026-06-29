@@ -26,10 +26,7 @@ export function cpScore(data: Data): number {
 
 export function skillScore(data: Data, id: string): number {
   if (id === 'cp') return cpScore(data)
-  const all = [...SKILL_DEFS, ...data.extraSkills]
-  const def = all.find(s => s.id === id)
-  const base = def ? def.base : 30
-  return Math.min(99, Math.round(base + (data.skillXp[id] || 0)))
+  return Math.min(99, Math.round(data.skillXp[id] || 0))
 }
 
 export function overallScore(data: Data): number {

@@ -11,6 +11,7 @@ export function ConnectModal() {
   const saveName      = useStore(s => s.saveName)
   const setPalette    = useStore(s => s.setPalette)
   const resetData     = useStore(s => s.resetData)
+  const deleteAccount = useStore(s => s.deleteAccount)
   const fbConfigDraft = useStore(s => s.fbConfigDraft)
   const setFbConfig   = useStore(s => s.setFbConfigDraft)
   const fbMode        = useStore(s => s.fbMode)
@@ -130,8 +131,17 @@ export function ConnectModal() {
 
       {/* Danger zone */}
       <div style={{ marginTop: 14, borderTop: '1px solid rgba(255,90,90,.12)', paddingTop: 16 }}>
-        <ModalLabel>DANGER ZONE</ModalLabel>
-        <button onClick={resetData} style={{ cursor: 'pointer', border: '1px solid rgba(255,90,90,.25)', background: 'rgba(255,90,90,.05)', color: '#c0746f', font: "500 10px 'Roboto Mono'", letterSpacing: '.12em', padding: 10, width: '100%', borderRadius: 4 }}>RESET ALL LOCAL PROGRESS</button>
+        <ModalLabel>danger zone</ModalLabel>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <button onClick={resetData} style={{ cursor: 'pointer', border: '1px solid rgba(255,90,90,.2)', background: 'rgba(255,90,90,.04)', color: '#c0746f', font: "400 10px 'Roboto Mono'", padding: 10, width: '100%', borderRadius: 6 }}>
+            reset all local progress
+          </button>
+          {fbUser && (
+            <button onClick={deleteAccount} style={{ cursor: 'pointer', border: '1px solid rgba(255,90,90,.35)', background: 'rgba(255,90,90,.08)', color: '#e06060', font: "400 10px 'Roboto Mono'", padding: 10, width: '100%', borderRadius: 6 }}>
+              delete account & all data
+            </button>
+          )}
+        </div>
       </div>
     </ModalShell>
   )

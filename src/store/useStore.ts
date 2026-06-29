@@ -6,7 +6,7 @@ import { todayKey, addWeekXp, bumpActivity } from '../lib/dates'
 import { studyGain, studySkillXp, readGain } from '../lib/momentum'
 import { flatNodes, nodeById } from '../data/village'
 import { ARENA, ARENA_AXIS_MAP } from '../data/arena'
-import { pushToFirebase } from '../lib/firebase'
+import { pushToFirebase, deleteAccount as fbDeleteAccount } from '../lib/firebase'
 import { seedWorkoutData, TOJI } from '../data/workoutTemplate'
 import { computeSession, computePBs, est1rm } from '../lib/workoutStats'
 import type { ArenaQuestion } from '../data/arena'
@@ -116,6 +116,7 @@ interface AppState {
   resetData: () => void
   onSignedIn: (user: FbUser) => void
   onSignedOut: () => void
+  deleteAccount: () => void
 
   // Workout Lab actions
   openLog: () => void
@@ -451,6 +452,20 @@ export const useStore = create<AppState>()(
 
         onSignedOut: () => {
           set({ fbUser: null, fbMode: 'offline' })
+        },
+
+        deleteAccount: async () => {
+          const { fbUser } = get()
+          if (!fbUser) { toast_('not signed in'); return }
+          if (!confirm('delete your account? this cannot be undone.')) return
+          try {
+            await fbDeleteAccount(fbUser.uid)
+            const fresh = seedData()
+            set({ data: fresh, fbUser: null, fbMode: 'offline', modal: null, nameDraft: fresh.profile.name })
+            toast_('account deleted')
+          } catch (e) {
+            toast_('delete failed · ' + String(e).slice(0, 50))
+          }
         },
 
         // --- Workout Lab ---

@@ -91,6 +91,25 @@ export async function signOut(): Promise<void> {
   await (so as (auth: unknown) => Promise<void>)(fb.auth)
 }
 
+export async function deleteAccount(uid: string): Promise<void> {
+  if (!fb) throw new Error('Not connected')
+  const { doc, deleteDoc } = fb.fsMod as Record<string, unknown>
+  await (deleteDoc as (ref: unknown) => Promise<void>)(
+    (doc as (db: unknown, col: string, id: string) => unknown)(fb.db, 'operatives', uid)
+  )
+  const { deleteUser, getAuth } = fb.authMod as Record<string, unknown>
+  const user = (getAuth as (a?: unknown) => { currentUser: unknown })(fb.auth).currentUser
+  if (user) {
+    try {
+      await (deleteUser as (u: unknown) => Promise<void>)(user)
+    } catch {
+      // if re-auth required, just sign out instead
+      const { signOut: so } = fb.authMod as Record<string, unknown>
+      await (so as (auth: unknown) => Promise<void>)(fb.auth)
+    }
+  }
+}
+
 // --- Public data queries ---
 
 let opsUnsub: (() => void) | null = null
