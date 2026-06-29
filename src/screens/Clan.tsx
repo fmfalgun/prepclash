@@ -1,7 +1,8 @@
+import { useState } from 'react'
 import { useStore } from '../store/useStore'
 import { AVATAR_COLORS } from '../data/palettes'
 import { gradeColor } from '../lib/grades'
-import { joinClan, leaveClan } from '../lib/firebase'
+import { joinClan, leaveClan, createClan } from '../lib/firebase'
 import type { ClanDoc, PublicOperative } from '../types'
 
 export function Clan() {
@@ -14,7 +15,14 @@ export function Clan() {
   const setSelectedPlayer = useStore(s => s.setSelectedPlayer)
   const setModal    = useStore(s => s.setModal)
   const showToast   = useStore(s => s.showToast)
+  const setClanId   = useStore(s => s.setClanId)
   const selectedClan = useStore(s => s.selectedClan)
+
+  const [creating, setCreating]     = useState(false)
+  const [clanName, setClanName]     = useState('')
+  const [clanTag, setClanTag]       = useState('')
+  const [clanDesc, setClanDesc]     = useState('')
+  const [submitting, setSubmitting] = useState(false)
 
   const myClanId = data.clanId || null
 
@@ -30,8 +38,23 @@ export function Clan() {
     if (!fbUser || !myClanId) return
     try {
       await leaveClan(fbUser.uid, myClanId)
+      setClanId(null)
       showToast('LEFT CLAN')
     } catch { showToast('FAILED') }
+  }
+
+  async function handleCreate() {
+    if (!fbUser) { setModal('connect'); return }
+    const name = clanName.trim()
+    if (!name) { showToast('ENTER A CLAN NAME'); return }
+    setSubmitting(true)
+    try {
+      const newId = await createClan(fbUser.uid, name, clanTag.trim() || `[${name.slice(0,3).toUpperCase()}]`, clanDesc.trim())
+      setClanId(newId)
+      showToast('CLAN CREATED · ' + name.toUpperCase())
+      setCreating(false); setClanName(''); setClanTag(''); setClanDesc('')
+    } catch { showToast('CREATE FAILED · CHECK CONNECTION') }
+    finally { setSubmitting(false) }
   }
 
   const activeClan = selectedClan || (myClanId ? clans.find(c => c.id === myClanId) : null)
@@ -90,6 +113,47 @@ export function Clan() {
               font: "700 10px 'Rajdhani'", letterSpacing: '.1em', padding: '12px', borderRadius: 5,
             }}
           >SIGN IN TO JOIN →</button>
+        )}
+
+        {fbUser && !myClanId && (
+          <div style={{ marginTop: 18 }}>
+            {!creating ? (
+              <button
+                onClick={() => setCreating(true)}
+                style={{
+                  cursor: 'pointer', width: '100%',
+                  border: '1px solid rgba(var(--rgb),.2)',
+                  background: 'transparent', color: 'var(--mut)',
+                  font: "700 10px 'Share Tech Mono'", letterSpacing: '.1em', padding: '11px', borderRadius: 5,
+                }}
+              >+ CREATE NEW CLAN</button>
+            ) : (
+              <div style={{ border: '1px solid rgba(var(--rgb),.15)', borderRadius: 6, padding: 14 }}>
+                <div style={{ font: "700 9px 'Share Tech Mono'", letterSpacing: '.2em', color: 'var(--mut)', marginBottom: 12 }}>NEW CLAN</div>
+                {([
+                  { label: 'NAME *', val: clanName, set: setClanName, placeholder: 'Clan name' },
+                  { label: 'TAG',    val: clanTag,  set: setClanTag,  placeholder: '[ABC] — auto if blank' },
+                  { label: 'BIO',    val: clanDesc, set: setClanDesc, placeholder: 'Short description' },
+                ] as const).map(f => (
+                  <div key={f.label} style={{ marginBottom: 8 }}>
+                    <div style={{ font: "700 8px 'Share Tech Mono'", color: 'var(--dim2)', marginBottom: 4 }}>{f.label}</div>
+                    <input
+                      value={f.val}
+                      onChange={e => f.set(e.target.value)}
+                      placeholder={f.placeholder}
+                      style={{ width: '100%', boxSizing: 'border-box', background: 'rgba(255,255,255,.03)', border: '1px solid rgba(255,255,255,.09)', borderRadius: 4, padding: '8px 10px', color: 'var(--ink)', font: "400 11px 'Share Tech Mono'", outline: 'none' }}
+                    />
+                  </div>
+                ))}
+                <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+                  <button onClick={() => setCreating(false)} style={{ cursor: 'pointer', flex: 1, border: '1px solid rgba(255,255,255,.08)', background: 'transparent', color: 'var(--mut)', font: "700 9px 'Share Tech Mono'", padding: '9px', borderRadius: 4 }}>CANCEL</button>
+                  <button onClick={handleCreate} disabled={submitting} style={{ cursor: 'pointer', flex: 2, border: '1px solid rgba(var(--rgb),.3)', background: 'rgba(var(--rgb),.08)', color: 'var(--a)', font: "700 10px 'Rajdhani'", letterSpacing: '.1em', padding: '9px', borderRadius: 4 }}>
+                    {submitting ? 'CREATING…' : 'FOUND CLAN'}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         )}
       </div>
 

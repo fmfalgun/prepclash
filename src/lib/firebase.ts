@@ -147,6 +147,21 @@ export async function joinClan(uid: string, clanId: string): Promise<void> {
   )
 }
 
+export async function createClan(uid: string, name: string, tag: string, description: string): Promise<string> {
+  if (!fb) throw new Error('Not connected')
+  const { doc, setDoc, updateDoc } = fb.fsMod as Record<string, unknown>
+  const clanId = name.toLowerCase().replace(/[^a-z0-9]+/g, '_').slice(0, 20) + '_' + Math.floor(Math.random() * 9999)
+  await (setDoc as (ref: unknown, d: unknown) => Promise<void>)(
+    (doc as (db: unknown, col: string, id: string) => unknown)(fb.db, 'clans', clanId),
+    { name, tag, description, founderUid: uid, memberCount: 1, createdAt: Date.now() }
+  )
+  await (updateDoc as (ref: unknown, d: unknown) => Promise<void>)(
+    (doc as (db: unknown, col: string, id: string) => unknown)(fb.db, 'operatives', uid),
+    { clanId }
+  )
+  return clanId
+}
+
 export async function leaveClan(uid: string, clanId: string): Promise<void> {
   if (!fb) throw new Error('Not connected')
   const { doc, updateDoc, increment } = fb.fsMod as Record<string, unknown>

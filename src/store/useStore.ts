@@ -2,7 +2,6 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { Data, Draft, ModalType, Palette, PublicOperative, ClanDoc, FbUser } from '../types'
 import { SKILL_DEFS, DEFAULT_KEYWORDS, COURSE_DEFS, BOOK_DEFS } from '../data/skills'
-import { seedActivity, seedWorkouts } from '../data/mock'
 import { todayKey, addWeekXp, bumpActivity } from '../lib/dates'
 import { studyGain, studySkillXp, workoutGain, readGain, fmtWeight } from '../lib/momentum'
 import { flatNodes, nodeById } from '../data/village'
@@ -30,19 +29,19 @@ function seedData(): Data {
     skillXp,
     keywords: DEFAULT_KEYWORDS.map(([label, skill]) => ({ label, skill })),
     extraSkills: [],
-    courses: COURSE_DEFS.map(c => ({ id: c.id, done: [...c.done] })),
-    books: BOOK_DEFS.map(b => ({ id: b.id, done: b.done })),
+    courses: COURSE_DEFS.map(c => ({ id: c.id, done: c.done.map(() => 0) })),
+    books: BOOK_DEFS.map(b => ({ id: b.id, done: 0 })),
     customDefs: [],
     logs: [],
     momentum: 0,
-    workouts: seedWorkouts(),
+    workouts: [],
     cf: { handle: '', rating: null, maxRating: null, rank: '', solved: null, contests: null, lastSync: null, error: null },
     a2oj: [],
     village: {},
     arena: {},
     weekly: {},
     palette: 'toxic',
-    activity: seedActivity(),
+    activity: {},
     kwCounts: {},
     clanId: null,
   }
@@ -108,6 +107,8 @@ interface AppState {
   openQuestion: (topic: string, qid: string) => void
   solveQuestion: () => void
   saveName: () => void
+  setCfHandle: (handle: string) => void
+  setClanId: (clanId: string | null) => void
   resetData: () => void
   onSignedIn: (user: FbUser) => void
   onSignedOut: () => void
@@ -411,6 +412,15 @@ export const useStore = create<AppState>()(
           if (!n) return
           persist_(d => { d.profile.name = n })
           toast_('NAME SAVED')
+        },
+
+        setCfHandle: (handle: string) => {
+          persist_(d => { d.cf.handle = handle.trim() })
+          toast_('CF HANDLE SAVED')
+        },
+
+        setClanId: (clanId: string | null) => {
+          persist_(d => { d.clanId = clanId })
         },
 
         resetData: () => {

@@ -18,8 +18,10 @@ export function ConnectModal() {
   const fbUser        = useStore(s => s.fbUser)
   const onSignedOut   = useStore(s => s.onSignedOut)
   const showToast     = useStore(s => s.showToast)
+  const setCfHandle   = useStore(s => s.setCfHandle)
 
   const [signingIn, setSigningIn] = useState(false)
+  const [cfDraft, setCfDraft]     = useState(data.cf.handle || '')
 
   async function handleGoogleAuth() {
     setSigningIn(true)
@@ -105,8 +107,30 @@ export function ConnectModal() {
         </div>
       )}
 
+      {/* Codeforces handle */}
+      <ModalLabel style={{ marginTop: 18 }}>CODEFORCES HANDLE</ModalLabel>
+      <div style={{ display: 'flex', gap: 8, marginBottom: 6 }}>
+        <input
+          value={cfDraft}
+          onChange={e => setCfDraft(e.target.value)}
+          placeholder="your_cf_handle"
+          style={{ ...inputStyle, flex: 1 }}
+          onKeyDown={e => e.key === 'Enter' && setCfHandle(cfDraft)}
+        />
+        <button
+          onClick={() => setCfHandle(cfDraft)}
+          style={{ cursor: 'pointer', border: '1px solid var(--a2)', background: 'rgba(var(--a2rgb),.1)', color: 'var(--a2)', font: "700 11px 'Rajdhani'", letterSpacing: '.1em', padding: '0 16px', borderRadius: 4 }}
+        >SAVE</button>
+      </div>
+      {data.cf.handle && (
+        <div style={{ font: "400 9px 'Share Tech Mono'", color: 'var(--dim2)', marginBottom: 14 }}>
+          Linked: <span style={{ color: 'var(--a)' }}>{data.cf.handle}</span>
+          {data.cf.rating ? ` · ${data.cf.rating} (${data.cf.rank})` : ''}
+        </div>
+      )}
+
       {/* Danger zone */}
-      <div style={{ marginTop: 22, borderTop: '1px solid rgba(255,90,90,.12)', paddingTop: 16 }}>
+      <div style={{ marginTop: 14, borderTop: '1px solid rgba(255,90,90,.12)', paddingTop: 16 }}>
         <ModalLabel>DANGER ZONE</ModalLabel>
         <button onClick={resetData} style={{ cursor: 'pointer', border: '1px solid rgba(255,90,90,.25)', background: 'rgba(255,90,90,.05)', color: '#c0746f', font: "700 10px 'Share Tech Mono'", letterSpacing: '.12em', padding: 10, width: '100%', borderRadius: 4 }}>RESET ALL LOCAL PROGRESS</button>
       </div>
