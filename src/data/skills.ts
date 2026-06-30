@@ -1,11 +1,11 @@
 export const SKILL_DEFS = [
-  { id: 'python',   name: 'PYTHON / ASYNC',      base: 64 },
-  { id: 'systems',  name: 'SYSTEMS / PACKAGING', base: 70 },
-  { id: 'network',  name: 'NETWORK RECON',        base: 52 },
-  { id: 'web',      name: 'WEB SECURITY',         base: 55 },
-  { id: 'exploit',  name: 'EXPLOIT DEV',          base: 38 },
-  { id: 'cp',       name: 'ALGO / CP',            base: 35 },
-  { id: 'physique', name: 'PHYSIQUE',             base: 46 },
+  { id: 'physique', name: 'PHYSIQUE', base: 0 },
+  { id: 'cp',       name: 'LOGIC',   base: 0 },
+  { id: 'python',   name: 'CRAFT',   base: 0 },
+  { id: 'systems',  name: 'BUILD',   base: 0 },
+  { id: 'network',  name: 'RECON',   base: 0 },
+  { id: 'web',      name: 'CONTROL', base: 0 },
+  { id: 'exploit',  name: 'ATTACK',  base: 0 },
 ] as const
 
 export type SkillId = typeof SKILL_DEFS[number]['id']

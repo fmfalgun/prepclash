@@ -510,11 +510,13 @@ export const useStore = create<AppState>()(
           set({ cfPulling: true })
           try {
             const cf = await syncCfProfile(handle)
-            const prevSolved = get().data.cf.solved || 0
+            const prevSolved = get().data.cf.solved  // null = first sync, skip XP award
             persist_(d => {
               d.cf = { ...cf, error: null }
-              const delta = (cf.solved || 0) - prevSolved
-              if (delta > 0) d.skillXp.cp = (d.skillXp.cp || 0) + delta * 0.3
+              if (prevSolved !== null) {
+                const delta = (cf.solved || 0) - prevSolved
+                if (delta > 0) d.skillXp.cp = (d.skillXp.cp || 0) + delta * 0.3
+              }
             })
             toast_('cf synced · ' + (cf.rating || '—') + ' rating')
           } catch (e) {
@@ -611,16 +613,20 @@ export const useStore = create<AppState>()(
           set({ mtPulling: true })
           try {
             const result = await syncMonkeytype(handle)
-            const prevCompleted = get().data.mt.completed || 0
+            const prevCompleted = get().data.mt.completed  // null = first sync
             persist_(d => {
               d.mt = { ...result, error: null }
-              const delta = (result.completed || 0) - prevCompleted
-              if (delta > 0) {
-                const gain = Math.round(delta * 0.5)
-                d.momentum += gain
-                addWeekXp(d, gain)
-                bumpActivity(d, gain)
-                SKILL_DEFS.forEach(s => { d.skillXp[s.id] = (d.skillXp[s.id] || 0) + Math.max(1, Math.round(delta * 0.05)) })
+              if (prevCompleted !== null) {
+                const delta = (result.completed || 0) - prevCompleted
+                if (delta > 0) {
+                  const gain = Math.round(delta * 0.5)
+                  d.momentum += gain
+                  addWeekXp(d, gain)
+                  bumpActivity(d, gain)
+                  // Monkeytype feeds CRAFT (coding consistency) and LOGIC (speed)
+                  d.skillXp.python = (d.skillXp.python || 0) + Math.max(1, Math.round(delta * 0.08))
+                  d.skillXp.cp     = (d.skillXp.cp     || 0) + Math.max(1, Math.round(delta * 0.04))
+                }
               }
             })
             toast_('mt synced · ' + (result.pb60 || '—') + ' wpm')
@@ -648,12 +654,14 @@ export const useStore = create<AppState>()(
           if (!handle) { toast_('enter a github username'); return }
           set({ ghPulling: true })
           try {
-            const prevRepos = get().data.gh.public_repos || 0
+            const prevRepos = get().data.gh.public_repos  // null = first sync
             const result = await syncGithubProfile(handle)
             persist_(d => {
               d.gh = { handle, ...result, error: null }
-              const delta = (result.public_repos || 0) - prevRepos
-              if (delta > 0) d.skillXp.systems = (d.skillXp.systems || 0) + delta * 0.5
+              if (prevRepos !== null) {
+                const delta = (result.public_repos || 0) - prevRepos
+                if (delta > 0) d.skillXp.systems = (d.skillXp.systems || 0) + delta * 0.5
+              }
             })
             toast_('github synced · ' + (result.public_repos || 0) + ' repos')
           } catch (e) {
@@ -956,6 +964,17 @@ export const useStore = create<AppState>()(
           if (!state.data.campaign)         state.data.campaign         = {}
           if (!state.data.campaignDefeated) state.data.campaignDefeated = {}
           if (!state.data.gh)               state.data.gh = { handle: '', public_repos: null, followers: null, lastSync: null, error: null }
+          // Migrate old skillXp values from score-format (0-99) to XP-format
+          // Old format stored display score directly; new formula uses sqrt(xp)*4
+          // Multiply by 60 so old score S maps to new score ≈ S: sqrt(S*60)*4 ≈ S
+          if (!(state.data as any)._skillXpV2) {
+            const effort = ['python','systems','network','web','exploit'] as const
+            effort.forEach(id => {
+              const v = state.data.skillXp[id] || 0
+              if (v > 0 && v <= 99) state.data.skillXp[id] = Math.round(v * 7)
+            })
+            ;(state.data as any)._skillXpV2 = true
+          }
           // Migrate old session exercises (flat format) to per-set format
           if (state.data.workoutLab?.sessions) {
             state.data.workoutLab.sessions = state.data.workoutLab.sessions.map((sess: WorkoutSession) => ({

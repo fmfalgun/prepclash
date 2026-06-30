@@ -16,17 +16,50 @@ export function a2ojTotal(data: Data) {
   return data.a2oj.reduce((x, l) => x + (l.solved || 0), 0)
 }
 
-export function cpScore(data: Data): number {
-  const cf = data.cf
-  let cfPart = 0
-  if (cf.rating) cfPart = Math.max(0, Math.min(55, (cf.rating - 700) / 15))
-  const ladderPart = Math.min(25, a2ojTotal(data) * 0.12)
-  return Math.min(99, Math.round(35 + cfPart + ladderPart + (data.skillXp.cp || 0)))
+// Dampened XP → score curve: slow to max, resistant to single-session spikes
+// ~104 hrs of focused study to reach 99; each hour adds less as you grow
+function xpToScore(xp: number): number {
+  return Math.min(99, Math.round(Math.sqrt(Math.max(0, xp)) * 4))
 }
 
+// LOGIC (cp): composite of CF rating + problems solved + A2OJ + small effort bonus
+export function cpScore(data: Data): number {
+  const cf = data.cf
+  // CF rating contribution — max 45 at Grandmaster (2800+)
+  const cfPart  = cf.rating ? Math.min(45, Math.max(0, (cf.rating - 600) / 33)) : 0
+  // Problems solved — max 25 at 200+ solved
+  const solvedPart = Math.min(25, (cf.solved || 0) / 8)
+  // A2OJ ladders — max 20 at all 276 solved
+  const a2ojPart = Math.min(20, a2ojTotal(data) / 13.8)
+  // Effort feed (monkeytype delta, CF delta accumulator) — max 9
+  const effortPart = Math.min(9, Math.round(Math.sqrt(data.skillXp.cp || 0) * 1.5))
+  return Math.min(99, Math.round(cfPart + solvedPart + a2ojPart + effortPart))
+}
+
+// PHYSIQUE: based on actual workout history + streak — decays without use
+export function physiqueScore(data: Data): number {
+  const sessions = data.workoutLab?.sessions || []
+  const now = Date.now()
+  const cutoff30 = now - 30 * 86400000
+
+  const recent = sessions.filter(s => s.ts >= cutoff30)
+  const totalVol = sessions.reduce((a, s) => a + s.volume, 0)
+
+  // Long-term volume (sqrt-dampened, max 45)
+  const volPart  = Math.min(45, Math.round(Math.sqrt(totalVol / 80)))
+  // Recent frequency last 30 days — max 35 at 12+ sessions/month
+  const freqPart = Math.min(35, recent.length * 3)
+  // Daily streak bonus — max 19
+  const strPart  = Math.min(19, computeStreak(data) * 2)
+
+  return Math.min(99, volPart + freqPart + strPart)
+}
+
+// General effort-based axes: sqrt-dampened accumulation
 export function skillScore(data: Data, id: string): number {
-  if (id === 'cp') return cpScore(data)
-  return Math.min(99, Math.round(data.skillXp[id] || 0))
+  if (id === 'cp')       return cpScore(data)
+  if (id === 'physique') return physiqueScore(data)
+  return xpToScore(data.skillXp[id] || 0)
 }
 
 export function overallScore(data: Data): number {
@@ -67,8 +100,6 @@ export function paletteCss(data: Data) {
   return PALETTES[data.palette] || PALETTES.toxic
 }
 
-// Clan creation eligibility — effort-based, not level-based
-// Score = momentum×0.15 + sessions×3 + activeDays×5; threshold 100
 export function clanEligibility(data: Data): { eligible: boolean; score: number; needed: number } {
   const activeDays = Object.values(data.activity).filter(v => (v as number) > 0).length
   const score = Math.round(data.momentum * 0.15 + data.logs.length * 3 + activeDays * 5)
@@ -84,7 +115,6 @@ export function isNodeUnlocked(data: Data, req: string[]): boolean {
 }
 
 export function currentNodeName(data: Data): string {
-  // imported inline to avoid circular dep
   const tiers = [
     { nodes: [{ id:'linux',req:[] },{ id:'net101',req:[] },{ id:'pyscript',req:[] }] },
     { nodes: [{ id:'recon',req:['linux','net101'] },{ id:'webbasic',req:['net101'] },{ id:'tooling',req:['linux','pyscript'] }] },
@@ -95,7 +125,6 @@ export function currentNodeName(data: Data): string {
   for (const t of tiers) {
     for (const n of t.nodes) {
       if (n.req.every(r => isNodeCleared(data, r)) && !isNodeCleared(data, n.id)) {
-        // find name from VILLAGE would cause circular; inline short names
         const names: Record<string, string> = { linux:'Linux Fundamentals',net101:'Networking 101',pyscript:'Python Scripting',recon:'Recon & OSINT',webbasic:'Web Fundamentals',tooling:'Bash & Tooling',webexp:'Web Exploitation',netatk:'Network Attacks',crypto:'Crypto & PKI',dsa:'DSA / Algorithms',privesc:'Privilege Escalation',adatk:'Active Directory',expdev:'Exploit Development',c2:'C2 Infrastructure',evasion:'Evasion & AV/EDR',redops:'Full Red Team Op' }
         return names[n.id] || n.id
       }
