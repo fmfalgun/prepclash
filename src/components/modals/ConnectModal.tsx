@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useStore } from '../../store/useStore'
 import { PALETTES } from '../../data/palettes'
-import { signInWithGoogle, signOut, saveFbConfigRaw } from '../../lib/firebase'
+import { signInWithGoogle, signOut, saveFbConfigRaw, saveCloudBackup } from '../../lib/firebase'
 import { ModalShell, ModalLabel, inputStyle, SubmitBtn } from './ModalShell'
 
 export function ConnectModal() {
@@ -39,6 +39,10 @@ export function ConnectModal() {
 
   async function handleSignOut() {
     try {
+      // Save to cloud BEFORE signing out — once auth token is revoked writes fail
+      if (fbUser?.uid) {
+        await saveCloudBackup(fbUser.uid, data).catch(() => {})
+      }
       await signOut()
       onSignedOut()
       showToast('SIGNED OUT')

@@ -36,8 +36,9 @@ let _cloudSaveTimer: ReturnType<typeof setTimeout> | null = null
 function scheduleCloudSave(uid: string, getData: () => Data) {
   if (_cloudSaveTimer) clearTimeout(_cloudSaveTimer)
   _cloudSaveTimer = setTimeout(() => {
+    _cloudSaveTimer = null
     saveCloudBackup(uid, getData()).catch(() => {})
-  }, 5 * 60 * 1000)
+  }, 60 * 1000)  // 60s debounce — saves within 1 minute of any change
 }
 
 function seedData(): Data {
@@ -216,6 +217,9 @@ export const useStore = create<AppState>()(
           pushToFirebase(data).catch(() => {})
           return { data }
         })
+        // Auto-save to cloud after every data mutation when signed in
+        const uid = get().fbUser?.uid
+        if (uid) scheduleCloudSave(uid, () => get().data)
       }
 
       function toast_(msg: string) {
@@ -334,8 +338,6 @@ export const useStore = create<AppState>()(
           })
           toast_('+' + gain + ' momentum · effort logged')
           set({ modal: null, draft: freshDraft() })
-          const uid = get().fbUser?.uid
-          if (uid) scheduleCloudSave(uid, () => get().data)
         },
 
         submitReading: () => {
@@ -612,13 +614,22 @@ export const useStore = create<AppState>()(
           if (anyHandle) {
             saveUserHandles(user.uid, { cf: d.cf.handle, mt: d.mt.handle, lc: d.lc.handle, cc: d.ccHandle }).catch(() => {})
           }
-          // Check for a cloud backup that is newer than local data
+          // Check for a cloud backup and restore if cloud has more progress
           const backup = await loadCloudBackup(user.uid)
           if (backup) {
-            const localMomentum = get().data.momentum
-            const cloudMomentum = ((backup.data as Data).momentum) || 0
-            if (cloudMomentum > localMomentum + 5) {
-              set({ cloudRestorePrompt: { data: backup.data as Data, savedAt: backup.savedAt } })
+            const local = get().data
+            const cloud = backup.data as Data
+            const localLogs = local.logs?.length ?? 0
+            const cloudLogs = cloud.logs?.length ?? 0
+            const localMom  = local.momentum ?? 0
+            const cloudMom  = cloud.momentum ?? 0
+            // Auto-restore when local is clearly fresh (no logs yet on this device)
+            if (localLogs === 0 && cloudLogs > 0) {
+              set({ data: cloud })
+              toast_('cloud data restored (' + cloudLogs + ' entries)')
+            } else if (cloudMom > localMom + 5) {
+              // Both devices have data — show prompt so user can choose
+              set({ cloudRestorePrompt: { data: cloud, savedAt: backup.savedAt } })
             }
           }
         },

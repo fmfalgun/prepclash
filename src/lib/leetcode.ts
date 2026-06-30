@@ -1,41 +1,30 @@
 import type { LeetCodeState } from '../types'
 
-const QUERY = `
-  query getUserProfile($username: String!) {
-    matchedUser(username: $username) {
-      submitStats: submitStatsGlobal {
-        acSubmissionNum { difficulty count }
-      }
-      profile { ranking }
-    }
-  }
-`
+// LeetCode's own GraphQL endpoint blocks browser CORS requests.
+// Use alfa-leetcode-api (community proxy) as the primary path.
+const PROXY = 'https://alfa-leetcode-api.onrender.com'
 
 export async function syncLeetCode(username: string): Promise<Omit<LeetCodeState, 'error'>> {
-  let res: Response
+  let json: Record<string, unknown>
   try {
-    res = await fetch('https://leetcode.com/graphql', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ query: QUERY, variables: { username } }),
-    })
-  } catch {
-    throw new Error('CORS blocked — LeetCode does not allow browser requests; add handle manually')
+    const res = await fetch(`${PROXY}/userProfile/${username}`)
+    if (!res.ok) throw new Error(`api error ${res.status}`)
+    json = await res.json()
+  } catch (e) {
+    throw new Error('LC sync failed — ' + String(e).replace('Error: ', ''))
   }
-  if (!res.ok) throw new Error(`api error ${res.status}`)
-  const json = await res.json()
-  const user = json.data?.matchedUser
-  if (!user) throw new Error('user not found')
 
-  const stats: { difficulty: string; count: number }[] = user.submitStats?.acSubmissionNum ?? []
-  const get = (d: string) => stats.find(s => s.difficulty === d)?.count ?? null
+  if ((json as any).errors || (json as any).status === 'error') {
+    throw new Error('user not found on LeetCode')
+  }
+
   return {
-    handle: username,
-    solved: get('All'),
-    easy: get('Easy'),
-    medium: get('Medium'),
-    hard: get('Hard'),
-    ranking: user.profile?.ranking ?? null,
+    handle:   username,
+    solved:   (json.totalSolved  as number) ?? null,
+    easy:     (json.easySolved   as number) ?? null,
+    medium:   (json.mediumSolved as number) ?? null,
+    hard:     (json.hardSolved   as number) ?? null,
+    ranking:  (json.ranking      as number) ?? null,
     lastSync: Date.now(),
   }
 }
