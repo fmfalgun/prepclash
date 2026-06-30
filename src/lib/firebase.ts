@@ -342,14 +342,13 @@ export async function pushToFirebase(data: Data): Promise<void> {
 
 export async function saveUserHandles(uid: string, handles: { cf?: string; mt?: string; lc?: string; cc?: string }): Promise<void> {
   if (!fb) return
-  try {
-    const { doc, setDoc } = fb.fsMod as Record<string, unknown>
-    await (setDoc as (ref: unknown, d: unknown, opts: unknown) => Promise<void>)(
-      (doc as (db: unknown, col: string, id: string) => unknown)(fb.db, 'userProfiles', uid),
-      { handles, updatedAt: Date.now() },
-      { merge: true }
-    )
-  } catch {}
+  const { doc, setDoc } = fb.fsMod as Record<string, unknown>
+  await (setDoc as (ref: unknown, d: unknown, opts: unknown) => Promise<void>)(
+    (doc as (db: unknown, col: string, id: string) => unknown)(fb.db, 'userProfiles', uid),
+    { handles, updatedAt: Date.now() },
+    { merge: true }
+  )
+  // No catch — caller is responsible for handling failures visibly
 }
 
 export async function loadUserHandles(uid: string): Promise<{ cf?: string; mt?: string; lc?: string; cc?: string } | null> {

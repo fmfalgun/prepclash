@@ -595,47 +595,56 @@ export const useStore = create<AppState>()(
         },
 
         onSignedIn: async (user: FbUser) => {
+          // Only touch UI state synchronously — never touch data until after all cloud reads
           set({ fbUser: user, fbMode: 'online', nameDraft: user.name || get().data.profile.name })
-          persist_(d => {
-            d.profile.uid = user.uid
-            if (user.name && d.profile.name === 'operative') d.profile.name = user.name
-          })
-          // Load saved platform handles from Firestore, merge if local ones are empty
-          const remote = await loadUserHandles(user.uid)
-          if (remote) {
-            set(s => ({
-              data: {
-                ...s.data,
-                cf: remote.cf && !s.data.cf.handle ? { ...s.data.cf, handle: remote.cf } : s.data.cf,
-                mt: remote.mt && !s.data.mt.handle ? { ...s.data.mt, handle: remote.mt } : s.data.mt,
-                lc: remote.lc && !s.data.lc.handle ? { ...s.data.lc, handle: remote.lc } : s.data.lc,
-                ccHandle: remote.cc && !s.data.ccHandle ? remote.cc : s.data.ccHandle,
-              },
-            }))
-          }
-          // Push current local handles back so they are available on other devices
-          const d = get().data
-          const anyHandle = d.cf.handle || d.mt.handle || d.lc.handle || d.ccHandle
-          if (anyHandle) {
-            saveUserHandles(user.uid, { cf: d.cf.handle, mt: d.mt.handle, lc: d.lc.handle, cc: d.ccHandle }).catch(() => {})
-          }
-          // Check for a cloud backup and restore if cloud has more progress
-          const backup = await loadCloudBackup(user.uid)
+
+          // Fetch handles + backup in parallel (both reads, no ordering dependency)
+          const [remote, backup] = await Promise.all([
+            loadUserHandles(user.uid),
+            loadCloudBackup(user.uid),
+          ])
+
+          // Snapshot local state AFTER the awaits — rehydration from localStorage is
+          // definitely complete by this point (network round-trip >> microtask)
+          const local = get().data
+
+          // Cloud restore decision — before writing anything to the store
           if (backup) {
-            const local = get().data
-            const cloud = backup.data as Data
+            const cloud     = backup.data as Data
             const localLogs = local.logs?.length ?? 0
             const cloudLogs = cloud.logs?.length ?? 0
             const localMom  = local.momentum ?? 0
             const cloudMom  = cloud.momentum ?? 0
-            // Auto-restore when local is clearly fresh (no logs yet on this device)
-            if (localLogs === 0 && cloudLogs > 0) {
+            // "Truly fresh" = no logs, no momentum, no platform handles set
+            const localIsEmpty = localLogs === 0 && localMom === 0
+              && !local.cf?.handle && !local.mt?.handle && !local.ccHandle
+            if (localIsEmpty && cloudLogs > 0) {
               set({ data: cloud })
               toast_('cloud data restored (' + cloudLogs + ' entries)')
             } else if (cloudMom > localMom + 5) {
-              // Both devices have data — show prompt so user can choose
               set({ cloudRestorePrompt: { data: cloud, savedAt: backup.savedAt } })
             }
+          }
+
+          // Update profile uid + name + merge any missing handles — single persist_ call
+          // so there is one deep-clone → one write, using the final post-restore state
+          persist_(d => {
+            d.profile.uid = user.uid
+            if (user.name && d.profile.name === 'operative') d.profile.name = user.name
+            if (remote) {
+              if (remote.cf && !d.cf.handle)   d.cf.handle   = remote.cf
+              if (remote.mt && !d.mt.handle)   d.mt.handle   = remote.mt
+              if (remote.lc && !d.lc.handle)   d.lc.handle   = remote.lc
+              if (remote.cc && !d.ccHandle)     d.ccHandle    = remote.cc
+            }
+          })
+
+          // Push local handles to Firestore so other devices can pick them up
+          const d = get().data
+          const anyHandle = d.cf.handle || d.mt.handle || d.lc.handle || d.ccHandle
+          if (anyHandle) {
+            saveUserHandles(user.uid, { cf: d.cf.handle, mt: d.mt.handle, lc: d.lc.handle, cc: d.ccHandle })
+              .catch((e) => toast_('handle sync failed: ' + String(e).slice(0, 50)))
           }
         },
 
