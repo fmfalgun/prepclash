@@ -196,6 +196,7 @@ interface AppState {
   ccPulling: boolean
   ghPulling: boolean
   resetData: () => void
+  applyImport: (raw: unknown) => void
   onSignedIn: (user: FbUser) => void
   onSignedOut: () => void
   deleteAccount: () => void
@@ -634,6 +635,16 @@ export const useStore = create<AppState>()(
           const fresh = seedData()
           set({ data: fresh, draft: freshDraft(), modal: null, nameDraft: fresh.profile.name })
           toast_('reset')
+        },
+
+        applyImport: (raw: unknown) => {
+          const parsed = raw as any
+          if (!parsed || typeof parsed !== 'object') { toast_('INVALID FILE'); return }
+          // Validate enough structure to be a real backup
+          if (!parsed.profile || !Array.isArray(parsed.logs)) { toast_('NOT A VALID BACKUP'); return }
+          if (!confirm('Replace ALL local data with this backup? This cannot be undone.')) return
+          set({ data: parsed as Data, nameDraft: parsed.profile?.name || get().nameDraft })
+          toast_('IMPORT OK')
         },
 
         onSignedIn: async (user: FbUser) => {

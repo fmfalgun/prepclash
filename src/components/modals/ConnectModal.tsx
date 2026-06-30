@@ -12,6 +12,7 @@ export function ConnectModal() {
   const setPalette    = useStore(s => s.setPalette)
   const resetData     = useStore(s => s.resetData)
   const deleteAccount = useStore(s => s.deleteAccount)
+  const applyImport   = useStore(s => s.applyImport)
   const fbConfigDraft = useStore(s => s.fbConfigDraft)
   const setFbConfig   = useStore(s => s.setFbConfigDraft)
   const fbMode        = useStore(s => s.fbMode)
@@ -24,6 +25,34 @@ export function ConnectModal() {
 
   const [signingIn, setSigningIn] = useState(false)
   const [cfDraft, setCfDraft]     = useState(data.cf.handle || '')
+
+  function handleExport() {
+    const json = JSON.stringify(data, null, 2)
+    const blob = new Blob([json], { type: 'application/json' })
+    const url  = URL.createObjectURL(blob)
+    const a    = document.createElement('a')
+    const date = new Date().toISOString().slice(0, 10)
+    a.href     = url
+    a.download = `prepclash-backup-${date}.json`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  function handleImport(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    e.target.value = ''
+    const reader = new FileReader()
+    reader.onload = ev => {
+      try {
+        const parsed = JSON.parse(ev.target?.result as string)
+        applyImport(parsed)
+      } catch {
+        showToast('INVALID JSON FILE')
+      }
+    }
+    reader.readAsText(file)
+  }
 
   async function hardRefresh() {
     try {
@@ -162,6 +191,23 @@ export function ConnectModal() {
           onClick={hardRefresh}
           style={{ cursor: 'pointer', flex: 1, border: '1px solid rgba(var(--rgb),.2)', background: 'transparent', color: 'var(--mut)', font: "500 10px 'Roboto Mono'", letterSpacing: '.08em', padding: 10, borderRadius: 5 }}
         >CLEAR CACHE & RELOAD</button>
+      </div>
+
+      {/* Local backup */}
+      <div style={{ marginTop: 14, borderTop: '1px solid rgba(var(--rgb),.1)', paddingTop: 16 }}>
+        <ModalLabel>LOCAL BACKUP</ModalLabel>
+        <div style={{ font: "400 9px 'Roboto Mono'", color: 'var(--dim2)', lineHeight: 1.6, marginBottom: 10 }}>
+          Export all your data as a .json file. Import it later to restore progress — no Firebase needed.
+        </div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button onClick={handleExport} style={{ cursor: 'pointer', flex: 1, border: '1px solid rgba(var(--rgb),.2)', background: 'transparent', color: 'var(--mut)', font: "500 10px 'Roboto Mono'", letterSpacing: '.08em', padding: 10, borderRadius: 5 }}>
+            EXPORT
+          </button>
+          <label style={{ cursor: 'pointer', flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(var(--rgb),.2)', background: 'transparent', color: 'var(--mut)', font: "500 10px 'Roboto Mono'", letterSpacing: '.08em', padding: 10, borderRadius: 5 }}>
+            IMPORT
+            <input type="file" accept=".json,application/json" onChange={handleImport} style={{ display: 'none' }} />
+          </label>
+        </div>
       </div>
 
       {/* Danger zone */}
