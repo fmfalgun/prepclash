@@ -2,7 +2,6 @@ import { useStore } from '../store/useStore'
 import { PALETTES } from '../data/palettes'
 import { Heatmap } from '../components/Heatmap'
 import { AreaLine } from '../components/charts/AreaLine'
-import { CompetitiveCard } from '../components/CompetitiveCard'
 import { allSkills } from '../store/selectors'
 import { todayKey } from '../lib/dates'
 
