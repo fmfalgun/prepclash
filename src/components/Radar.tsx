@@ -49,7 +49,7 @@ export function Radar({ data, skillXp: rawXp, palette: rawPalette, size = 236 }:
     return (
       <text key={'l' + i} x={x} y={y} fill="#7a8c82" fontSize={7.5}
         fontFamily="'Roboto Mono',monospace" textAnchor="middle" dominantBaseline="middle">
-        {s.id.toUpperCase()}
+        {s.name}
       </text>
     )
   })

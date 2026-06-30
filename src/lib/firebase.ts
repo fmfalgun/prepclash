@@ -145,7 +145,9 @@ export function subscribeClans(onData: (clans: ClanDoc[]) => void): () => void {
       (collection as (db: unknown, name: string) => unknown)(fb.db, 'clans'),
       (snap: unknown) => {
         const s = snap as { docs: { id: string; data: () => unknown }[] }
-        const clans: ClanDoc[] = s.docs.map(d => ({ id: d.id, ...(d.data() as Omit<ClanDoc, 'id'>) }))
+        const clans: ClanDoc[] = s.docs
+          .map(d => ({ id: d.id, ...(d.data() as Omit<ClanDoc, 'id'>) }))
+          .filter((c: ClanDoc & { disbanded?: boolean }) => !c.disbanded)
         onData(clans)
       }
     )
@@ -378,4 +380,50 @@ function currentNodeNameFromVillage(village: Record<string, unknown>): string {
     }
   }
   return 'Red Team Op'
+}
+
+// Cloud backup — full local data persisted to Firestore for cross-device sync
+export async function saveCloudBackup(uid: string, data: unknown): Promise<void> {
+  if (!fb) throw new Error('Not connected')
+  const { doc, setDoc } = fb.fsMod as Record<string, unknown>
+  await (setDoc as (ref: unknown, d: unknown) => Promise<void>)(
+    (doc as (db: unknown, col: string, id: string) => unknown)(fb.db, 'userBackups', uid),
+    { data: JSON.stringify(data), savedAt: Date.now() }
+  )
+}
+
+export async function loadCloudBackup(uid: string): Promise<{ data: unknown; savedAt: number } | null> {
+  if (!fb) return null
+  try {
+    const { doc, getDoc } = fb.fsMod as Record<string, unknown>
+    const snap = await (getDoc as (ref: unknown) => Promise<{ exists: () => boolean; data: () => unknown }>)(
+      (doc as (db: unknown, col: string, id: string) => unknown)(fb.db, 'userBackups', uid)
+    )
+    if (!snap.exists()) return null
+    const d = snap.data() as { data?: string; savedAt?: number }
+    if (!d.data || !d.savedAt) return null
+    return { data: JSON.parse(d.data), savedAt: d.savedAt }
+  } catch { return null }
+}
+
+// Fix clan deletion: mark as disbanded (avoids needing Firestore delete permissions)
+export async function disbandClan(uid: string, clanId: string): Promise<void> {
+  if (!fb) throw new Error('Not connected')
+  const { doc, updateDoc, deleteDoc } = fb.fsMod as Record<string, unknown>
+  try {
+    // Attempt hard delete first (works if rules allow it)
+    await (deleteDoc as (ref: unknown) => Promise<void>)(
+      (doc as (db: unknown, col: string, id: string) => unknown)(fb.db, 'clans', clanId)
+    )
+  } catch {
+    // Fall back to soft-delete if rules don't allow delete
+    await (updateDoc as (ref: unknown, d: unknown) => Promise<void>)(
+      (doc as (db: unknown, col: string, id: string) => unknown)(fb.db, 'clans', clanId),
+      { disbanded: true, founderUid: '', memberCount: 0 }
+    )
+  }
+  await (updateDoc as (ref: unknown, d: unknown) => Promise<void>)(
+    (doc as (db: unknown, col: string, id: string) => unknown)(fb.db, 'operatives', uid),
+    { clanId: null }
+  )
 }

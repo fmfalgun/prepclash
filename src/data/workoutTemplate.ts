@@ -103,8 +103,8 @@ export function genSeed(): WorkoutSession[] {
 export function seedWorkoutData(): WorkoutData {
   const now = Date.now()
   return {
-    schedule: { version: 1, updatedAt: now - 46 * 86400000, days: JSON.parse(JSON.stringify(TOJI)) },
-    history: [{ version: 1, note: 'Initial split — Toji programme', ts: now - 46 * 86400000 }],
-    sessions: genSeed(),
+    schedule: { version: 1, updatedAt: now, days: JSON.parse(JSON.stringify(TOJI)) },
+    history: [{ version: 1, note: 'Initial split — Toji programme', ts: now }],
+    sessions: [],
   }
 }

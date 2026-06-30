@@ -3,6 +3,7 @@ import { useStore } from './store/useStore'
 import { PALETTES } from './data/palettes'
 import { TopBar } from './components/TopBar'
 import { Toast } from './components/Toast'
+import { CloudRestoreBanner } from './components/CloudRestoreBanner'
 import { Home } from './screens/Home'
 import { Village } from './screens/Village'
 import { Arena } from './screens/Arena'
@@ -89,6 +90,7 @@ export default function App() {
       {modal === 'edit'     && <EditScheduleModal />}
       {selectedPlayer && <PlayerDetailModal />}
       {showOnboarding && <OnboardingModal />}
+      <CloudRestoreBanner />
       <Toast />
     </div>
   )

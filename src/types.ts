@@ -163,6 +163,7 @@ export type ModalType = 'study' | 'reading' | 'node' | 'question' | 'connect' | 
 export interface Draft {
   title: string
   mins: number
+  logDate: string     // YYYY-MM-DD, defaults to today — allows backdating logs
   selected: string[]
   newKwLabel: string
   newKwSkill: string

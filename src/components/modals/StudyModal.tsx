@@ -1,12 +1,13 @@
 import { useStore } from '../../store/useStore'
 import { studyGain } from '../../lib/momentum'
 import { SKILL_DEFS } from '../../data/skills'
+import { todayKey } from '../../lib/dates'
 import { ModalShell, ModalLabel, inputStyle, SubmitBtn } from './ModalShell'
 
 export function StudyModal() {
-  const data     = useStore(s => s.data)
-  const draft    = useStore(s => s.draft)
-  const setDraft = useStore(s => s.setDraft)
+  const data          = useStore(s => s.data)
+  const draft         = useStore(s => s.draft)
+  const setDraft      = useStore(s => s.setDraft)
   const toggleKeyword = useStore(s => s.toggleKeyword)
   const addKeyword    = useStore(s => s.addKeyword)
   const submitStudy   = useStore(s => s.submitStudy)
@@ -41,6 +42,16 @@ export function StudyModal() {
           />
         </div>
         <div style={{ flex: 1 }}>
+          <ModalLabel>DATE</ModalLabel>
+          <input
+            type="date"
+            value={draft.logDate || todayKey()}
+            max={todayKey()}
+            onChange={e => setDraft(d => ({ ...d, logDate: e.target.value }))}
+            style={{ ...inputStyle, colorScheme: 'dark' }}
+          />
+        </div>
+        <div style={{ flex: '0 0 auto' }}>
           <ModalLabel>MOMENTUM</ModalLabel>
           <div style={{ backgroundColor: 'var(--bg0)', border: '1px solid rgba(var(--a2rgb),.25)', borderRadius: 4, padding: '9px 10px', font: "500 15px 'Lexend Deca'", color: 'var(--a2)' }}>
             +{gain}
@@ -53,17 +64,18 @@ export function StudyModal() {
         {data.keywords.map(k => {
           const on = draft.selected.includes(k.label)
           return (
-            <span
+            <button
               key={k.label}
+              type="button"
               onClick={() => toggleKeyword(k.label)}
               style={{
-                cursor: 'pointer', font: "500 11px 'Roboto Mono'", padding: '6px 11px', borderRadius: 4, userSelect: 'none',
+                cursor: 'pointer', font: "500 11px 'Roboto Mono'", padding: '6px 11px', borderRadius: 4,
                 background: on ? 'rgba(var(--a2rgb),.16)' : 'rgba(var(--rgb),.05)',
                 border: on ? '1px solid var(--a2)' : '1px solid rgba(var(--rgb),.16)',
                 color: on ? 'var(--a2)' : 'var(--txt)',
                 boxShadow: on ? '0 0 8px rgba(var(--a2rgb),.25)' : 'none',
               }}
-            >{k.label}</span>
+            >{k.label}</button>
           )
         })}
       </div>
@@ -91,6 +103,7 @@ export function StudyModal() {
             <option value="__new__">+ New category…</option>
           </select>
           <button
+            type="button"
             onClick={addKeyword}
             style={{ cursor: 'pointer', border: '1px solid var(--a2)', background: 'rgba(var(--a2rgb),.1)', color: 'var(--a2)', font: "500 12px 'Lexend Deca'", letterSpacing: '.08em', padding: '0 16px', borderRadius: 4 }}
           >ADD</button>

@@ -1,6 +1,7 @@
 import { useStore } from '../../store/useStore'
 import { ModalShell, ModalLabel, inputStyle, SubmitBtn } from './ModalShell'
 import { computeSession, fmtK } from '../../lib/workoutStats'
+import { todayKey } from '../../lib/dates'
 import type { WeightMode } from '../../types'
 
 const MODE_OPTS: WeightMode[] = ['kg/hand', 'kg total', 'lb/hand', 'bodyweight', 'cardio']
@@ -16,6 +17,7 @@ export function LogSessionModal() {
   const removeLogSet   = useStore(s => s.removeLogSet)
   const updateLogSet   = useStore(s => s.updateLogSet)
   const setLogDuration = useStore(s => s.setLogDuration)
+  const setLogDate     = useStore(s => s.setLogDate)
   const submitSession  = useStore(s => s.submitSession)
   const wl  = useStore(s => s.data.workoutLab)
   const days = wl?.schedule.days || []
@@ -133,7 +135,7 @@ export function LogSessionModal() {
         }}>+ add exercise</button>
       </div>
 
-      {/* Duration + live preview */}
+      {/* Duration + date + live preview */}
       <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 6 }}>
         <div style={{ flex: 1 }}>
           <ModalLabel>duration (min)</ModalLabel>
@@ -141,6 +143,16 @@ export function LogSessionModal() {
             type="number" min={10} max={240} value={logDraft.durationMin}
             onChange={e => setLogDuration(parseInt(e.target.value) || 55)}
             style={{ ...inputStyle }}
+          />
+        </div>
+        <div style={{ flex: 1 }}>
+          <ModalLabel>date</ModalLabel>
+          <input
+            type="date"
+            value={logDraft.logDate || todayKey()}
+            max={todayKey()}
+            onChange={e => setLogDate(e.target.value)}
+            style={{ ...inputStyle, colorScheme: 'dark' }}
           />
         </div>
         <div style={{ background: 'var(--cardHi)', borderRadius: 8, padding: '10px 14px', minWidth: 120, textAlign: 'center' }}>

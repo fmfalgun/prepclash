@@ -7,7 +7,7 @@ import { todayKey, addWeekXp, bumpActivity } from '../lib/dates'
 import { studyGain, studySkillXp, readGain } from '../lib/momentum'
 import { flatNodes, nodeById } from '../data/village'
 import { ARENA, ARENA_AXIS_MAP } from '../data/arena'
-import { pushToFirebase, deleteAccount as fbDeleteAccount, deleteClan as fbDeleteClan, transferClanAdmin as fbTransferAdmin, saveUserHandles, loadUserHandles } from '../lib/firebase'
+import { pushToFirebase, deleteAccount as fbDeleteAccount, disbandClan as fbDisbandClan, transferClanAdmin as fbTransferAdmin, saveUserHandles, loadUserHandles, saveCloudBackup, loadCloudBackup } from '../lib/firebase'
 import { TOJI_BOOK_DEFS } from '../data/toji'
 import { syncMonkeytype } from '../lib/monkeytype'
 import { syncLeetCode } from '../lib/leetcode'
@@ -19,9 +19,25 @@ import type { ArenaQuestion } from '../data/arena'
 
 function freshDraft(): Draft {
   return {
-    title: '', mins: 30, selected: [], newKwLabel: '', newKwSkill: 'python', newCatName: '',
+    title: '', mins: 30, logDate: todayKey(), selected: [],
+    newKwLabel: '', newKwSkill: 'python', newCatName: '',
     book: 'wahh', readAmount: 10, nbTitle: '', nbUnit: 'pages', nbTotal: '', nbSkill: 'web',
   }
+}
+
+// Convert YYYY-MM-DD string to a timestamp at noon local time
+function dateToTs(d: string): number {
+  const t = new Date(d + 'T12:00:00').getTime()
+  return isNaN(t) ? Date.now() : t
+}
+
+// Module-level cloud save debounce
+let _cloudSaveTimer: ReturnType<typeof setTimeout> | null = null
+function scheduleCloudSave(uid: string, getData: () => Data) {
+  if (_cloudSaveTimer) clearTimeout(_cloudSaveTimer)
+  _cloudSaveTimer = setTimeout(() => {
+    saveCloudBackup(uid, getData()).catch(() => {})
+  }, 5 * 60 * 1000)
 }
 
 function seedData(): Data {
@@ -57,7 +73,7 @@ function seedData(): Data {
   }
 }
 
-type LogDraft = { dayId: string; exercises: SessionExercise[]; durationMin: number }
+type LogDraft = { dayId: string; exercises: SessionExercise[]; durationMin: number; logDate?: string }
 
 interface AppState {
   data: Data
@@ -149,6 +165,10 @@ interface AppState {
   onSignedIn: (user: FbUser) => void
   onSignedOut: () => void
   deleteAccount: () => void
+  cloudRestorePrompt: { data: Data; savedAt: number } | null
+  acceptCloudRestore: () => void
+  rejectCloudRestore: () => void
+  triggerCloudSave: () => void
 
   // Workout Lab actions
   openLog: () => void
@@ -162,6 +182,7 @@ interface AppState {
   removeLogSet: (exIdx: number, setIdx: number) => void
   updateLogSet: (exIdx: number, setIdx: number, field: 'reps' | 'weight', value: number) => void
   setLogDuration: (v: number) => void
+  setLogDate: (d: string) => void
   submitSession: () => void
   saveSchedule: () => void
   setSelEx: (name: string) => void
@@ -246,6 +267,7 @@ export const useStore = create<AppState>()(
         mtPulling: false,
         lcPulling: false,
         ghPulling: false,
+        cloudRestorePrompt: null,
         logDraft: null,
         editDraft: null,
         editNote: '',
@@ -296,6 +318,8 @@ export const useStore = create<AppState>()(
           if (!title) { toast_('describe the work first'); return }
           const mins = Math.max(1, parseInt(String(draft.mins)) || 0)
           const sel = draft.selected
+          const logDate = draft.logDate || todayKey()
+          const logTs   = dateToTs(logDate)
           const skillsHit = [...new Set(sel.map(l => data.keywords.find(k => k.label === l)?.skill).filter(Boolean))] as string[]
           const gain = studyGain(mins, sel.length)
           persist_(d => {
@@ -305,10 +329,13 @@ export const useStore = create<AppState>()(
             d.momentum += gain
             addWeekXp(d, gain)
             bumpActivity(d, mins)
-            d.logs.unshift({ type: 'study', title, mins, keywords: sel, gain, date: todayKey(), ts: Date.now() })
+            d.logs.unshift({ type: 'study', title, mins, keywords: sel, gain, date: logDate, ts: logTs })
+            d.logs.sort((a, b) => b.ts - a.ts)
           })
           toast_('+' + gain + ' momentum · effort logged')
           set({ modal: null, draft: freshDraft() })
+          const uid = get().fbUser?.uid
+          if (uid) scheduleCloudSave(uid, () => get().data)
         },
 
         submitReading: () => {
@@ -318,6 +345,8 @@ export const useStore = create<AppState>()(
           const def = allDefs.find(b => b.id === draft.book)
           if (!def) return
           const amt = Math.max(1, parseInt(String(draft.readAmount)) || 0)
+          const logDate = draft.logDate || todayKey()
+          const logTs   = dateToTs(logDate)
           const gain = readGain(def.unit, amt)
           persist_(d => {
             const b = d.books.find(x => x.id === draft.book)
@@ -326,7 +355,8 @@ export const useStore = create<AppState>()(
             d.momentum += gain
             addWeekXp(d, gain)
             bumpActivity(d, Math.round(gain * 1.4))
-            d.logs.unshift({ type: 'reading', title: 'read ' + amt + ' ' + def.unit + ' · ' + def.title, mins: 0, gain, date: todayKey(), ts: Date.now(), amount: amt, unit: def.unit, bookId: def.id })
+            d.logs.unshift({ type: 'reading', title: 'read ' + amt + ' ' + def.unit + ' · ' + def.title, mins: 0, gain, date: logDate, ts: logTs, amount: amt, unit: def.unit, bookId: def.id })
+            d.logs.sort((a, b) => b.ts - a.ts)
           })
           toast_('+' + gain + ' momentum · intel absorbed')
           set({ modal: null, draft: freshDraft() })
@@ -582,10 +612,40 @@ export const useStore = create<AppState>()(
           if (anyHandle) {
             saveUserHandles(user.uid, { cf: d.cf.handle, mt: d.mt.handle, lc: d.lc.handle, cc: d.ccHandle }).catch(() => {})
           }
+          // Check for a cloud backup that is newer than local data
+          const backup = await loadCloudBackup(user.uid)
+          if (backup) {
+            const localMomentum = get().data.momentum
+            const cloudMomentum = ((backup.data as Data).momentum) || 0
+            if (cloudMomentum > localMomentum + 5) {
+              set({ cloudRestorePrompt: { data: backup.data as Data, savedAt: backup.savedAt } })
+            }
+          }
         },
 
         onSignedOut: () => {
           set({ fbUser: null, fbMode: 'offline' })
+          if (_cloudSaveTimer) { clearTimeout(_cloudSaveTimer); _cloudSaveTimer = null }
+        },
+
+        acceptCloudRestore: () => {
+          const prompt = get().cloudRestorePrompt
+          if (!prompt) return
+          set({ data: prompt.data as Data, cloudRestorePrompt: null })
+          toast_('data restored from cloud')
+        },
+        rejectCloudRestore: () => {
+          const uid = get().fbUser?.uid
+          set({ cloudRestorePrompt: null })
+          // Overwrite cloud with current local data so this device wins
+          if (uid) saveCloudBackup(uid, get().data).catch(() => {})
+        },
+        triggerCloudSave: () => {
+          const uid = get().fbUser?.uid
+          if (!uid) { toast_('sign in to save to cloud'); return }
+          saveCloudBackup(uid, get().data)
+            .then(() => toast_('data saved to cloud'))
+            .catch(() => toast_('cloud save failed'))
         },
 
         setMtHandle: (h) => {
@@ -675,7 +735,7 @@ export const useStore = create<AppState>()(
           if (!fbUser) { toast_('not signed in'); return }
           if (!confirm('delete this clan? all members will be removed. this cannot be undone.')) return
           try {
-            await fbDeleteClan(fbUser.uid, clanId)
+            await fbDisbandClan(fbUser.uid, clanId)
             persist_(d => { d.clanId = null })
             toast_('clan disbanded')
           } catch (e) {
@@ -813,6 +873,9 @@ export const useStore = create<AppState>()(
         setLogDuration: (v) => {
           set(s => s.logDraft ? { logDraft: { ...s.logDraft, durationMin: v } } : {})
         },
+        setLogDate: (d: string) => {
+          set(s => s.logDraft ? { logDraft: { ...s.logDraft, logDate: d } } : {})
+        },
 
         submitSession: () => {
           const { logDraft, data, editingSessionId } = get()
@@ -851,8 +914,10 @@ export const useStore = create<AppState>()(
             const orm = est1rm(e)
             if (orm && (!before[e.name] || orm > before[e.name].orm + 0.01)) prCount++
           })
+          const wLogDate = logDraft.logDate || todayKey()
+          const wLogTs   = dateToTs(wLogDate)
           const sess: WorkoutSession = {
-            id: 's' + Date.now(), ts: Date.now(), date: todayKey(),
+            id: 's' + wLogTs, ts: wLogTs, date: wLogDate,
             dayId: logDraft.dayId, dayName: day.name, muscle: day.muscle,
             exercises: exs, durationMin: logDraft.durationMin,
             volume: m.volume, totalReps: m.totalReps, totalSets: m.totalSets,
@@ -861,11 +926,13 @@ export const useStore = create<AppState>()(
           persist_(d => {
             if (!d.workoutLab) d.workoutLab = seedWorkoutData()
             d.workoutLab.sessions.push(sess)
+            d.workoutLab.sessions.sort((a, b) => b.ts - a.ts)
             d.momentum += gain
             addWeekXp(d, gain)
             bumpActivity(d, gain * 2)
             d.skillXp.physique = (d.skillXp.physique || 0) + Math.max(1, Math.round(gain * 0.4))
-            d.logs.unshift({ type: 'workout', title: 'workout · ' + day.name, mins: logDraft.durationMin, gain, date: todayKey(), ts: Date.now() })
+            d.logs.unshift({ type: 'workout', title: 'workout · ' + day.name, mins: logDraft.durationMin, gain, date: wLogDate, ts: wLogTs })
+            d.logs.sort((a, b) => b.ts - a.ts)
           })
           const msg = prCount ? `session logged · ★ ${prCount} new pr${prCount > 1 ? 's' : ''}!` : `session logged · ${m.volume}kg moved`
           get().showToast(msg)
@@ -974,6 +1041,12 @@ export const useStore = create<AppState>()(
               if (v > 0 && v <= 99) state.data.skillXp[id] = Math.round(v * 7)
             })
             ;(state.data as any)._skillXpV2 = true
+          }
+          // Remove seeded dummy sessions (generated by genSeed() — now replaced by empty list)
+          if (state.data.workoutLab?.sessions) {
+            state.data.workoutLab.sessions = state.data.workoutLab.sessions.filter(
+              (s: WorkoutSession) => !String(s.id).startsWith('seed')
+            )
           }
           // Migrate old session exercises (flat format) to per-set format
           if (state.data.workoutLab?.sessions) {
