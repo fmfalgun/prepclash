@@ -171,6 +171,31 @@ export function PlayerDetailModal() {
                 </div>
               )}
 
+              {/* Current target */}
+              {o.currentTarget && (
+                <div>
+                  <div style={{ font: "500 8px 'Roboto Mono'", letterSpacing: '.18em', color: 'var(--mut)', marginBottom: 8 }}>CURRENT TARGET</div>
+                  <div style={{ font: "500 11px 'Lexend Deca'", color: P.a, lineHeight: 1.4 }}>{o.currentTarget}</div>
+                </div>
+              )}
+
+              {/* Last-week workout */}
+              {o.weekWorkout && (
+                <div>
+                  <div style={{ font: "500 8px 'Roboto Mono'", letterSpacing: '.18em', color: 'var(--mut)', marginBottom: 8 }}>LAST 7 DAYS · WORKOUT</div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
+                    <div style={{ background: 'rgba(255,255,255,.04)', borderRadius: 5, padding: '7px 9px' }}>
+                      <div style={{ font: "400 7px 'Roboto Mono'", color: 'var(--mut)', marginBottom: 2 }}>SESSIONS</div>
+                      <div style={{ font: "500 16px/1 'Roboto Mono'", color: P.a2 }}>{o.weekWorkout.sessions}</div>
+                    </div>
+                    <div style={{ background: 'rgba(255,255,255,.04)', borderRadius: 5, padding: '7px 9px' }}>
+                      <div style={{ font: "400 7px 'Roboto Mono'", color: 'var(--mut)', marginBottom: 2 }}>VOLUME</div>
+                      <div style={{ font: "500 16px/1 'Roboto Mono'", color: P.a2 }}>{o.weekWorkout.volume >= 1000 ? (o.weekWorkout.volume / 1000).toFixed(1) + 'k' : o.weekWorkout.volume}</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Village progress */}
               <div>
                 <div style={{ font: "500 8px 'Roboto Mono'", letterSpacing: '.18em', color: 'var(--mut)', marginBottom: 8 }}>VILLAGE</div>
@@ -191,6 +216,26 @@ export function PlayerDetailModal() {
               </div>
             </div>
           </div>
+
+          {/* Recent activity */}
+          {o.recentActivity && o.recentActivity.length > 0 && (
+            <div style={{ marginTop: 20 }}>
+              <div style={{ font: "500 8px 'Roboto Mono'", letterSpacing: '.18em', color: 'var(--mut)', marginBottom: 10 }}>RECENT ACTIVITY</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {o.recentActivity.map((a, i) => (
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 10px', background: 'rgba(255,255,255,.03)', borderRadius: 6 }}>
+                    <span style={{ fontSize: 12, flexShrink: 0 }}>
+                      {{ study: '⚡', workout: '⚔', reading: '📖', node: '◈', arena: '▶', course: '✓' }[a.type] || '·'}
+                    </span>
+                    <span style={{ flex: 1, font: "400 10px 'Lexend Deca'", color: 'var(--txt)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.title}</span>
+                    <span style={{ font: "400 8px 'Roboto Mono'", color: 'var(--dim2)', flexShrink: 0 }}>
+                      {Math.floor((Date.now() - a.ts) / 86400000) === 0 ? 'today' : Math.floor((Date.now() - a.ts) / 86400000) + 'd ago'}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Clan join CTA */}
           {clanDoc && !isYou && data.clanId !== o.clanId && (

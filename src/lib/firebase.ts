@@ -2,7 +2,7 @@ import type { Data, ClanMember, PublicOperative, ClanDoc, FbUser } from '../type
 import { rankFor } from './grades'
 import { flatNodes } from '../data/village'
 import { AVATAR_COLORS } from '../data/palettes'
-import { SKILL_DEFS } from '../data/skills'
+import { SKILL_DEFS, COURSE_DEFS } from '../data/skills'
 
 export const FB_KEY = 'prepclash_fb_config'
 
@@ -308,6 +308,22 @@ export async function pushToFirebase(data: Data): Promise<void> {
         rank: data.cf.rank,
         solved: data.cf.solved,
       },
+      currentTarget: (() => {
+        const inProgress = COURSE_DEFS.find(c => {
+          const st = data.courses.find(x => x.id === c.id)
+          if (!st) return false
+          const done = st.done.filter(Boolean).length
+          return done > 0 && done < c.phases.length
+        })
+        return inProgress?.name || null
+      })(),
+      weekWorkout: (() => {
+        const cutoff = Date.now() - 7 * 86400000
+        const sessions = (data.workoutLab?.sessions || []).filter(s => s.ts >= cutoff)
+        if (!sessions.length) return null
+        return { sessions: sessions.length, volume: Math.round(sessions.reduce((a, s) => a + s.volume, 0)) }
+      })(),
+      recentActivity: data.logs.slice(0, 5).map(l => ({ type: l.type, title: l.title, ts: l.ts })),
       lastSeen: Date.now(),
     }
 

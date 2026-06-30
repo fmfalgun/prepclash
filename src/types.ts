@@ -196,6 +196,9 @@ export interface PublicOperative {
   lastSeen: number
   createdAt?: number
   isShowcase?: boolean
+  currentTarget?: string | null
+  weekWorkout?: { sessions: number; volume: number } | null
+  recentActivity?: { type: string; title: string; ts: number }[]
 }
 
 export interface ClanDoc {
