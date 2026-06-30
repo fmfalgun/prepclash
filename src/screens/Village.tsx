@@ -119,7 +119,8 @@ export function Village() {
     return (campaign[laneKey(act.id, lid)] || 0) >= units
   }
   function actChReady(act: ActData) {
-    return act.chapters.length > 0 && act.chapters.every(ch => ch.content && chCleared(act, ch))
+    const withContent = act.chapters.filter(ch => ch.content)
+    return withContent.length > 0 && withContent.every(ch => chCleared(act, ch))
   }
   function actLanesReady(act: ActData) {
     return (SIDE[act.id] || []).every(n => laneDone(act, n.id, n.units))

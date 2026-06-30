@@ -737,6 +737,7 @@ export const useStore = create<AppState>()(
             d.momentum += gain
             addWeekXp(d, gain)
             bumpActivity(d, gain * 2)
+            d.skillXp.physique = (d.skillXp.physique || 0) + Math.max(1, Math.round(gain * 0.4))
             d.logs.unshift({ type: 'workout', title: 'workout · ' + day.name, mins: logDraft.durationMin, gain, date: todayKey(), ts: Date.now() })
           })
           const msg = prCount ? `session logged · ★ ${prCount} new pr${prCount > 1 ? 's' : ''}!` : `session logged · ${m.volume}kg moved`

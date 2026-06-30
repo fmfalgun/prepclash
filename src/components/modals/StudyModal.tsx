@@ -21,7 +21,7 @@ export function StudyModal() {
   }).filter(Boolean))].join(', ')
 
   return (
-    <ModalShell kicker="OFFICE // WORK HOURS" title="Log Office Study">
+    <ModalShell kicker="STUDY SESSION" title="Log Study Session">
       <ModalLabel>WHAT DID YOU WORK ON?</ModalLabel>
       <textarea
         value={draft.title}

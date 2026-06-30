@@ -104,9 +104,9 @@ export function Study() {
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          <div style={{ font: "300 30px/1 'Lexend Deca'", color: 'var(--ink)', letterSpacing: '.01em' }}>office study lab</div>
+          <div style={{ font: "300 30px/1 'Lexend Deca'", color: 'var(--ink)', letterSpacing: '.01em' }}>study lab</div>
           <div style={{ font: "400 11px 'Roboto Mono'", color: 'var(--mut)', marginTop: 5 }}>
-            work hours · {totalSessions} sessions · {totalHours}h focused
+            {totalSessions} sessions · {totalHours}h focused
           </div>
         </div>
         <div style={{ display: 'flex', gap: 10 }}>
@@ -150,8 +150,7 @@ export function Study() {
         {tiles.map(t => <StatTile key={t.label} label={t.label} value={t.value} sub={t.sub} accent={t.accent} />)}
       </div>
 
-      {/* Competitive programming */}
-      <CompetitiveCard />
+      {/* Competitive programming lives in the Arena tab */}
 
       {/* Category focus + Keyword heat */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.25fr', gap: 24 }}>
