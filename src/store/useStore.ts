@@ -831,6 +831,12 @@ export const useStore = create<AppState>()(
     {
       name: 'prepclash_v2',
       partialize: (state) => ({ data: state.data }),
+      onRehydrateStorage: () => (state) => {
+        if (state?.data) {
+          if (!state.data.campaign)         state.data.campaign         = {}
+          if (!state.data.campaignDefeated) state.data.campaignDefeated = {}
+        }
+      },
     }
   )
 )
