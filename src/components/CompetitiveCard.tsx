@@ -4,16 +4,21 @@ import { cpScore } from '../store/selectors'
 import { A2OJ_DEFS } from '../data/a2oj'
 import { ago } from '../lib/dates'
 
+const A2OJ_GROUPS = [
+  { label: 'By Problem Type', ids: ['l4','l5','l6','l7','l8','l9','l10'], total: 700 },
+  { label: 'By Rating Std',   ids: ['l11','l12','l13','l14','l15','l16','l17','l18','l19','l20','l21'], total: 1100 },
+  { label: 'By Rating Extra', ids: ['l22','l23','l24','l25','l26','l27','l28','l29','l30','l31','l32'], total: 2200 },
+]
+
 export function CompetitiveCard() {
-  const data       = useStore(s => s.data)
-  const syncCf     = useStore(s => s.syncCf)
-  const bumpA2oj   = useStore(s => s.bumpA2oj)
+  const data        = useStore(s => s.data)
+  const syncCf      = useStore(s => s.syncCf)
   const setCfHandle = useStore(s => s.setCfHandle)
-  const cfPulling  = useStore(s => s.cfPulling)
+  const cfPulling   = useStore(s => s.cfPulling)
   const [handleDraft, setHandleDraft] = useState(data.cf.handle || '')
 
-  const cf  = data.cf
-  const cp  = cpScore(data)
+  const cf = data.cf
+  const cp = cpScore(data)
 
   function handleSync() {
     if (handleDraft.trim() !== cf.handle) setCfHandle(handleDraft)
@@ -26,6 +31,9 @@ export function CompetitiveCard() {
       <div style={{ font: "500 18px/1 'Roboto Mono'", color: 'var(--a)' }}>{value ?? '—'}</div>
     </div>
   )
+
+  const totalSolved = data.a2oj.reduce((s, x) => s + (x.solved || 0), 0)
+  const totalProbs  = A2OJ_DEFS.reduce((s, d) => s + d.total, 0)
 
   return (
     <div style={{ background: 'var(--card0)', borderRadius: 11, padding: '22px 24px' }}>
@@ -72,37 +80,38 @@ export function CompetitiveCard() {
           </div>
         </div>
 
-        {/* A2OJ side */}
+        {/* A2OJ summary */}
         <div>
-          <div style={{ font: "400 10px 'Roboto Mono'", color: 'var(--mut)', marginBottom: 14 }}>a2oj ladders</div>
-          {A2OJ_DEFS.map(def => {
-            const entry = data.a2oj.find(x => x.id === def.id)
-            const solved = entry?.solved ?? 0
-            const pct = Math.round(solved / def.total * 100)
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 12 }}>
+            <span style={{ font: "400 10px 'Roboto Mono'", color: 'var(--mut)' }}>a2oj ladders · 29 sets</span>
+            <span style={{ font: "500 13px 'Roboto Mono'", color: 'var(--a)' }}>{totalSolved} <span style={{ color: 'var(--dim2)', fontWeight: 400 }}>/ {totalProbs}</span></span>
+          </div>
+
+          {/* overall bar */}
+          <div style={{ height: 5, background: 'var(--cardHi)', borderRadius: 3, overflow: 'hidden', marginBottom: 14 }}>
+            <div style={{ height: '100%', borderRadius: 3, background: 'var(--a)', width: (totalSolved / totalProbs * 100) + '%', transition: 'width .3s' }} />
+          </div>
+
+          {/* group breakdown */}
+          {A2OJ_GROUPS.map(g => {
+            const solved = g.ids.reduce((s, id) => s + (data.a2oj.find(x => x.id === id)?.solved || 0), 0)
+            const pct    = Math.round(solved / g.total * 100)
             return (
-              <div key={def.id} style={{ marginBottom: 13 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 }}>
-                  <span style={{ font: "400 13px 'Lexend Deca'", color: 'var(--ink)' }}>{def.name}</span>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{ font: "400 11px 'Roboto Mono'", color: 'var(--mut)' }}>{solved}/{def.total}</span>
-                    <button onClick={() => bumpA2oj(def.id, -1)} style={{
-                      cursor: 'pointer', width: 22, height: 22, borderRadius: 5, border: 'none',
-                      background: 'var(--cardHi)', color: 'var(--mut)',
-                      font: "400 14px 'Roboto Mono'", lineHeight: '1', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    }}>−</button>
-                    <button onClick={() => bumpA2oj(def.id, 1)} style={{
-                      cursor: 'pointer', width: 22, height: 22, borderRadius: 5, border: 'none',
-                      background: `rgba(var(--rgb),.16)`, color: 'var(--a)',
-                      font: "400 14px 'Roboto Mono'", lineHeight: '1', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    }}>+</button>
-                  </div>
+              <div key={g.label} style={{ marginBottom: 10 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                  <span style={{ font: "400 9px 'Roboto Mono'", color: 'var(--dim2)' }}>{g.label}</span>
+                  <span style={{ font: "400 9px 'Roboto Mono'", color: 'var(--mut)' }}>{solved}/{g.total}</span>
                 </div>
-                <div style={{ height: 6, background: 'var(--cardHi)', borderRadius: 3, overflow: 'hidden' }}>
-                  <div style={{ height: '100%', borderRadius: 3, background: 'var(--a)', width: pct + '%', transition: 'width .25s' }} />
+                <div style={{ height: 4, background: 'var(--cardHi)', borderRadius: 2, overflow: 'hidden' }}>
+                  <div style={{ height: '100%', borderRadius: 2, background: 'rgba(var(--rgb),.5)', width: pct + '%', transition: 'width .3s' }} />
                 </div>
               </div>
             )
           })}
+
+          <div style={{ font: "400 9px 'Roboto Mono'", color: 'var(--dim2)', marginTop: 10 }}>
+            auto-tracked from CF submissions · sync CF to update
+          </div>
         </div>
       </div>
     </div>

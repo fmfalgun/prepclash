@@ -31,9 +31,10 @@ type ParseFn = (json: Record<string, unknown>) => { rating: number | null; maxRa
 const parseCompeteApi: ParseFn = (json) => {
   const d = json as any
   if (d.error || d.statusCode === 404) throw new Error('user not found')
-  const rating    = parseInt(String(d.rating_number ?? d.currentRating ?? '0'), 10)
-  const maxRating = parseInt(String(d.max_rank ?? d.highestRating ?? '0'), 10)
+  const rating = parseInt(String(d.rating_number ?? d.currentRating ?? '0'), 10)
   if (!rating) throw new Error('no rating data')
+  let maxRating = parseInt(String(d.max_rank ?? d.highestRating ?? '0'), 10)
+  if (maxRating < rating) maxRating = rating  // guard: fall back to current if missing/lower
   const stars = ratingToStars(rating)
   return { rating, maxRating, stars, rank: ratingToRank(stars), solved: null }
 }

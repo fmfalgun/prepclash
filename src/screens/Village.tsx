@@ -156,19 +156,24 @@ export function Village() {
   function actDefeated(act: ActData) { return !!defeated[act.id] }
 
   // ── total progress ─────────────────────────────────────────────────────
-  let doneUnits = 0, totalUnits = 0
+  // fightsDone/Total: chapter fights + bosses only (manual confirmations)
+  // lanesDone/Total:  side lane units (some auto-tracked — kept separate)
+  let fightsDone = 0, fightsTotal = 0
+  let lanesDone  = 0, lanesTotal  = 0
   acts.forEach(a => {
     a.chapters.forEach(ch => {
       if (ch.content) {
-        totalUnits += ch.content.fights.length + 1
-        doneUnits  += chFightsDone(a, ch) + (chBossDone(a, ch) ? 1 : 0)
+        fightsTotal += ch.content.fights.length + 1
+        fightsDone  += chFightsDone(a, ch) + (chBossDone(a, ch) ? 1 : 0)
       }
     });
     ;(SIDE[a.id] || []).forEach(n => {
-      totalUnits += n.units
-      doneUnits  += laneProgress(a.id, n)
+      lanesTotal += n.units
+      lanesDone  += laneProgress(a.id, n)
     })
   })
+  const doneUnits  = fightsDone  + lanesDone
+  const totalUnits = fightsTotal + lanesTotal
 
   // ── panel helpers ──────────────────────────────────────────────────────
   const panelAct = panel ? acts[panel.actIdx] : null
@@ -192,12 +197,15 @@ export function Village() {
           </div>
         </div>
         <div style={{ width: 200 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', font: "500 9px 'Roboto Mono'", letterSpacing: '.08em', color: 'var(--mut)', marginBottom: 8 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', font: "500 9px 'Roboto Mono'", letterSpacing: '.08em', color: 'var(--mut)', marginBottom: 6 }}>
             <span>FIGHTS LOGGED</span>
-            <span style={{ color: P.a2 }}>{doneUnits} / {totalUnits}</span>
+            <span style={{ color: P.a2 }}>{fightsDone} / {fightsTotal}</span>
           </div>
-          <div style={{ height: 4, background: `rgba(${rgb},.12)`, borderRadius: 2 }}>
-            <div style={{ width: totalUnits ? (doneUnits / totalUnits * 100) + '%' : '0%', height: '100%', background: `linear-gradient(90deg,${P.a},${P.a2})`, borderRadius: 2, transition: 'width .5s' }} />
+          <div style={{ height: 4, background: `rgba(${rgb},.12)`, borderRadius: 2, marginBottom: 5 }}>
+            <div style={{ width: fightsTotal ? (fightsDone / fightsTotal * 100) + '%' : '0%', height: '100%', background: `linear-gradient(90deg,${P.a},${P.a2})`, borderRadius: 2, transition: 'width .5s' }} />
+          </div>
+          <div style={{ font: "400 8px 'Roboto Mono'", color: 'var(--dim2)', textAlign: 'right' }}>
+            side lanes {lanesDone}/{lanesTotal}
           </div>
         </div>
       </div>
