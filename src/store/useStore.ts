@@ -33,11 +33,14 @@ function dateToTs(d: string): number {
 
 // Module-level cloud save debounce
 let _cloudSaveTimer: ReturnType<typeof setTimeout> | null = null
+let _onCloudSaveFail: ((msg: string) => void) | null = null
 function scheduleCloudSave(uid: string, getData: () => Data) {
   if (_cloudSaveTimer) clearTimeout(_cloudSaveTimer)
   _cloudSaveTimer = setTimeout(() => {
     _cloudSaveTimer = null
-    saveCloudBackup(uid, getData()).catch(() => {})
+    saveCloudBackup(uid, getData()).catch((e) => {
+      _onCloudSaveFail?.('cloud sync failed: ' + String(e).replace('Error: ', '').slice(0, 60))
+    })
   }, 60 * 1000)  // 60s debounce — saves within 1 minute of any change
 }
 
@@ -226,6 +229,8 @@ export const useStore = create<AppState>()(
         set({ toast: msg })
         setTimeout(() => set({ toast: null }), 2600)
       }
+      // Wire cloud-save failure callback to this store's toast
+      _onCloudSaveFail = toast_
 
       function topicQuestions(topic: string): ArenaQuestion[] {
         return [...(ARENA[topic]?.questions || []), ...(get().liveQuestions[topic] || [])]
@@ -655,8 +660,8 @@ export const useStore = create<AppState>()(
           const uid = get().fbUser?.uid
           if (!uid) { toast_('sign in to save to cloud'); return }
           saveCloudBackup(uid, get().data)
-            .then(() => toast_('data saved to cloud'))
-            .catch(() => toast_('cloud save failed'))
+            .then(() => toast_('data saved to cloud ✓'))
+            .catch((e) => toast_('cloud save failed: ' + String(e).slice(0, 60)))
         },
 
         setMtHandle: (h) => {

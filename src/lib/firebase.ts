@@ -385,13 +385,14 @@ function currentNodeNameFromVillage(village: Record<string, unknown>): string {
   return 'Red Team Op'
 }
 
-// Cloud backup — full local data persisted to Firestore for cross-device sync
+// Cloud backup — stored in userProfiles/{uid} (same collection as handles, confirmed writable)
 export async function saveCloudBackup(uid: string, data: unknown): Promise<void> {
   if (!fb) throw new Error('Not connected')
   const { doc, setDoc } = fb.fsMod as Record<string, unknown>
-  await (setDoc as (ref: unknown, d: unknown) => Promise<void>)(
-    (doc as (db: unknown, col: string, id: string) => unknown)(fb.db, 'userBackups', uid),
-    { data: JSON.stringify(data), savedAt: Date.now() }
+  await (setDoc as (ref: unknown, d: unknown, opts: unknown) => Promise<void>)(
+    (doc as (db: unknown, col: string, id: string) => unknown)(fb.db, 'userProfiles', uid),
+    { backup: JSON.stringify(data), savedAt: Date.now() },
+    { merge: true }
   )
 }
 
@@ -400,12 +401,12 @@ export async function loadCloudBackup(uid: string): Promise<{ data: unknown; sav
   try {
     const { doc, getDoc } = fb.fsMod as Record<string, unknown>
     const snap = await (getDoc as (ref: unknown) => Promise<{ exists: () => boolean; data: () => unknown }>)(
-      (doc as (db: unknown, col: string, id: string) => unknown)(fb.db, 'userBackups', uid)
+      (doc as (db: unknown, col: string, id: string) => unknown)(fb.db, 'userProfiles', uid)
     )
     if (!snap.exists()) return null
-    const d = snap.data() as { data?: string; savedAt?: number }
-    if (!d.data || !d.savedAt) return null
-    return { data: JSON.parse(d.data), savedAt: d.savedAt }
+    const d = snap.data() as { backup?: string; savedAt?: number }
+    if (!d.backup || !d.savedAt) return null
+    return { data: JSON.parse(d.backup), savedAt: d.savedAt }
   } catch { return null }
 }
 

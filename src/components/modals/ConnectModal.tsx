@@ -19,10 +19,23 @@ export function ConnectModal() {
   const fbUser        = useStore(s => s.fbUser)
   const onSignedOut   = useStore(s => s.onSignedOut)
   const showToast     = useStore(s => s.showToast)
-  const setCfHandle   = useStore(s => s.setCfHandle)
+  const setCfHandle    = useStore(s => s.setCfHandle)
+  const triggerCloudSave = useStore(s => s.triggerCloudSave)
 
   const [signingIn, setSigningIn] = useState(false)
   const [cfDraft, setCfDraft]     = useState(data.cf.handle || '')
+
+  async function hardRefresh() {
+    if ('caches' in window) {
+      const keys = await caches.keys()
+      await Promise.all(keys.map(k => caches.delete(k)))
+    }
+    if ('serviceWorker' in navigator) {
+      const regs = await navigator.serviceWorker.getRegistrations()
+      await Promise.all(regs.map(r => r.unregister()))
+    }
+    window.location.replace(window.location.pathname + '?_reload=' + Date.now())
+  }
 
   async function handleGoogleAuth() {
     setSigningIn(true)
@@ -132,6 +145,20 @@ export function ConnectModal() {
           <SubmitBtn onClick={handleGoogleAuth}>{signingIn ? 'CONNECTING…' : '⟳ SIGN IN WITH GOOGLE'}</SubmitBtn>
         </div>
       )}
+
+      {/* Cloud & app actions */}
+      <div style={{ marginTop: 14, borderTop: '1px solid rgba(var(--rgb),.1)', paddingTop: 16, display: 'flex', gap: 8 }}>
+        {fbUser && (
+          <button
+            onClick={triggerCloudSave}
+            style={{ cursor: 'pointer', flex: 1, border: '1px solid rgba(var(--a2rgb),.3)', background: 'rgba(var(--a2rgb),.06)', color: 'var(--a2)', font: "500 10px 'Roboto Mono'", letterSpacing: '.08em', padding: 10, borderRadius: 5 }}
+          >FORCE SAVE TO CLOUD</button>
+        )}
+        <button
+          onClick={hardRefresh}
+          style={{ cursor: 'pointer', flex: 1, border: '1px solid rgba(var(--rgb),.2)', background: 'transparent', color: 'var(--mut)', font: "500 10px 'Roboto Mono'", letterSpacing: '.08em', padding: 10, borderRadius: 5 }}
+        >CLEAR CACHE & RELOAD</button>
+      </div>
 
       {/* Danger zone */}
       <div style={{ marginTop: 14, borderTop: '1px solid rgba(255,90,90,.12)', paddingTop: 16 }}>
