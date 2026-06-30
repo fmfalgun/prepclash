@@ -74,7 +74,7 @@ export function Village() {
 
   // ── fetch data ─────────────────────────────────────────────────────────
   useEffect(() => {
-    const base = '/data/courses/'
+    const base = import.meta.env.BASE_URL + 'data/courses/'
     async function load() {
       try {
         const manifest = await fetch(base + 'manifest.json').then(r => r.json())
