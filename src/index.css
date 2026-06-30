@@ -46,3 +46,27 @@ input, textarea, select { font-family: 'Roboto Mono', monospace; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: rgba(255,255,255,.1); border-radius: 5px; }
 ::placeholder             { color: var(--dim2); }
+
+/* Hide scrollbar on tab strip */
+.tab-strip::-webkit-scrollbar { display: none; }
+
+/* Mobile responsive */
+@media (max-width: 640px) {
+  .hide-xs  { display: none !important; }
+  .hide-sm  { display: none !important; }
+}
+@media (min-width: 641px) and (max-width: 900px) {
+  .hide-sm  { display: none !important; }
+}
+@media (max-width: 900px) {
+  /* Home 3-col → single col */
+  .home-grid { grid-template-columns: 1fr !important; }
+  /* All content areas */
+  .rtt { overflow-x: hidden; }
+}
+@media (max-width: 600px) {
+  /* Tighter padding on screens */
+  .screen-pad { padding: 16px 12px 64px !important; }
+  /* Stack platform stat grids */
+  .platform-grid { grid-template-columns: 1fr !important; }
+}

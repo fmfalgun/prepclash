@@ -3,6 +3,7 @@ import { SKILL_DEFS } from '../data/skills'
 import { AVATAR_COLORS, PALETTES } from '../data/palettes'
 import { gradeColor } from '../lib/grades'
 import { joinClan } from '../lib/firebase'
+import { Radar } from './Radar'
 
 const AXIS_COLORS: Record<string, string> = {
   systems: '#39ff88', network: '#2da0ff', python: '#caa24a',
@@ -112,28 +113,36 @@ export function PlayerDetailModal() {
             ))}
           </div>
 
-          {/* Two columns: skills | intel */}
+          {/* Skill radar */}
+          <div style={{ marginBottom: 22 }}>
+            <div style={{ font: "500 8px 'Roboto Mono'", letterSpacing: '.18em', color: 'var(--mut)', marginBottom: 12 }}>SKILL RADAR</div>
+            <div style={{ display: 'flex', gap: 18, alignItems: 'flex-start', flexWrap: 'wrap' }}>
+              <Radar skillXp={o.skillXp} palette={o.palette} size={160} />
+              <div style={{ flex: 1, minWidth: 120, display: 'flex', flexDirection: 'column', gap: 7, paddingTop: 4 }}>
+                {SKILL_DEFS.map(s => {
+                  const v  = Math.min(99, Math.round(o.skillXp[s.id] || 0))
+                  const ac = AXIS_COLORS[s.id] || P.a
+                  return (
+                    <div key={s.id}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', font: "400 8px 'Roboto Mono'", color: 'var(--txt)', marginBottom: 3 }}>
+                        <span>{s.name}</span>
+                        <span style={{ color: ac }}>{v}</span>
+                      </div>
+                      <div style={{ height: 2, background: 'rgba(255,255,255,.06)', borderRadius: 2 }}>
+                        <div style={{ width: v + '%', height: '100%', background: ac, opacity: .85, borderRadius: 2 }} />
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* Two columns: intel */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 22 }}>
 
-            {/* Skill bars */}
-            <div>
-              <div style={{ font: "500 8px 'Roboto Mono'", letterSpacing: '.18em', color: 'var(--mut)', marginBottom: 10 }}>SKILL AXES</div>
-              {SKILL_DEFS.map(s => {
-                const v  = Math.min(99, Math.round(o.skillXp[s.id] || 0))
-                const ac = AXIS_COLORS[s.id] || P.a
-                return (
-                  <div key={s.id} style={{ marginBottom: 9 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', font: "400 8px 'Roboto Mono'", color: 'var(--txt)', marginBottom: 3 }}>
-                      <span>{s.name}</span>
-                      <span style={{ color: ac }}>{v}</span>
-                    </div>
-                    <div style={{ height: 3, background: 'rgba(255,255,255,.06)', borderRadius: 2 }}>
-                      <div style={{ width: v + '%', height: '100%', background: ac, opacity: .85, borderRadius: 2, transition: 'width .3s' }} />
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
+            {/* placeholder to keep right column */}
+            <div style={{ display: 'none' }} />
 
             {/* Right: CF + village + arena */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>

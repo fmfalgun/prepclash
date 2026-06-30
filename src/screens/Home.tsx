@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useStore } from '../store/useStore'
 import { Radar } from '../components/Radar'
 import { Heatmap } from '../components/Heatmap'
@@ -6,6 +6,7 @@ import { PALETTES } from '../data/palettes'
 import { COURSE_DEFS } from '../data/skills'
 import { allSkills, allBookDefs, skillScore, overallScore, level, rank, streak, todayGain } from '../store/selectors'
 import { weekXpNow, ago } from '../lib/dates'
+import type { LogEntry } from '../types'
 import { CompetitiveCard } from '../components/CompetitiveCard'
 
 const LOG_ICONS: Record<string, string> = { study: '⚡', workout: '⚔', reading: '📖', node: '◈', arena: '▶', course: '✓' }
@@ -14,6 +15,81 @@ function squadNumber(sc: number): string {
   // lower score → higher number (Blue Lock style — rank higher = lower squad #)
   const n = Math.max(1, 300 - Math.floor(sc * 2.5))
   return String(n).padStart(3, '0')
+}
+
+function dateLabel(ts: number): string {
+  const now = Date.now()
+  const diffD = Math.floor((now - ts) / 86400000)
+  if (diffD === 0) return 'today'
+  if (diffD === 1) return 'yesterday'
+  if (diffD < 7) return `${diffD} days ago`
+  if (diffD < 14) return '1 week ago'
+  return `${Math.floor(diffD / 7)} weeks ago`
+}
+
+function feedDateKey(ts: number): string {
+  return new Date(ts).toDateString()
+}
+
+function FeedCard({ logs, showAll, onToggle }: { logs: LogEntry[]; showAll: boolean; onToggle: () => void }) {
+  const visible = showAll ? logs : logs.slice(0, 25)
+  const groups = useMemo(() => {
+    const map = new Map<string, { label: string; entries: LogEntry[] }>()
+    visible.forEach(log => {
+      const k = feedDateKey(log.ts)
+      if (!map.has(k)) map.set(k, { label: dateLabel(log.ts), entries: [] })
+      map.get(k)!.entries.push(log)
+    })
+    return Array.from(map.values())
+  }, [visible])
+
+  return (
+    <div style={{ background: 'var(--card0)', borderRadius: 10, padding: 18 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+        <div style={{ font: "500 9px 'Roboto Mono'", letterSpacing: '.08em', color: 'var(--mut)' }}>ACTIVITY</div>
+        {logs.length > 25 && (
+          <button onClick={onToggle} style={{
+            cursor: 'pointer', background: 'transparent', border: 'none',
+            font: "400 9px 'Roboto Mono'", color: 'var(--a)',
+          }}>
+            {showAll ? 'show less' : `show all (${logs.length})`}
+          </button>
+        )}
+      </div>
+      {logs.length === 0 && (
+        <div style={{ font: "400 10px 'Roboto Mono'", color: 'var(--dim2)', textAlign: 'center', padding: 20 }}>
+          no entries yet — log your first session
+        </div>
+      )}
+      {groups.map((g, gi) => (
+        <div key={gi}>
+          <div style={{
+            font: "400 8px 'Roboto Mono'", letterSpacing: '.08em', color: 'var(--dim)', textTransform: 'uppercase',
+            padding: '10px 0 6px', borderTop: gi > 0 ? '1px solid rgba(var(--rgb),.06)' : 'none',
+          }}>{g.label}</div>
+          {g.entries.map((log, i) => (
+            <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '7px 0' }}>
+              <div style={{
+                width: 28, height: 28, borderRadius: 6, flexShrink: 0,
+                background: 'rgba(var(--rgb),.08)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13,
+              }}>{LOG_ICONS[log.type] || '·'}</div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ font: "500 11px 'Lexend Deca'", color: 'var(--ink)', lineHeight: 1.3 }}>{log.title}</div>
+                {log.keywords?.length ? (
+                  <div style={{ font: "400 9px 'Roboto Mono'", color: 'var(--dim2)', marginTop: 2 }}>{log.keywords.join(', ')}</div>
+                ) : null}
+              </div>
+              <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                <div style={{ font: "500 11px 'Roboto Mono'", color: 'var(--a2)' }}>+{log.gain}</div>
+                <div style={{ font: "400 8px 'Roboto Mono'", color: 'var(--dim2)', marginTop: 1 }}>{ago(log.ts)}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      ))}
+    </div>
+  )
 }
 
 function PlatformCard({
@@ -54,23 +130,27 @@ function PlatformCard({
 }
 
 export function Home() {
-  const data       = useStore(s => s.data)
-  const setModal   = useStore(s => s.setModal)
-  const setPalette = useStore(s => s.setPalette)
+  const data        = useStore(s => s.data)
+  const setModal    = useStore(s => s.setModal)
   const togglePhase = useStore(s => s.togglePhase)
   const syncMt      = useStore(s => s.syncMt)
   const syncLc      = useStore(s => s.syncLc)
+  const syncGh      = useStore(s => s.syncGh)
   const setMtHandle = useStore(s => s.setMtHandle)
   const setLcHandle = useStore(s => s.setLcHandle)
   const setCcHandle = useStore(s => s.setCcHandle)
+  const setGhHandle = useStore(s => s.setGhHandle)
   const mtPulling   = useStore(s => s.mtPulling)
   const lcPulling   = useStore(s => s.lcPulling)
+  const ghPulling   = useStore(s => s.ghPulling)
 
   const [mtDraft, setMtDraft] = useState(data.mt.handle || '')
   const [lcDraft, setLcDraft] = useState(data.lc.handle || '')
   const [ccDraft, setCcDraft] = useState(data.ccHandle || '')
+  const [ghDraft, setGhDraft] = useState(data.gh?.handle || '')
   const [lcEditing, setLcEditing] = useState(false)
   const [ccEditing, setCcEditing] = useState(false)
+  const [showAllFeed, setShowAllFeed] = useState(false)
 
   const sc   = Math.round(overallScore(data))
   const lvl  = level(data)
@@ -97,9 +177,25 @@ export function Home() {
       setCcEditing(false)
     }
   }
+  function handleGhSync() {
+    if (ghDraft !== data.gh?.handle) setGhHandle(ghDraft)
+    setTimeout(() => syncGh(), 0)
+  }
 
   const mt = data.mt
   const lc = data.lc
+  const gh = data.gh || { handle: '', public_repos: null, followers: null, lastSync: null, error: null }
+
+  // Only show courses with at least one phase completed
+  const activeCourses = COURSE_DEFS.filter(c => {
+    const state = data.courses.find(x => x.id === c.id)
+    return state && state.done.some(Boolean)
+  })
+  // Only show books with progress
+  const activeBooks = allBookDefs(data).filter(def => {
+    const b = data.books.find(x => x.id === def.id)
+    return b && b.done > 0
+  })
 
   const ACTIONS = [
     { icon: '⚡', label: 'STUDY', tip: 'log study session', modal: 'study' as const },
@@ -108,7 +204,7 @@ export function Home() {
 
   return (
     <div style={{ maxWidth: 1360, margin: '0 auto', padding: '28px 26px 80px' }}>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 2.2fr 1fr', gap: 24, alignItems: 'start' }}>
+      <div className="home-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 2.2fr 1fr', gap: 24, alignItems: 'start' }}>
 
         {/* LEFT — Face card + skills */}
         <div>
@@ -385,121 +481,109 @@ export function Home() {
           </div>
 
           {/* Activity log */}
-          <div style={{ background: 'var(--card0)', borderRadius: 10, padding: 18 }}>
-            <div style={{ font: "500 9px 'Roboto Mono'", letterSpacing: '.08em', color: 'var(--mut)', marginBottom: 12 }}>ACTIVITY FEED</div>
-            {data.logs.length === 0 && (
-              <div style={{ font: "400 10px 'Roboto Mono'", color: 'var(--dim2)', textAlign: 'center', padding: 20 }}>
-                No entries yet. Log your first session.
-              </div>
-            )}
-            {data.logs.slice(0, 20).map((log, i) => (
-              <div
-                key={i}
-                style={{
-                  display: 'flex', alignItems: 'flex-start', gap: 10, padding: '9px 0',
-                  borderBottom: i < 19 && i < data.logs.length - 1 ? '1px solid rgba(var(--rgb),.07)' : 'none',
-                }}
-              >
-                <span style={{ fontSize: 14, marginTop: 1, flex: '0 0 20px', textAlign: 'center' }}>{LOG_ICONS[log.type] || '·'}</span>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ font: "500 11px 'Lexend Deca'", color: 'var(--ink)', lineHeight: 1.3 }}>{log.title}</div>
-                  {log.keywords?.length ? (
-                    <div style={{ font: "400 9px 'Roboto Mono'", color: 'var(--dim2)', marginTop: 3 }}>{log.keywords.join(', ')}</div>
-                  ) : null}
-                </div>
-                <span style={{ font: "500 11px 'Lexend Deca'", color: 'var(--a2)', whiteSpace: 'nowrap' }}>+{log.gain}</span>
-                <span style={{ font: "400 9px 'Roboto Mono'", color: 'var(--dim2)', whiteSpace: 'nowrap' }}>{ago(log.ts)}</span>
-              </div>
-            ))}
-          </div>
+          <FeedCard logs={data.logs} showAll={showAllFeed} onToggle={() => setShowAllFeed(x => !x)} />
         </div>
 
-        {/* RIGHT — Courses, books, palette */}
-        <div>
-          {/* Courses */}
-          <div style={{ background: 'var(--card0)', borderRadius: 10, padding: 16, marginBottom: 18 }}>
-            <div style={{ font: "500 9px 'Roboto Mono'", letterSpacing: '.08em', color: 'var(--mut)', marginBottom: 12 }}>TARGET COURSES</div>
-            {COURSE_DEFS.map(c => {
-              const state = data.courses.find(x => x.id === c.id)
-              const done = state ? state.done.filter(Boolean).length : 0
-              return (
-                <div key={c.id} style={{ marginBottom: 14 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', font: "500 10px 'Lexend Deca'", color: 'var(--ink)', marginBottom: 6 }}>
-                    <span>{c.name}</span>
-                    <span style={{ font: "400 9px 'Roboto Mono'", color: 'var(--mut)' }}>{done}/{c.phases.length}</span>
-                  </div>
-                  <div style={{ display: 'flex', gap: 4 }}>
-                    {c.phases.map((ph, idx) => {
-                      const on = !!(state?.done[idx])
-                      return (
-                        <div
-                          key={idx}
-                          title={ph}
-                          onClick={() => togglePhase(c.id, idx)}
-                          style={{
-                            flex: 1, height: 20, borderRadius: 3, cursor: 'pointer',
-                            background: on ? 'var(--a2)' : 'rgba(var(--rgb),.1)',
-                            transition: 'background .2s',
-                          }}
-                        />
-                      )
-                    })}
-                  </div>
-                </div>
-              )
-            })}
-          </div>
+        {/* RIGHT — Active courses, active books, GitHub */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
 
-          {/* Books mini */}
-          <div style={{ background: 'var(--card0)', borderRadius: 10, padding: 16, marginBottom: 18 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-              <div style={{ font: "500 9px 'Roboto Mono'", letterSpacing: '.08em', color: 'var(--mut)' }}>READING LIST</div>
-              <button onClick={() => setModal('reading')} style={{ cursor: 'pointer', background: 'transparent', border: 'none', color: 'var(--a2)', fontSize: 14 }}>+</button>
+          {/* GitHub */}
+          <PlatformCard
+            title="GITHUB"
+            handle={ghDraft}
+            pulling={ghPulling}
+            onHandleChange={setGhDraft}
+            onSync={handleGhSync}
+          >
+            {gh.error
+              ? <div style={{ font: "400 9px 'Roboto Mono'", color: '#e06060' }}>{gh.error}</div>
+              : gh.lastSync
+                ? <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                    {[
+                      { l: 'repos',     v: gh.public_repos ?? '—' },
+                      { l: 'followers', v: gh.followers    ?? '—' },
+                    ].map(({ l, v }) => (
+                      <div key={l} style={{ background: 'var(--bg0)', borderRadius: 7, padding: '8px 10px' }}>
+                        <div style={{ font: "400 8px 'Roboto Mono'", color: 'var(--mut)', marginBottom: 3 }}>{l}</div>
+                        <div style={{ font: "500 15px/1 'Roboto Mono'", color: 'var(--a)' }}>{v}</div>
+                      </div>
+                    ))}
+                  </div>
+                : <div style={{ font: "400 9px 'Roboto Mono'", color: 'var(--mut)' }}>enter username and sync</div>
+            }
+          </PlatformCard>
+
+          {/* Active courses — only what's started */}
+          {(activeCourses.length > 0 || COURSE_DEFS.length > 0) && (
+            <div style={{ background: 'var(--card0)', borderRadius: 10, padding: 16 }}>
+              <div style={{ font: "500 9px 'Roboto Mono'", letterSpacing: '.08em', color: 'var(--mut)', marginBottom: 12 }}>TARGET COURSES</div>
+              {activeCourses.length === 0 && (
+                <div style={{ font: "400 9px 'Roboto Mono'", color: 'var(--dim2)' }}>no courses started · toggle phases below to track</div>
+              )}
+              {COURSE_DEFS.map(c => {
+                const state = data.courses.find(x => x.id === c.id)
+                const done = state ? state.done.filter(Boolean).length : 0
+                if (done === 0 && activeCourses.length > 0) return null
+                return (
+                  <div key={c.id} style={{ marginBottom: 12 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', font: "500 10px 'Lexend Deca'", color: done > 0 ? 'var(--ink)' : 'var(--mut)', marginBottom: 5 }}>
+                      <span>{c.name}</span>
+                      <span style={{ font: "400 9px 'Roboto Mono'", color: 'var(--mut)' }}>{done}/{c.phases.length}</span>
+                    </div>
+                    <div style={{ display: 'flex', gap: 3 }}>
+                      {c.phases.map((ph, idx) => {
+                        const on = !!(state?.done[idx])
+                        return (
+                          <div
+                            key={idx}
+                            title={ph}
+                            onClick={() => togglePhase(c.id, idx)}
+                            style={{
+                              flex: 1, height: 18, borderRadius: 3, cursor: 'pointer',
+                              background: on ? 'var(--a2)' : 'rgba(var(--rgb),.1)',
+                              transition: 'background .2s',
+                            }}
+                          />
+                        )
+                      })}
+                    </div>
+                  </div>
+                )
+              })}
             </div>
-            {allBookDefs(data).slice(0, 8).map(def => {
-              const st = data.books.find(x => x.id === def.id)
-              const done = st ? st.done : 0
-              const pct = Math.min(100, (done / def.total) * 100)
-              return (
-                <div key={def.id} style={{ marginBottom: 10 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', font: "400 9px 'Roboto Mono'", color: 'var(--txt)', marginBottom: 4 }}>
-                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '70%' }}>{def.title}</span>
-                    <span style={{ color: 'var(--dim2)' }}>{done}/{def.total}</span>
-                  </div>
-                  <div style={{ height: 3, background: 'rgba(var(--rgb),.12)', borderRadius: 2 }}>
-                    <div style={{ width: pct + '%', height: '100%', background: 'var(--a2)', transition: 'width .3s' }} />
-                  </div>
-                </div>
-              )
-            })}
-            {allBookDefs(data).length > 8 && (
-              <div style={{ font: "400 9px 'Roboto Mono'", color: 'var(--mut)', textAlign: 'center', marginTop: 8 }}>
-                +{allBookDefs(data).length - 8} more → reading tab
+          )}
+
+          {/* Active books */}
+          {activeBooks.length > 0 && (
+            <div style={{ background: 'var(--card0)', borderRadius: 10, padding: 16 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                <div style={{ font: "500 9px 'Roboto Mono'", letterSpacing: '.08em', color: 'var(--mut)' }}>IN PROGRESS</div>
+                <button onClick={() => setModal('reading')} style={{ cursor: 'pointer', background: 'transparent', border: 'none', color: 'var(--a2)', fontSize: 14 }}>+</button>
               </div>
-            )}
-          </div>
-
-          {/* Palettes */}
-          <div style={{ background: 'var(--card0)', borderRadius: 10, padding: 16 }}>
-            <div style={{ font: "500 9px 'Roboto Mono'", letterSpacing: '.08em', color: 'var(--mut)', marginBottom: 10 }}>PALETTE</div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
-              {(Object.entries(PALETTES) as [string, typeof PALETTES.toxic][]).map(([id, Pal]) => (
-                <button
-                  key={id}
-                  onClick={() => setPalette(id as Parameters<typeof setPalette>[0])}
-                  style={{
-                    cursor: 'pointer', border: `1px solid ${data.palette === id ? Pal.a2 : 'rgba(255,255,255,.08)'}`,
-                    background: `rgba(${Pal.rgb},.08)`, borderRadius: 5, padding: '8px 12px',
-                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                    color: Pal.a, font: "500 10px 'Roboto Mono'", letterSpacing: '.06em',
-                  }}
-                >
-                  <span>{Pal.name}</span>
-                  {data.palette === id && <span style={{ fontSize: 12 }}>◈</span>}
-                </button>
-              ))}
+              {activeBooks.slice(0, 6).map(def => {
+                const b = data.books.find(x => x.id === def.id)
+                const done = b ? b.done : 0
+                const pct = Math.min(100, (done / def.total) * 100)
+                return (
+                  <div key={def.id} style={{ marginBottom: 10 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', font: "400 9px 'Roboto Mono'", color: 'var(--txt)', marginBottom: 4 }}>
+                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '72%' }}>{def.title}</span>
+                      <span style={{ color: 'var(--dim2)' }}>{Math.round(pct)}%</span>
+                    </div>
+                    <div style={{ height: 3, background: 'rgba(var(--rgb),.12)', borderRadius: 2 }}>
+                      <div style={{ width: pct + '%', height: '100%', background: 'var(--a2)', transition: 'width .3s' }} />
+                    </div>
+                  </div>
+                )
+              })}
+              {activeBooks.length > 6 && (
+                <div style={{ font: "400 9px 'Roboto Mono'", color: 'var(--mut)', textAlign: 'center', marginTop: 4 }}>
+                  +{activeBooks.length - 6} more → reading tab
+                </div>
+              )}
             </div>
-          </div>
+          )}
+
         </div>
 
       </div>

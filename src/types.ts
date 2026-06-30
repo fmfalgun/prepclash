@@ -35,6 +35,14 @@ export interface MonkeytypeState {
   error: string | null
 }
 
+export interface GhState {
+  handle: string
+  public_repos: number | null
+  followers: number | null
+  lastSync: number | null
+  error: string | null
+}
+
 export interface LeetCodeState {
   handle: string
   solved: number | null
@@ -127,6 +135,7 @@ export interface Data {
   onboarded?: boolean
   mt: MonkeytypeState
   lc: LeetCodeState
+  gh: GhState
   ccHandle: string
 }
 

@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { Data, Draft, ModalType, Palette, PublicOperative, ClanDoc, FbUser, SessionExercise, ScheduleDay, WorkoutSession } from '../types'
+import { syncGithubProfile } from '../lib/github'
 import { SKILL_DEFS, DEFAULT_KEYWORDS, COURSE_DEFS, BOOK_DEFS } from '../data/skills'
 import { todayKey, addWeekXp, bumpActivity } from '../lib/dates'
 import { studyGain, studySkillXp, readGain } from '../lib/momentum'
@@ -51,6 +52,7 @@ function seedData(): Data {
     workoutLab: seedWorkoutData(),
     mt: { handle: '', pb60: null, pb30: null, pb15: null, completed: null, lastSync: null, error: null },
     lc: { handle: '', solved: null, easy: null, medium: null, hard: null, ranking: null, lastSync: null, error: null },
+    gh: { handle: '', public_repos: null, followers: null, lastSync: null, error: null },
     ccHandle: '',
   }
 }
@@ -135,11 +137,14 @@ interface AppState {
   adoptToji: (choice: 'toji' | 'own' | 'both') => void
   syncMt: () => void
   syncLc: () => void
+  syncGh: () => void
   setMtHandle: (h: string) => void
   setLcHandle: (h: string) => void
   setCcHandle: (h: string) => void
+  setGhHandle: (h: string) => void
   mtPulling: boolean
   lcPulling: boolean
+  ghPulling: boolean
   resetData: () => void
   onSignedIn: (user: FbUser) => void
   onSignedOut: () => void
@@ -240,6 +245,7 @@ export const useStore = create<AppState>()(
         selectedClan: null,
         mtPulling: false,
         lcPulling: false,
+        ghPulling: false,
         logDraft: null,
         editDraft: null,
         editNote: '',
@@ -346,6 +352,7 @@ export const useStore = create<AppState>()(
           const course = COURSE_DEFS.find(c => c.id === cid)
           if (!course) return
           let completed = false
+          const phaseTitle = course.name + ' · ' + course.phases[idx] + ' cleared'
           persist_(d => {
             const c = d.courses.find(x => x.id === cid)
             if (!c) return
@@ -356,10 +363,12 @@ export const useStore = create<AppState>()(
               d.momentum += 15
               addWeekXp(d, 15)
               bumpActivity(d, 40)
-              d.logs.unshift({ type: 'course', title: course.name + ' · ' + course.phases[idx] + ' cleared', mins: 0, gain: 15, date: todayKey(), ts: Date.now() })
+              d.logs.unshift({ type: 'course', title: phaseTitle, mins: 0, gain: 15, date: todayKey(), ts: Date.now() })
             } else {
               d.skillXp[course.skill] = Math.max(0, (d.skillXp[course.skill] || 0) - 4)
               d.momentum = Math.max(0, d.momentum - 15)
+              const i = d.logs.findIndex(l => l.type === 'course' && l.title === phaseTitle)
+              if (i >= 0) d.logs.splice(i, 1)
             }
           })
           if (completed) toast_('phase cleared · +15')
@@ -592,6 +601,9 @@ export const useStore = create<AppState>()(
           const uid = get().data.profile.uid
           if (uid) saveUserHandles(uid, { cc: h }).catch(() => {})
         },
+        setGhHandle: (h) => {
+          persist_(d => { d.gh = { ...d.gh, handle: h } })
+        },
 
         syncMt: async () => {
           const handle = get().data.mt.handle.trim()
@@ -599,7 +611,19 @@ export const useStore = create<AppState>()(
           set({ mtPulling: true })
           try {
             const result = await syncMonkeytype(handle)
-            persist_(d => { d.mt = { ...result, error: null } })
+            const prevCompleted = get().data.mt.completed || 0
+            persist_(d => {
+              d.mt = { ...result, error: null }
+              const delta = (result.completed || 0) - prevCompleted
+              if (delta > 0) {
+                const gain = Math.round(delta * 0.5)
+                d.momentum += gain
+                addWeekXp(d, gain)
+                bumpActivity(d, gain)
+                SKILL_DEFS.forEach(s => { d.skillXp[s.id] = (d.skillXp[s.id] || 0) + Math.max(1, Math.round(delta * 0.05)) })
+              }
+            })
+            toast_('mt synced · ' + (result.pb60 || '—') + ' wpm')
           } catch (e) {
             persist_(d => { d.mt.error = String(e).replace('Error: ', '') })
             toast_('MT sync failed')
@@ -617,6 +641,25 @@ export const useStore = create<AppState>()(
             persist_(d => { d.lc.error = String(e).replace('Error: ', '') })
             toast_('LC sync failed')
           } finally { set({ lcPulling: false }) }
+        },
+
+        syncGh: async () => {
+          const handle = get().data.gh.handle.trim()
+          if (!handle) { toast_('enter a github username'); return }
+          set({ ghPulling: true })
+          try {
+            const prevRepos = get().data.gh.public_repos || 0
+            const result = await syncGithubProfile(handle)
+            persist_(d => {
+              d.gh = { handle, ...result, error: null }
+              const delta = (result.public_repos || 0) - prevRepos
+              if (delta > 0) d.skillXp.systems = (d.skillXp.systems || 0) + delta * 0.5
+            })
+            toast_('github synced · ' + (result.public_repos || 0) + ' repos')
+          } catch (e) {
+            persist_(d => { d.gh = { ...d.gh, error: 'sync failed · check username' } })
+            toast_('github sync failed')
+          } finally { set({ ghPulling: false }) }
         },
 
         deleteClan: async (clanId: string) => {
@@ -912,6 +955,7 @@ export const useStore = create<AppState>()(
         if (state?.data) {
           if (!state.data.campaign)         state.data.campaign         = {}
           if (!state.data.campaignDefeated) state.data.campaignDefeated = {}
+          if (!state.data.gh)               state.data.gh = { handle: '', public_repos: null, followers: null, lastSync: null, error: null }
           // Migrate old session exercises (flat format) to per-set format
           if (state.data.workoutLab?.sessions) {
             state.data.workoutLab.sessions = state.data.workoutLab.sessions.map((sess: WorkoutSession) => ({

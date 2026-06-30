@@ -1,13 +1,18 @@
-import type { Data } from '../types'
+import type { Data, Palette } from '../types'
 import { SKILL_DEFS } from '../data/skills'
 import { skillScore, allSkills } from '../store/selectors'
 import { paletteCss } from '../store/selectors'
+import { PALETTES } from '../data/palettes'
 
-interface Props { data: Data; size?: number }
+interface PropsData  { data: Data; size?: number; skillXp?: never; palette?: never }
+interface PropsRaw   { skillXp: Record<string, number>; palette?: Palette; size?: number; data?: never }
+type Props = PropsData | PropsRaw
 
-export function Radar({ data, size = 236 }: Props) {
-  const P = paletteCss(data)
-  const skills = allSkills(data)
+export function Radar({ data, skillXp: rawXp, palette: rawPalette, size = 236 }: Props) {
+  const P = data ? paletteCss(data) : PALETTES[rawPalette || 'toxic']
+  const skills = data ? allSkills(data) : SKILL_DEFS
+  const xpOf = (id: string) => data ? skillScore(data, id) : Math.min(99, Math.round((rawXp?.[id] || 0)))
+
   const n = skills.length
   const cx = size / 2, cy = size / 2, maxR = size / 2 - 28
 
@@ -32,10 +37,10 @@ export function Radar({ data, size = 236 }: Props) {
     return <line key={'sp' + i} x1={cx} y1={cy} x2={x} y2={y} stroke={`rgba(${P.rgb},.1)`} strokeWidth={1} />
   })
 
-  const dataPoints = skills.map((s, i) => pt(skillScore(data, s.id) / 100, i).map(x => x.toFixed(1)).join(',')).join(' ')
+  const dataPoints = skills.map((s, i) => pt(xpOf(s.id) / 100, i).map(x => x.toFixed(1)).join(',')).join(' ')
 
   const dots = skills.map((s, i) => {
-    const [x, y] = pt(skillScore(data, s.id) / 100, i)
+    const [x, y] = pt(xpOf(s.id) / 100, i)
     return <circle key={'d' + i} cx={x} cy={y} r={2.4} fill={P.a2} />
   })
 
