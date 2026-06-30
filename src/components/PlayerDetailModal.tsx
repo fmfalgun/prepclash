@@ -171,6 +171,49 @@ export function PlayerDetailModal() {
                 </div>
               )}
 
+              {/* Platform handles: GitHub, Monkeytype, CodeChef */}
+              {(o.gh?.handle || o.mt?.handle || o.ccHandle) && (
+                <div>
+                  <div style={{ font: "500 8px 'Roboto Mono'", letterSpacing: '.18em', color: 'var(--mut)', marginBottom: 8 }}>PLATFORMS</div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    {o.gh?.handle && (
+                      <div style={{ display: 'flex', justifyContent: 'space-between', background: 'rgba(255,255,255,.04)', borderRadius: 5, padding: '7px 9px' }}>
+                        <div>
+                          <div style={{ font: "400 7px 'Roboto Mono'", color: 'var(--mut)', marginBottom: 2 }}>GITHUB</div>
+                          <div style={{ font: "500 12px/1 'Roboto Mono'", color: P.a2 }}>@{o.gh.handle}</div>
+                        </div>
+                        {o.gh.public_repos != null && (
+                          <div style={{ textAlign: 'right' }}>
+                            <div style={{ font: "400 7px 'Roboto Mono'", color: 'var(--mut)', marginBottom: 2 }}>REPOS</div>
+                            <div style={{ font: "500 14px/1 'Roboto Mono'", color: P.a }}>{o.gh.public_repos}</div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    {o.mt?.handle && (
+                      <div style={{ display: 'flex', justifyContent: 'space-between', background: 'rgba(255,255,255,.04)', borderRadius: 5, padding: '7px 9px' }}>
+                        <div>
+                          <div style={{ font: "400 7px 'Roboto Mono'", color: 'var(--mut)', marginBottom: 2 }}>MONKEYTYPE</div>
+                          <div style={{ font: "500 12px/1 'Roboto Mono'", color: P.a2 }}>@{o.mt.handle}</div>
+                        </div>
+                        {o.mt.pb60 != null && (
+                          <div style={{ textAlign: 'right' }}>
+                            <div style={{ font: "400 7px 'Roboto Mono'", color: 'var(--mut)', marginBottom: 2 }}>PB 60s</div>
+                            <div style={{ font: "500 14px/1 'Roboto Mono'", color: P.a }}>{o.mt.pb60} wpm</div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    {o.ccHandle && (
+                      <div style={{ background: 'rgba(255,255,255,.04)', borderRadius: 5, padding: '7px 9px' }}>
+                        <div style={{ font: "400 7px 'Roboto Mono'", color: 'var(--mut)', marginBottom: 2 }}>CODECHEF</div>
+                        <div style={{ font: "500 12px/1 'Roboto Mono'", color: P.a2 }}>@{o.ccHandle}</div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {/* Current target */}
               {o.currentTarget && (
                 <div>

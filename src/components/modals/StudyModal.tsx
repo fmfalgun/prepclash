@@ -8,7 +8,6 @@ export function StudyModal() {
   const data          = useStore(s => s.data)
   const draft         = useStore(s => s.draft)
   const setDraft      = useStore(s => s.setDraft)
-  const toggleKeyword = useStore(s => s.toggleKeyword)
   const addKeyword    = useStore(s => s.addKeyword)
   const submitStudy   = useStore(s => s.submitStudy)
 
@@ -67,7 +66,12 @@ export function StudyModal() {
             <button
               key={k.label}
               type="button"
-              onClick={() => toggleKeyword(k.label)}
+              onClick={() => {
+                const next = draft.selected.includes(k.label)
+                  ? draft.selected.filter(l => l !== k.label)
+                  : [...draft.selected, k.label]
+                setDraft(d => ({ ...d, selected: next }))
+              }}
               style={{
                 cursor: 'pointer', font: "500 11px 'Roboto Mono'", padding: '6px 11px', borderRadius: 4,
                 background: on ? 'rgba(var(--a2rgb),.16)' : 'rgba(var(--rgb),.05)',

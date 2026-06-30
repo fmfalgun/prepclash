@@ -194,6 +194,9 @@ export interface PublicOperative {
   // arena: question id → solved ts (proof hidden)
   arena: Record<string, { ts: number }>
   cf: { handle: string; rating: number | null; rank: string; solved: number | null }
+  mt?: { handle: string; pb60?: number | null } | null
+  gh?: { handle: string; public_repos?: number | null } | null
+  ccHandle?: string | null
   lastSeen: number
   createdAt?: number
   isShowcase?: boolean

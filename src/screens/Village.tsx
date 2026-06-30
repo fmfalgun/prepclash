@@ -57,6 +57,7 @@ type Panel =
 
 // ── component ──────────────────────────────────────────────────────────────
 export function Village() {
+  const data             = useStore(s => s.data)
   const palette          = useStore(s => s.data.palette)
   const campaign         = useStore(s => s.data.campaign)
   const defeated         = useStore(s => s.data.campaignDefeated)
@@ -115,15 +116,39 @@ export function Village() {
     if (!ch.content) return false
     return chFightsDone(act, ch) === ch.content.fights.length && chBossDone(act, ch)
   }
-  function laneDone(act: ActData, lid: string, units: number) {
-    return (campaign[laneKey(act.id, lid)] || 0) >= units
+  // Auto-compute lane progress from real data (GRIND → CF/A2OJ, PHYSIQUE → sessions, FOREST → campaign)
+  function laneProgress(actId: string, n: { id: string; tag: string; units: number }): number {
+    if (n.tag === 'A2OJ') {
+      const aojIdMap: Record<string, string> = { 'a2oj-b': 'div2b', 'a2oj-1300': 'r1300', 'a2oj-1400': 'r1400' }
+      const aojId = aojIdMap[n.id]
+      const solved = aojId ? (data.a2oj.find(l => l.id === aojId)?.solved || 0) : 0
+      return Math.min(n.units, solved)
+    }
+    if (n.tag === 'CF') {
+      return Math.min(n.units, data.cf.solved || 0)
+    }
+    if (n.tag === 'BODY') {
+      // Count distinct training days in the last 90 days
+      const cutoff = Date.now() - 90 * 86400000
+      const sessions = (data.workoutLab?.sessions || []).filter(s => s.ts >= cutoff)
+      return Math.min(n.units, sessions.length)
+    }
+    // BOOK / manual
+    // Check if this book exists in data.books by matching SIDE id → BOOK_DEFS id
+    const bookDone = data.books.find(b => b.id === n.id)?.done
+    if (bookDone !== undefined) return Math.min(n.units, bookDone)
+    return Math.min(n.units, campaign[laneKey(actId, n.id)] || 0)
+  }
+
+  function laneDone(actId: string, n: { id: string; tag: string; units: number }) {
+    return laneProgress(actId, n) >= n.units
   }
   function actChReady(act: ActData) {
     const withContent = act.chapters.filter(ch => ch.content)
     return withContent.length > 0 && withContent.every(ch => chCleared(act, ch))
   }
   function actLanesReady(act: ActData) {
-    return (SIDE[act.id] || []).every(n => laneDone(act, n.id, n.units))
+    return (SIDE[act.id] || []).every(n => laneDone(act.id, n))
   }
   function actReady(act: ActData)    { return actChReady(act) && actLanesReady(act) }
   function actUnlocked(i: number)    { return i === 0 || !!defeated[acts[i - 1].id] }
@@ -138,9 +163,9 @@ export function Village() {
         doneUnits  += chFightsDone(a, ch) + (chBossDone(a, ch) ? 1 : 0)
       }
     });
-    (SIDE[a.id] || []).forEach(n => {
+    ;(SIDE[a.id] || []).forEach(n => {
       totalUnits += n.units
-      doneUnits  += Math.min(n.units, campaign[laneKey(a.id, n.id)] || 0)
+      doneUnits  += laneProgress(a.id, n)
     })
   })
 
@@ -287,7 +312,7 @@ export function Village() {
                         </div>
                         <div style={{ flex: 1, display: 'flex', gap: 9, flexWrap: 'wrap' }}>
                           {items.map(n => {
-                            const cnt  = Math.min(n.units, campaign[laneKey(act.id, n.id)] || 0)
+                            const cnt  = laneProgress(act.id, n)
                             const full = cnt >= n.units
                             return (
                               <div
@@ -477,27 +502,104 @@ export function Village() {
             })()}
 
             {panel.kind === 'lane' && panelAct && (() => {
-              const act  = panelAct
-              const n    = (SIDE[act.id] || []).find(x => x.id === panel.laneId)!
+              const act    = panelAct
+              const n      = (SIDE[act.id] || []).find(x => x.id === panel.laneId)!
               if (!n) return null
-              const cnt  = Math.min(n.units, campaign[laneKey(act.id, n.id)] || 0)
-              const full = cnt >= n.units
+              const cnt    = laneProgress(act.id, n)
+              const full   = cnt >= n.units
               const lColor = LANE_COLOR[n.lane]
+              const isAuto = n.tag === 'A2OJ' || n.tag === 'CF' || n.tag === 'BODY'
+
+              // FOREST: all books with any reading progress
+              const allBooks = [...(data.customDefs || []).concat(
+                data.books.map(b => ({ id: b.id, title: b.id, unit: 'pages', total: 1, skill: 'web', done: 0 }))
+              )]
+              const forestExtra = n.tag === 'BOOK'
+                ? data.books.filter(b => b.done > 0 && b.id !== n.id).map(b => {
+                    const allDefs = [...(data.customDefs || [])]
+                    const def = allDefs.find(d => d.id === b.id)
+                    return def ? { id: b.id, title: def.title, done: b.done, total: def.total } : null
+                  }).filter(Boolean) as { id: string; title: string; done: number; total: number }[]
+                : []
+
               return (
                 <>
                   <div style={{ font: "500 9px 'Roboto Mono'", letterSpacing: '.18em', color: lColor }}>{LANE_NAME[n.lane]} LANE</div>
                   <div style={{ font: "500 22px 'Lexend Deca'", color: 'var(--ink)', marginTop: 5 }}>{n.title}</div>
-                  <div style={{ font: "400 10px 'Roboto Mono'", color: 'var(--dim2)', marginTop: 5, marginBottom: 18 }}>{n.tag} · {cnt} / {n.units} units</div>
+                  <div style={{ font: "400 10px 'Roboto Mono'", color: 'var(--dim2)', marginTop: 5, marginBottom: 18 }}>
+                    {n.tag} · {cnt} / {n.units} {n.tag === 'BODY' ? 'sessions' : 'units'}
+                    {isAuto && <span style={{ marginLeft: 8, color: lColor }}>· AUTO</span>}
+                  </div>
                   <div style={{ height: 6, borderRadius: 3, background: 'rgba(255,255,255,.07)', overflow: 'hidden', marginBottom: 20 }}>
-                    <div style={{ width: (cnt / n.units * 100) + '%', height: '100%', background: lColor, transition: 'width .25s' }} />
+                    <div style={{ width: (Math.min(1, cnt / n.units) * 100) + '%', height: '100%', background: lColor, transition: 'width .25s' }} />
                   </div>
-                  <div style={{ display: 'flex', gap: 10 }}>
-                    <button onClick={() => bumpLane(laneKey(act.id, n.id), -1, n.units)} disabled={cnt === 0} style={laneBtn(cnt === 0)}>− 1</button>
-                    <button onClick={() => bumpLane(laneKey(act.id, n.id), 1, n.units)}  disabled={full}    style={laneBtn(full)}>+ 1</button>
-                    <button onClick={() => bumpLane(laneKey(act.id, n.id), 5, n.units)}  disabled={full}    style={laneBtn(full)}>+ 5</button>
-                    {!full && <button onClick={() => setCampaign(laneKey(act.id, n.id), n.units)} style={laneBtn(false)}>COMPLETE</button>}
-                  </div>
-                  {full && <div style={{ marginTop: 14, font: "500 10px 'Roboto Mono'", color: lColor, letterSpacing: '.1em' }}>✓ LANE COMPLETE</div>}
+
+                  {/* GRIND: source breakdown */}
+                  {n.tag === 'A2OJ' && (
+                    <div style={{ font: "400 10px 'Roboto Mono'", color: 'var(--dim2)', marginBottom: 14 }}>
+                      Auto-tracked from Arena ladder · sync CF to update
+                    </div>
+                  )}
+                  {n.tag === 'CF' && (
+                    <div style={{ font: "400 10px 'Roboto Mono'", color: 'var(--dim2)', marginBottom: 14 }}>
+                      {data.cf.handle ? `@${data.cf.handle} · ${data.cf.solved ?? 0} solved total` : 'Connect Codeforces in settings to auto-track'}
+                    </div>
+                  )}
+
+                  {/* PHYSIQUE: recent sessions */}
+                  {n.tag === 'BODY' && (() => {
+                    const cutoff = Date.now() - 90 * 86400000
+                    const recent = (data.workoutLab?.sessions || []).filter(s => s.ts >= cutoff).slice(0, 6)
+                    return (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 16 }}>
+                        {recent.map(s => (
+                          <div key={s.id} style={{ display: 'flex', justifyContent: 'space-between', font: "400 10px 'Roboto Mono'", color: 'var(--txt)', padding: '5px 8px', background: 'rgba(255,255,255,.04)', borderRadius: 5 }}>
+                            <span>{s.dayName}</span>
+                            <span style={{ color: 'var(--mut)' }}>{new Date(s.ts).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} · {s.volume}kg</span>
+                          </div>
+                        ))}
+                        {(data.workoutLab?.sessions || []).length === 0 && (
+                          <div style={{ font: "400 10px 'Roboto Mono'", color: 'var(--dim2)' }}>No sessions logged yet — log workouts to progress this lane</div>
+                        )}
+                      </div>
+                    )
+                  })()}
+
+                  {/* FOREST: required + optional books */}
+                  {n.tag === 'BOOK' && (
+                    <div style={{ marginBottom: 14 }}>
+                      <div style={{ font: "500 8px 'Roboto Mono'", color: lColor, letterSpacing: '.12em', marginBottom: 8 }}>REQUIRED</div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', font: "400 10px 'Roboto Mono'", color: 'var(--txt)', padding: '6px 8px', background: 'rgba(255,255,255,.04)', borderRadius: 5, marginBottom: 10 }}>
+                        <span>{n.title}</span>
+                        <span style={{ color: full ? lColor : 'var(--mut)' }}>{cnt}/{n.units}</span>
+                      </div>
+                      {/* Manual bump only for required book */}
+                      <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+                        <button onClick={() => bumpLane(laneKey(act.id, n.id), -1, n.units)} disabled={cnt === 0} style={laneBtn(cnt === 0)}>− 1</button>
+                        <button onClick={() => bumpLane(laneKey(act.id, n.id), 1, n.units)}  disabled={full}    style={laneBtn(full)}>+ 1</button>
+                        <button onClick={() => bumpLane(laneKey(act.id, n.id), 5, n.units)}  disabled={full}    style={laneBtn(full)}>+ 5</button>
+                        {!full && <button onClick={() => setCampaign(laneKey(act.id, n.id), n.units)} style={laneBtn(false)}>COMPLETE</button>}
+                      </div>
+                      {forestExtra.length > 0 && (
+                        <>
+                          <div style={{ font: "500 8px 'Roboto Mono'", color: 'var(--mut)', letterSpacing: '.12em', marginBottom: 8 }}>ALSO READING</div>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                            {forestExtra.map(b => (
+                              <div key={b.id} style={{ display: 'flex', justifyContent: 'space-between', font: "400 10px 'Roboto Mono'", color: 'var(--dim2)', padding: '5px 8px', background: 'rgba(255,255,255,.03)', borderRadius: 5 }}>
+                                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>{b.title}</span>
+                                <span style={{ marginLeft: 8, flexShrink: 0 }}>{b.done}/{b.total}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  )}
+
+                  {/* GRIND/PHYSIQUE: no manual buttons, auto-tracked */}
+                  {isAuto && full && <div style={{ marginTop: 8, font: "500 10px 'Roboto Mono'", color: lColor, letterSpacing: '.1em' }}>✓ LANE COMPLETE</div>}
+                  {isAuto && !full && <div style={{ marginTop: 8, font: "400 9px 'Roboto Mono'", color: 'var(--dim2)' }}>This lane updates automatically as you log activity.</div>}
+                  {n.tag === 'BOOK' && full && <div style={{ font: "500 10px 'Roboto Mono'", color: lColor, letterSpacing: '.1em' }}>✓ LANE COMPLETE</div>}
                 </>
               )
             })()}
