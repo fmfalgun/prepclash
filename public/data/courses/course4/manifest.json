@@ -1,0 +1,13 @@
+{
+  "course": "Course 4 \u2014 FastAPI Multi-Source Port API",
+  "chapters": [
+    { "code": "01", "title": "FastAPI Fundamentals" },
+    { "code": "02", "title": "CORS, Startup Validation, and API Documentation" },
+    { "code": "03", "title": "API Key Authentication" },
+    { "code": "04", "title": "Rate Limiting" },
+    { "code": "05", "title": "The Fetch-Log Cursor Pattern" },
+    { "code": "06", "title": "Aggregating 11 Security Intelligence Sources" },
+    { "code": "07", "title": "GitHub Actions CI/CD" },
+    { "code": "08", "title": "The GitHub Contents API Sync Pipeline" }
+  ]
+}

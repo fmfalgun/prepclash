@@ -109,6 +109,8 @@ export interface Data {
   cf: CfState
   a2oj: { id: string; solved: number }[]
   village: Record<string, { cleared: true; proof: string; ts: number }>
+  campaign: Record<string, number>
+  campaignDefeated: Record<string, boolean>
   arena: Record<string, { proof: string; ts: number }>
   weekly: Record<string, number>
   palette: Palette

@@ -1,0 +1,13 @@
+{
+  "course": "Course 3 \u2014 Async IoT Camera Scanner + TUI",
+  "chapters": [
+    { "code": "01", "title": "Python asyncio Core" },
+    { "code": "02", "title": "TCP Banner Grabbing with asyncio Streams" },
+    { "code": "03", "title": "CIDR + IP Math" },
+    { "code": "04", "title": "BGP, ASNs, and the Routing System" },
+    { "code": "05", "title": "SQLite as Scanner Cache" },
+    { "code": "06", "title": "PeeringDB API Integration" },
+    { "code": "07", "title": "curses TUI Architecture" },
+    { "code": "08", "title": "Camera Fingerprinting and Scan Pipeline" }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "title": "Bash Basics",
+  "summary": "Variables, quoting, conditionals, loops, functions, exit codes and here-docs \u2014 the shell as a real language.",
+  "topics": ["Variables & quoting", "Conditionals: [[ ]] vs [ ] vs (( ))", "Loops & functions", "Exit codes: set -e, pipefail", "Pipes & redirection", "Here-docs"],
+  "fights": [
+    { "id": "conf-logger", "title": "Config-file-driven event logger (.conf parser)", "kind": "project" },
+    { "id": "quoting",     "title": "Predict word-splitting across 8 quoting cases", "kind": "problem" },
+    { "id": "exitcodes",   "title": "Chain commands with && / || + pipefail correctly", "kind": "problem" },
+    { "id": "heredoc",     "title": "Feed SQLite a here-doc with and without expansion", "kind": "problem" }
+  ],
+  "boss": {
+    "title": "Bash Trial",
+    "questions": [
+      "Why does \"$VAR\" differ from $VAR, and when does word-splitting bite?",
+      "What do set -e and set -o pipefail each change about failure handling?",
+      "Contrast <<'EOF' and <<EOF \u2014 why does it matter for SQL here-docs?"
+    ]
+  },
+  "reading": [
+    { "label": "GNU Bash Manual (ch 3\u20135)", "url": "https://www.gnu.org/software/bash/manual/bash.html" }
+  ],
+  "links": [
+    { "label": "ShellCheck", "url": "https://www.shellcheck.net/" }
+  ]
+}

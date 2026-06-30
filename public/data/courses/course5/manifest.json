@@ -1,0 +1,14 @@
+{
+  "course": "Course 5 \u2014 Fingerprinting Portfolio + Firebase",
+  "chapters": [
+    { "code": "01", "title": "HTML Semantics and the DOM Tree" },
+    { "code": "02", "title": "CSS Layout: Box Model, Flexbox, Grid, Custom Properties" },
+    { "code": "03", "title": "JavaScript in the Browser: Modules, Scope, MVC" },
+    { "code": "04", "title": "DOM Manipulation, IntersectionObserver, Transitions" },
+    { "code": "05", "title": "Async JavaScript: fetch(), Promises, async/await" },
+    { "code": "06", "title": "Browser Fingerprinting: navigator, Canvas, WebGL" },
+    { "code": "07", "title": "Firebase Firestore: SDK, Writes, Security Rules" },
+    { "code": "08", "title": "Security: XSS, innerHTML, CSP" },
+    { "code": "09", "title": "GitHub Pages: Deployment, robots.txt, Performance" }
+  ]
+}

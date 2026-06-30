@@ -1,0 +1,16 @@
+{
+  "schema": "prepclash.courses.v1",
+  "note": "Each act = one course. chapters points at that course's chapter manifest. Drop a chapter file (data/courses/<id>/ch<code>.json) to populate that level — the GUI fetches it automatically. heavyProblems are the act-boss's final CSE gauntlet, handed out once every chapter + side lane is cleared.",
+  "acts": [
+    { "id": "course1", "act": "I",   "name": "GHOST DAEMON",  "villain": "Lowtide",   "ep": "The Pale Frequency", "stack": "LINUX \u00b7 BASH \u00b7 SQLITE \u00b7 BLE \u00b7 DEBIAN", "chapters": "course1/manifest.json",
+      "heavyProblems": [ "PID-file daemon supervisor with graceful TERM handling", "WAL-mode SQLite job queue with concurrent readers", "Streaming btmon parser as a state machine" ] },
+    { "id": "course2", "act": "II",  "name": "NAME EATER",    "villain": "Recursa",   "ep": "The Hollow Records", "stack": "DNS \u00b7 X.509 \u00b7 TLS \u00b7 SPF", "chapters": "course2/manifest.json",
+      "heavyProblems": [ "Recursive DNS resolver with TTL cache + eviction", "Certificate Transparency log diff tool", "Concurrent subdomain brute-forcer with rate limiting" ] },
+    { "id": "course3", "act": "III", "name": "HOLLOW SIGNAL",  "villain": "Static",    "ep": "The Dead Frequency", "stack": "ASYNCIO \u00b7 ASN \u00b7 CURSES", "chapters": "course3/manifest.json",
+      "heavyProblems": [ "Async TCP port scanner with bounded concurrency", "CIDR aggregation / longest-prefix match", "ASN \u2192 prefix resolver with PeeringDB cache" ] },
+    { "id": "course4", "act": "IV",  "name": "SERPENT COIL",   "villain": "Vyper",     "ep": "The Venom Cache",   "stack": "FASTAPI \u00b7 SQLITE \u00b7 CI/CD", "chapters": "course4/manifest.json",
+      "heavyProblems": [ "Token-bucket rate limiter middleware", "Multi-source fetch-log cursor aggregator", "Idempotent GitHub Contents sync pipeline" ] },
+    { "id": "course5", "act": "V",   "name": "FINAL RENDER",   "villain": "Mirrorface", "ep": "The Last Reflection", "stack": "HTML \u00b7 CSS \u00b7 JS \u00b7 FIREBASE", "chapters": "course5/manifest.json",
+      "heavyProblems": [ "XSS-safe template renderer (escape + URL scheme check)", "IntersectionObserver-driven virtualized list", "djb2 canvas-fingerprint hasher" ] }
+  ]
+}

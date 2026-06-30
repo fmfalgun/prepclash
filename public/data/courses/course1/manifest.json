@@ -1,0 +1,24 @@
+{
+  "course": "Course 1 \u2014 Linux / Bash / SQLite / BLE / Debian",
+  "chapters": [
+    { "code": "01",  "title": "Linux Fundamentals" },
+    { "code": "02",  "title": "Bash Basics" },
+    { "code": "03",  "title": "Bash Intermediate" },
+    { "code": "04",  "title": "Bash Advanced" },
+    { "code": "05",  "title": "Bash Parsing Patterns" },
+    { "code": "06",  "title": "SQLite Fundamentals" },
+    { "code": "07",  "title": "SQLite Advanced" },
+    { "code": "08",  "title": "Python stdlib HTTP Server" },
+    { "code": "09",  "title": "Server-Sent Events (SSE)" },
+    { "code": "10a", "title": "Bluetooth Protocol Stack" },
+    { "code": "10b", "title": "BLE Attack Taxonomy \u2014 All 89 Checks" },
+    { "code": "11",  "title": "systemd Deep Dive" },
+    { "code": "12",  "title": "Debian Package Anatomy" },
+    { "code": "13",  "title": "Control File + Package Metadata" },
+    { "code": "14",  "title": "Maintainer Scripts" },
+    { "code": "15",  "title": "Building with dpkg-deb" },
+    { "code": "16",  "title": "Lintian + Quality Standards" },
+    { "code": "17",  "title": "Multi-Package Builds" },
+    { "code": "18",  "title": "Capstone \u2014 Rebuild ble-monitor" }
+  ]
+}

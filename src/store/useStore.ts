@@ -39,6 +39,8 @@ function seedData(): Data {
     cf: { handle: '', rating: null, maxRating: null, rank: '', solved: null, contests: null, lastSync: null, error: null },
     a2oj: [],
     village: {},
+    campaign: {},
+    campaignDefeated: {},
     arena: {},
     weekly: {},
     palette: 'toxic',
@@ -114,6 +116,9 @@ interface AppState {
   togglePhase: (cid: string, idx: number) => void
   addKeyword: () => void
   toggleKeyword: (label: string) => void
+  setCampaign: (key: string, val: number) => void
+  bumpCampaignLane: (key: string, delta: number, max: number) => void
+  defeatAct: (actId: string) => void
   openNode: (id: string) => void
   clearNode: () => void
   unclearNode: () => void
@@ -375,6 +380,16 @@ export const useStore = create<AppState>()(
               : [...s.draft.selected, label]
             return { draft: { ...s.draft, selected: sel } }
           })
+        },
+
+        setCampaign: (key, val) => {
+          persist_(d => { d.campaign[key] = val })
+        },
+        bumpCampaignLane: (key, delta, max) => {
+          persist_(d => { d.campaign[key] = Math.max(0, Math.min(max, (d.campaign[key] || 0) + delta)) })
+        },
+        defeatAct: (actId) => {
+          persist_(d => { d.campaignDefeated[actId] = true })
         },
 
         openNode: (id) => {

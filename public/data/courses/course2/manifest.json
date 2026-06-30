@@ -1,0 +1,16 @@
+{
+  "course": "Course 2 \u2014 DNS / X.509 / TLS Recon",
+  "chapters": [
+    { "code": "01", "title": "Python Networking Fundamentals" },
+    { "code": "02", "title": "DNS Protocol + dnspython" },
+    { "code": "03", "title": "X.509 / PKI / Certificate Transparency" },
+    { "code": "04", "title": "TLS/SSL Depth" },
+    { "code": "05", "title": "Email Security (SPF + DMARC)" },
+    { "code": "06", "title": "SQLite as a Hub" },
+    { "code": "07", "title": "DNS Brute-Force Architecture" },
+    { "code": "08", "title": "HTTP Probing Architecture" },
+    { "code": "09", "title": "Web Fingerprinting (WhatWeb)" },
+    { "code": "10", "title": "Incremental Design + Gap Analysis" },
+    { "code": "11", "title": "Capstone \u2014 Rebuild dig-recon" }
+  ]
+}
