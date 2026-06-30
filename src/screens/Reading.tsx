@@ -98,17 +98,17 @@ export function Reading() {
   ]
 
   return (
-    <div style={{ maxWidth: 1180, margin: '0 auto', padding: '30px 34px 80px', display: 'flex', flexDirection: 'column', gap: 24 }}>
+    <div className="screen-pad" style={{ maxWidth: 1100, margin: '0 auto', padding: '24px 20px 80px', display: 'flex', flexDirection: 'column', gap: 20 }}>
 
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div className="screen-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          <div style={{ font: "300 30px/1 'Lexend Deca'", color: 'var(--ink)', letterSpacing: '.01em' }}>reading lab</div>
+          <div style={{ font: "300 26px/1 'Lexend Deca'", color: 'var(--ink)', letterSpacing: '.01em' }}>reading lab</div>
           <div style={{ font: "400 11px 'Roboto Mono'", color: 'var(--mut)', marginTop: 5 }}>
             intel · {booksDone}/{booksTotal} books complete
           </div>
         </div>
-        <div style={{ display: 'flex', gap: 10 }}>
+        <div className="screen-header-btns" style={{ display: 'flex', gap: 10 }}>
           <button onClick={() => setModal('reading')} style={{
             cursor: 'pointer', border: 'none', background: 'var(--cardHi)', color: 'var(--txt)',
             font: "400 12px 'Roboto Mono'", padding: '11px 16px', borderRadius: 8,
@@ -121,7 +121,7 @@ export function Reading() {
       </div>
 
       {/* Hero */}
-      <div style={{ display: 'grid', gridTemplateColumns: '190px 1fr', gap: 26 }}>
+      <div className="hero-grid" style={{ display: 'grid', gridTemplateColumns: '190px 1fr', gap: 20 }}>
         <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 22, padding: '6px 0' }}>
           {[
             { label: 'overall',   val: overallPct + '%', sub: 'library complete',     accent: true  },
@@ -145,7 +145,7 @@ export function Reading() {
       </div>
 
       {/* Stat tiles */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 14 }}>
+      <div className="stat-tiles-6" style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 12 }}>
         {tiles.map(t => <StatTile key={t.label} label={t.label} value={t.value} sub={t.sub} accent={t.accent} />)}
       </div>
 
@@ -155,7 +155,7 @@ export function Reading() {
           <Label>library</Label>
           <span style={{ font: "400 10px 'Roboto Mono'", color: 'var(--mut)' }}>click a book to log progress</span>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px 26px' }}>
+        <div className="lib-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px 20px' }}>
           {defs.filter(def => {
             if (showAllBooks) return true
             const b = books.find(x => x.id === def.id)
@@ -208,7 +208,7 @@ export function Reading() {
       </div>
 
       {/* By unit + Heatmap */}
-      <div style={{ display: 'grid', gridTemplateColumns: '0.85fr 1.15fr', gap: 24 }}>
+      <div className="two-col" style={{ display: 'grid', gridTemplateColumns: '0.85fr 1.15fr', gap: 20 }}>
         <div style={card}>
           <Label>read by unit type</Label>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginTop: 12 }}>

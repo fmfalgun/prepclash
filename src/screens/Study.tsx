@@ -98,21 +98,17 @@ export function Study() {
   ]
 
   return (
-    <div style={{ maxWidth: 1180, margin: '0 auto', padding: '30px 34px 80px', display: 'flex', flexDirection: 'column', gap: 24 }}>
+    <div className="screen-pad" style={{ maxWidth: 1100, margin: '0 auto', padding: '24px 20px 80px', display: 'flex', flexDirection: 'column', gap: 20 }}>
 
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div className="screen-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          <div style={{ font: "300 30px/1 'Lexend Deca'", color: 'var(--ink)', letterSpacing: '.01em' }}>study lab</div>
+          <div style={{ font: "300 26px/1 'Lexend Deca'", color: 'var(--ink)', letterSpacing: '.01em' }}>study lab</div>
           <div style={{ font: "400 11px 'Roboto Mono'", color: 'var(--mut)', marginTop: 5 }}>
             {totalSessions} sessions · {totalHours}h focused
           </div>
         </div>
-        <div style={{ display: 'flex', gap: 10 }}>
-          <button onClick={() => {}} style={{
-            cursor: 'pointer', border: 'none', background: 'var(--cardHi)', color: 'var(--txt)',
-            font: "400 12px 'Roboto Mono'", padding: '11px 16px', borderRadius: 8,
-          }}>categories</button>
+        <div className="screen-header-btns" style={{ display: 'flex', gap: 10 }}>
           <button onClick={() => setModal('study')} style={{
             cursor: 'pointer', border: 'none', background: 'var(--a)', color: '#1b1c1e',
             font: "500 12px 'Roboto Mono'", padding: '11px 20px', borderRadius: 8,
@@ -121,7 +117,7 @@ export function Study() {
       </div>
 
       {/* Hero */}
-      <div style={{ display: 'grid', gridTemplateColumns: '190px 1fr', gap: 26 }}>
+      <div className="hero-grid" style={{ display: 'grid', gridTemplateColumns: '190px 1fr', gap: 20 }}>
         <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 22, padding: '6px 0' }}>
           {[
             { label: 'focus today', val: todayMins, sub: 'minutes', accent: true },
@@ -145,14 +141,14 @@ export function Study() {
       </div>
 
       {/* Stat tiles */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 14 }}>
+      <div className="stat-tiles-6" style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 12 }}>
         {tiles.map(t => <StatTile key={t.label} label={t.label} value={t.value} sub={t.sub} accent={t.accent} />)}
       </div>
 
       {/* Competitive programming lives in the Arena tab */}
 
       {/* Category focus + Keyword heat */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.25fr', gap: 24 }}>
+      <div className="two-col" style={{ display: 'grid', gridTemplateColumns: '1fr 1.25fr', gap: 20 }}>
         <div style={card}>
           <Label>category focus · by minutes</Label>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginTop: 12 }}>

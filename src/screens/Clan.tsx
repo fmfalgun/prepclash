@@ -83,9 +83,9 @@ export function Clan() {
   const iAmFounder = !!(activeClan && fbUser && activeClan.founderUid === fbUser.uid)
 
   return (
-    <div style={{ maxWidth: 1060, margin: '0 auto', padding: '28px 26px 80px', display: 'flex', gap: 24, alignItems: 'flex-start' }}>
+    <div className="clan-layout screen-pad" style={{ maxWidth: 1060, margin: '0 auto', padding: '24px 16px 80px', display: 'flex', gap: 20, alignItems: 'flex-start' }}>
       {/* LEFT — Clan list */}
-      <div style={{ width: 280, flexShrink: 0 }}>
+      <div className="clan-sidebar" style={{ width: 280, flexShrink: 0 }}>
         <div style={{ font: "500 9px 'Roboto Mono'", letterSpacing: '.22em', color: 'var(--mut)', marginBottom: 14 }}>CLANS</div>
 
         {fbMode === 'offline' && (

@@ -204,7 +204,7 @@ export function Home() {
   ]
 
   return (
-    <div style={{ maxWidth: 1360, margin: '0 auto', padding: '28px 26px 80px' }}>
+    <div className="screen-pad" style={{ maxWidth: 1360, margin: '0 auto', padding: '20px 16px 80px' }}>
       <div className="home-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 2.2fr 1fr', gap: 24, alignItems: 'start' }}>
 
         {/* LEFT — Face card + skills */}
@@ -352,7 +352,7 @@ export function Home() {
           {/* Platform integrations */}
           <div style={{ marginBottom: 20 }}>
             <div style={{ font: "500 9px 'Roboto Mono'", letterSpacing: '.12em', color: 'var(--mut)', marginBottom: 14 }}>PLATFORM STATS</div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
+            <div className="platform-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }}>
 
               {/* Monkeytype */}
               <PlatformCard

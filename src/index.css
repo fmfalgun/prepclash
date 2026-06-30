@@ -63,10 +63,37 @@ input, textarea, select { font-family: 'Roboto Mono', monospace; }
   .home-grid { grid-template-columns: 1fr !important; }
   /* All content areas */
   .rtt { overflow-x: hidden; }
+  /* Clan: sidebar + content → stacked */
+  .clan-layout { flex-direction: column !important; }
+  .clan-sidebar { width: 100% !important; }
+  /* Workout: exercise chart + PR board → stacked */
+  .workout-split { grid-template-columns: 1fr !important; }
+  /* Study / Reading: hero stat col + chart → stacked */
+  .hero-grid { grid-template-columns: 1fr !important; }
+  /* Study / Reading: category + keyword side by side → stacked */
+  .two-col { grid-template-columns: 1fr !important; }
+  /* Reading: library 2-col → 1-col */
+  .lib-grid { grid-template-columns: 1fr !important; }
+  /* Ladder: hide less-important columns */
+  .ladder-col-streak { display: none !important; }
+  .ladder-col-nodes  { display: none !important; }
+  .ladder-col-clan   { display: none !important; }
+  .ladder-header { display: none !important; }
 }
 @media (max-width: 600px) {
   /* Tighter padding on screens */
   .screen-pad { padding: 16px 12px 64px !important; }
-  /* Stack platform stat grids */
+  /* Platform stat grids — stack  */
   .platform-grid { grid-template-columns: 1fr !important; }
+  /* Stat tiles: 6-col → 2-col */
+  .stat-tiles-6 { grid-template-columns: repeat(2, 1fr) !important; }
+  /* Workout stat tiles 4-col → 2-col */
+  .stat-tiles-4 { grid-template-columns: repeat(2, 1fr) !important; }
+  /* Hero stats row → horizontal scroll */
+  .hero-stats { flex-direction: row !important; overflow-x: auto !important; gap: 16px !important; }
+  /* Ladder rows: tighter padding */
+  .ladder-row { padding: 10px 8px !important; gap: 8px !important; }
+  /* Screen headers with button: wrap */
+  .screen-header { flex-wrap: wrap !important; gap: 10px !important; }
+  .screen-header-btns { flex-wrap: wrap !important; }
 }

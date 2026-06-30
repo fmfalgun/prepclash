@@ -114,7 +114,7 @@ export function Workout() {
     <div style={{ maxWidth: 1200, margin: '0 auto', padding: '28px 24px', display: 'flex', flexDirection: 'column', gap: 20 }}>
 
       {/* Header row */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 14 }}>
+      <div className="screen-header" style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 14 }}>
         <div>
           <div style={{ font: "300 26px/1 'Lexend Deca'", color: 'var(--ink)' }}>workout lab</div>
           <div style={{ font: "400 12px 'Roboto Mono'", color: 'var(--mut)', marginTop: 6 }}>
@@ -136,7 +136,7 @@ export function Workout() {
       </div>
 
       {/* Stat tiles */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
+      <div className="stat-tiles-4" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
         <StatTile label="total volume" value={fmtK(totalVol) + ' kg'} sub={`${fmtK(totalSets)} sets logged`} />
         <StatTile label="week streak" value={streaks.cur + ' wk'} sub={`best ${streaks.longest} wk`} />
         <StatTile label="sessions" value={sessions.length} sub={`${days.length}-day split`} />
@@ -172,7 +172,7 @@ export function Workout() {
       )}
 
       {/* Exercise detail + PR board */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: 14 }}>
+      <div className="workout-split" style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: 14 }}>
         <div style={card}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14, flexWrap: 'wrap' }}>
             <Label>exercise</Label>

@@ -13,7 +13,7 @@ export function Ladder() {
   const sorted = [...operatives].sort((a, b) => b.momentum - a.momentum)
 
   return (
-    <div style={{ maxWidth: 860, margin: '0 auto', padding: '28px 26px 80px' }}>
+    <div className="screen-pad" style={{ maxWidth: 860, margin: '0 auto', padding: '24px 16px 80px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 28 }}>
         <div>
           <div style={{ font: "500 9px 'Roboto Mono'", letterSpacing: '.12em', color: 'var(--mut)' }}>GLOBAL</div>
@@ -44,16 +44,16 @@ export function Ladder() {
       )}
 
       {/* Column headers */}
-      <div style={{ display: 'flex', gap: 12, padding: '0 16px', marginBottom: 8, font: "500 8px 'Roboto Mono'", letterSpacing: '.18em', color: 'var(--dim2)' }}>
+      <div className="ladder-header" style={{ display: 'flex', gap: 12, padding: '0 16px', marginBottom: 8, font: "500 8px 'Roboto Mono'", letterSpacing: '.18em', color: 'var(--dim2)' }}>
         <span style={{ width: 28 }}>#</span>
         <span style={{ width: 48 }} />
         <span style={{ flex: 1 }}>OPERATIVE</span>
         <span style={{ width: 52, textAlign: 'center' }}>RANK</span>
         <span style={{ width: 70, textAlign: 'center' }}>MOMENTUM</span>
         <span style={{ width: 55, textAlign: 'center' }}>SCORE</span>
-        <span style={{ width: 50, textAlign: 'center' }}>STREAK</span>
-        <span style={{ width: 55, textAlign: 'center' }}>NODES</span>
-        <span style={{ width: 55, textAlign: 'center' }}>CLAN</span>
+        <span className="ladder-col-streak" style={{ width: 50, textAlign: 'center' }}>STREAK</span>
+        <span className="ladder-col-nodes"  style={{ width: 55, textAlign: 'center' }}>NODES</span>
+        <span className="ladder-col-clan"   style={{ width: 55, textAlign: 'center' }}>CLAN</span>
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -114,9 +114,9 @@ function PlayerRow({ op, pos, isYou, onClick }: { op: PublicOperative; pos: numb
       <span style={{ width: 52, textAlign: 'center', font: "500 12px 'Lexend Deca'", color: gradeColor(op.rank), flexShrink: 0 }}>{op.rank}</span>
       <span style={{ width: 70, textAlign: 'center', font: "500 13px 'Lexend Deca'", color: 'var(--txt)', flexShrink: 0 }}>{op.momentum.toLocaleString()}</span>
       <span style={{ width: 55, textAlign: 'center', font: "500 13px 'Lexend Deca'", color: 'var(--a2)', flexShrink: 0 }}>{op.overallScore}</span>
-      <span style={{ width: 50, textAlign: 'center', font: "400 9px 'Roboto Mono'", color: 'var(--mut)', flexShrink: 0 }}>{op.streak}d</span>
-      <span style={{ width: 55, textAlign: 'center', font: "400 9px 'Roboto Mono'", color: 'var(--dim2)', flexShrink: 0 }}>{nodes}/16</span>
-      <span style={{ width: 55, textAlign: 'center', font: "400 8px 'Roboto Mono'", color: 'var(--dim2)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flexShrink: 0 }}>
+      <span className="ladder-col-streak" style={{ width: 50, textAlign: 'center', font: "400 9px 'Roboto Mono'", color: 'var(--mut)', flexShrink: 0 }}>{op.streak}d</span>
+      <span className="ladder-col-nodes"  style={{ width: 55, textAlign: 'center', font: "400 9px 'Roboto Mono'", color: 'var(--dim2)', flexShrink: 0 }}>{nodes}/16</span>
+      <span className="ladder-col-clan"   style={{ width: 55, textAlign: 'center', font: "400 8px 'Roboto Mono'", color: 'var(--dim2)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flexShrink: 0 }}>
         {op.clanId || '—'}
       </span>
     </div>
