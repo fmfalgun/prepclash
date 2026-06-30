@@ -192,6 +192,35 @@ function LineChart({ points, color = 'var(--a)', height = 110, emptyMsg = 'sync 
   )
 }
 
+function A2ojGroup({ title, defs, a2oj }: {
+  title: string
+  defs: readonly { id: string; name: string; total: number }[]
+  a2oj: { id: string; solved: number }[]
+}) {
+  const groupTotal = defs.reduce((s, d) => s + (a2oj.find(x => x.id === d.id)?.solved ?? 0), 0)
+  return (
+    <div style={{ background: 'var(--card0)', borderRadius: 11, padding: '16px 18px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 14 }}>
+        <div style={{ font: "500 8px 'Roboto Mono'", letterSpacing: '.12em', color: 'var(--mut)' }}>{title}</div>
+        <div style={{ font: "400 9px 'Roboto Mono'", color: 'var(--a2)' }}>{groupTotal} solved</div>
+      </div>
+      {defs.map(def => {
+        const solved = a2oj.find(x => x.id === def.id)?.solved ?? 0
+        const pct    = Math.min(100, Math.round(solved / def.total * 100))
+        return (
+          <div key={def.id} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 9 }}>
+            <span style={{ font: "400 9px 'Roboto Mono'", color: solved > 0 ? 'var(--txt)' : 'var(--dim2)', width: 110, flexShrink: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{def.name}</span>
+            <div style={{ flex: 1, height: 4, background: 'var(--bg0)', borderRadius: 2 }}>
+              <div style={{ height: '100%', width: pct + '%', background: 'linear-gradient(90deg, var(--a), var(--a2))', borderRadius: 2, transition: 'width .3s' }} />
+            </div>
+            <span style={{ font: "400 8px 'Roboto Mono'", color: 'var(--dim2)', width: 46, textAlign: 'right', flexShrink: 0 }}>{solved}/{def.total}</span>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
 // ─── main ─────────────────────────────────────────────────────────────────────
 
 type Tab = 'overview' | 'cf' | 'lc' | 'cc' | 'a2oj'
@@ -497,71 +526,47 @@ export function Arena() {
       {/* ── A2OJ ── */}
       {tab === 'a2oj' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <div style={{ background: 'var(--card0)', borderRadius: 11, padding: '18px 18px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 16 }}>
-              <div style={{ font: "500 9px 'Roboto Mono'", letterSpacing: '.12em', color: 'var(--mut)' }}>A2OJ LADDERS</div>
-              <div style={{ font: "400 9px 'Roboto Mono'", color: 'var(--a2)' }}>{a2ot} total</div>
-            </div>
-            {A2OJ_DEFS.map(def => {
-              const entry  = data.a2oj.find(x => x.id === def.id)
-              const solved = entry?.solved ?? 0
-              const pct    = Math.round(solved / def.total * 100)
-              return (
-                <div key={def.id} style={{ marginBottom: 18 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                    <span style={{ font: "500 12px 'Lexend Deca'", color: 'var(--ink)' }}>{def.name}</span>
-                    <span style={{ font: "400 9px 'Roboto Mono'", color: 'var(--mut)' }}>{solved}/{def.total}</span>
-                  </div>
-                  <div style={{ height: 5, background: 'var(--bg0)', borderRadius: 3, overflow: 'hidden', marginBottom: 8 }}>
-                    <div style={{ height: '100%', width: pct + '%', background: 'linear-gradient(90deg, var(--a), var(--a2))', borderRadius: 3, transition: 'width .3s' }} />
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <button onClick={() => bumpA2oj(def.id, -1)} style={{
-                      cursor: 'pointer', width: 34, height: 34, borderRadius: 8, border: 'none',
-                      background: 'var(--cardHi)', color: 'var(--mut)',
-                      font: "400 18px 'Roboto Mono'", display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                    }}>−</button>
-                    <div style={{ flex: 1, font: "400 9px 'Roboto Mono'", color: 'var(--dim2)', textAlign: 'center' }}>
-                      {pct}% · {def.total - solved} left
-                    </div>
-                    <button onClick={() => bumpA2oj(def.id, 1)} style={{
-                      cursor: 'pointer', width: 34, height: 34, borderRadius: 8, border: 'none',
-                      background: 'rgba(var(--rgb),.16)', color: 'var(--a)',
-                      font: "400 18px 'Roboto Mono'", display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                    }}>+</button>
-                  </div>
-                </div>
-              )
-            })}
+
+          {/* Overview stat row */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+            <StatBox label="TOTAL SOLVED" value={a2ot} accent />
+            <StatBox label="LOGIC PTS"    value={`${a2Part}/15`} />
+            <StatBox label="LADDERS"      value={`${A2OJ_DEFS.filter(d => (data.a2oj.find(x => x.id === d.id)?.solved ?? 0) > 0).length}/${A2OJ_DEFS.length}`} />
           </div>
 
+          {/* Solved history chart */}
           <div style={{ background: 'var(--card0)', borderRadius: 11, padding: '18px 18px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14, flexWrap: 'wrap', gap: 8 }}>
               <div style={{ font: "500 9px 'Roboto Mono'", letterSpacing: '.12em', color: 'var(--mut)' }}>SOLVED HISTORY</div>
               <TimeFilter value={tf} onChange={setTf} />
             </div>
             <LineChart points={a2Series} color="var(--a2)" height={130}
-              emptyMsg="bump any ladder to start tracking A2OJ progress" />
+              emptyMsg="sync CF to auto-populate A2OJ progress" />
           </div>
 
-          <div style={{ background: 'var(--card0)', borderRadius: 11, padding: '18px 18px' }}>
-            <div style={{ font: "500 9px 'Roboto Mono'", letterSpacing: '.12em', color: 'var(--mut)', marginBottom: 14 }}>LADDER COMPARISON</div>
-            {A2OJ_DEFS.map(def => {
-              const solved = data.a2oj.find(x => x.id === def.id)?.solved ?? 0
-              return (
-                <div key={def.id} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-                  <span style={{ font: "400 9px 'Roboto Mono'", color: 'var(--txt)', width: 80, flexShrink: 0 }}>{def.name}</span>
-                  <div style={{ flex: 1, height: 5, background: 'var(--bg0)', borderRadius: 3 }}>
-                    <div style={{ height: '100%', width: (solved / def.total * 100) + '%', background: 'var(--a2)', borderRadius: 3 }} />
-                  </div>
-                  <span style={{ font: "400 8px 'Roboto Mono'", color: 'var(--dim2)', width: 30, textAlign: 'right', flexShrink: 0 }}>{solved}</span>
-                </div>
-              )
-            })}
-            <div style={{ marginTop: 14, paddingTop: 12, borderTop: '1px solid rgba(255,255,255,.06)', display: 'flex', justifyContent: 'space-between', font: "400 9px 'Roboto Mono'" }}>
-              <span style={{ color: 'var(--mut)' }}>A2OJ → LOGIC</span>
-              <span><span style={{ color: 'var(--a)' }}>{a2Part}</span><span style={{ color: 'var(--dim2)' }}>/15</span></span>
-            </div>
+          {/* By problem type */}
+          <A2ojGroup
+            title="BY PROBLEM TYPE"
+            defs={A2OJ_DEFS.filter(d => ['l4','l5','l6','l7','l8','l9','l10'].includes(d.id))}
+            a2oj={data.a2oj}
+          />
+
+          {/* By rating — standard */}
+          <A2ojGroup
+            title="BY RATING · STANDARD (100)"
+            defs={A2OJ_DEFS.filter(d => ['l11','l12','l13','l14','l15','l16','l17','l18','l19','l20','l21'].includes(d.id))}
+            a2oj={data.a2oj}
+          />
+
+          {/* By rating — extra */}
+          <A2ojGroup
+            title="BY RATING · EXTRA (200)"
+            defs={A2OJ_DEFS.filter(d => ['l22','l23','l24','l25','l26','l27','l28','l29','l30','l31','l32'].includes(d.id))}
+            a2oj={data.a2oj}
+          />
+
+          <div style={{ paddingTop: 4, font: "400 8px 'Roboto Mono'", color: 'var(--dim2)', textAlign: 'center' }}>
+            29 ladders · auto-tracked from CF submissions · sync CF to update
           </div>
         </div>
       )}

@@ -119,7 +119,8 @@ export function Village() {
   // Auto-compute lane progress from real data (GRIND → CF/A2OJ, PHYSIQUE → sessions, FOREST → campaign)
   function laneProgress(actId: string, n: { id: string; tag: string; units: number }): number {
     if (n.tag === 'A2OJ') {
-      const aojIdMap: Record<string, string> = { 'a2oj-b': 'div2b', 'a2oj-1300': 'r1300', 'a2oj-1400': 'r1400' }
+      // Map old side-lane IDs → new A2OJ_DEFS IDs (renamed l4/l5/l11/l12/l13)
+      const aojIdMap: Record<string, string> = { 'a2oj-b': 'l5', 'a2oj-1300': 'l11', 'a2oj-1400': 'l12' }
       const aojId = aojIdMap[n.id]
       const solved = aojId ? (data.a2oj.find(l => l.id === aojId)?.solved || 0) : 0
       return Math.min(n.units, solved)

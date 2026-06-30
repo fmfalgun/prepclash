@@ -6,12 +6,18 @@ import { TOJI } from '../../data/workoutTemplate'
 const TOTAL_TOJI_BOOKS = BOOK_DEFS.length + TOJI_BOOK_DEFS.length
 
 export function OnboardingModal() {
-  const adoptToji  = useStore(s => s.adoptToji)
-  const setModal   = useStore(s => s.setModal)
-  const data       = useStore(s => s.data)
+  const adoptToji      = useStore(s => s.adoptToji)
+  const closeOnboarding = useStore(s => s.closeOnboarding)
+  const setModal       = useStore(s => s.setModal)
+  const data           = useStore(s => s.data)
 
   function choose(c: 'toji' | 'own' | 'both') {
     adoptToji(c)
+    setModal(null)
+  }
+
+  function dismiss() {
+    closeOnboarding()
     setModal(null)
   }
 
@@ -31,7 +37,18 @@ export function OnboardingModal() {
 
   return (
     <div style={overlay}>
-      <div style={box}>
+      <div style={{ ...box, position: 'relative' }}>
+        {/* Dismiss button */}
+        <button onClick={dismiss} style={{
+          position: 'absolute', top: 16, right: 16,
+          background: 'none', border: 'none', cursor: 'pointer',
+          color: 'var(--mut)', fontSize: 20, lineHeight: 1, padding: '4px 8px',
+          opacity: 0.6,
+        }}
+          onMouseEnter={e => (e.currentTarget.style.opacity = '1')}
+          onMouseLeave={e => (e.currentTarget.style.opacity = '0.6')}
+          title="skip setup"
+        >×</button>
         {/* Header */}
         <div style={{ marginBottom: 32, textAlign: 'center' }}>
           <div style={{ font: "300 30px/1 'Lexend Deca'", color: 'var(--ink)', marginBottom: 8 }}>

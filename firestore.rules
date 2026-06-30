@@ -1,0 +1,33 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Public operative profiles ────────────────────────────────────────
+    // Anyone can read (needed for Ladder page to list all operatives)
+    // Only the owner can write their own doc
+    match /operatives/{uid} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == uid;
+    }
+
+    // ── Clans ────────────────────────────────────────────────────────────
+    // Anyone can read (needed to list clans)
+    // Authenticated users can create clans
+    // Only the founder can update/delete
+    match /clans/{clanId} {
+      allow read: if true;
+      allow create: if request.auth != null;
+      allow update: if request.auth != null
+        && (resource.data.founderUid == request.auth.uid
+            || !resource.data.keys().hasAll(['founderUid']));
+      allow delete: if request.auth != null
+        && resource.data.founderUid == request.auth.uid;
+    }
+
+    // ── Private user profiles (handles + cloud backup) ───────────────────
+    // Only the owner can read or write their own profile
+    match /userProfiles/{uid} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+  }
+}

@@ -15,7 +15,7 @@ import { syncCodeChef } from '../lib/codechef'
 import { seedWorkoutData, TOJI } from '../data/workoutTemplate'
 import { computeSession, computePBs, est1rm } from '../lib/workoutStats'
 import { syncCfProfile } from '../lib/codeforces'
-import { A2OJ_DEFS } from '../data/a2oj'
+import { A2OJ_DEFS, A2OJ_PROBLEMS } from '../data/a2oj'
 import type { ArenaQuestion } from '../data/arena'
 
 function freshDraft(): Draft {
@@ -182,6 +182,7 @@ interface AppState {
   deleteClan: (clanId: string) => void
   transferClanAdmin: (clanId: string, toUid: string) => void
   adoptToji: (choice: 'toji' | 'own' | 'both') => void
+  closeOnboarding: () => void
   syncMt: () => void
   syncLc: () => void
   syncCc: () => void
@@ -576,13 +577,22 @@ export const useStore = create<AppState>()(
           if (!handle) { toast_('set a cf handle first'); return }
           set({ cfPulling: true })
           try {
-            const cf = await syncCfProfile(handle)
+            const { profile: cf, solvedIds } = await syncCfProfile(handle)
             const prevSolved = get().data.cf.solved  // null = first sync, skip XP award
             persist_(d => {
               d.cf = { ...cf, error: null }
               if (prevSolved !== null) {
                 const delta = (cf.solved || 0) - prevSolved
                 if (delta > 0) d.skillXp.cp = (d.skillXp.cp || 0) + delta * 0.3
+              }
+              // Auto-compute A2OJ counts from CF solved problem IDs
+              const solvedSet = new Set(solvedIds)
+              for (const def of A2OJ_DEFS) {
+                const problems = A2OJ_PROBLEMS[def.id] || []
+                const count = problems.filter(id => solvedSet.has(id)).length
+                const existing = d.a2oj.find(x => x.id === def.id)
+                if (existing) existing.solved = count
+                else d.a2oj.push({ id: def.id, solved: count })
               }
               snapshotCp(d)
             })
@@ -842,10 +852,16 @@ export const useStore = create<AppState>()(
           toast_(choice === 'own' ? 'building your own library' : "toji's reading list added")
         },
 
+        closeOnboarding: () => {
+          persist_(d => { d.onboarded = true })
+        },
+
         deleteAccount: async () => {
           const { fbUser } = get()
           if (!fbUser) { toast_('not signed in'); return }
           if (!confirm('delete your account? this cannot be undone.')) return
+          // Cancel any pending cloud save so it doesn't fire after auth is revoked
+          if (_cloudSaveTimer) { clearTimeout(_cloudSaveTimer); _cloudSaveTimer = null }
           try {
             await fbDeleteAccount(fbUser.uid)
             const fresh = seedData()
@@ -1110,6 +1126,34 @@ export const useStore = create<AppState>()(
           }
           delete anyState.ccHandle
           if (!state.data.cpHistory) state.data.cpHistory = []
+          // Auto-mark onboarded for returning users who already have meaningful data
+          // Prevents the welcome modal re-appearing after sign-out/sign-in cycles
+          if (!state.data.onboarded) {
+            const d = state.data
+            const hasMeaningfulData = !!(d.cf.handle) || d.momentum > 0 || d.logs.length > 0 ||
+              (d.a2oj || []).some((x: any) => x.solved > 0) || d.cf.rating != null ||
+              d.lc?.solved != null || d.cc?.rating != null
+            if (hasMeaningfulData) state.data.onboarded = true
+          }
+          // Seed an initial snapshot if the user has data but no history yet
+          if (state.data.cpHistory.length === 0) {
+            const d = state.data
+            const cfRating = d.cf.rating
+            const cfSolved = d.cf.solved
+            const lcSolved = d.lc?.solved ?? null
+            const ccRating = d.cc?.rating ?? null
+            const a2ojTot  = d.a2oj.reduce((s, x) => s + (x.solved || 0), 0)
+            if (cfRating || cfSolved || lcSolved || ccRating || a2ojTot > 0) {
+              const cfPart = cfRating ? Math.min(30, Math.max(0, (cfRating - 600) / 73)) : 0
+              const cfSolP = Math.min(15, (cfSolved || 0) / 13.3)
+              const a2p    = Math.min(15, a2ojTot / 18.4)
+              const lcP    = Math.min(20, (lcSolved || 0) / 15)
+              const ccP    = ccRating && ccRating >= 1400 ? Math.min(10, (ccRating - 1400) / 60) : 0
+              const effP   = Math.min(9, Math.round(Math.sqrt(d.skillXp.cp || 0) * 1.5))
+              const score  = Math.min(99, Math.round(cfPart + cfSolP + a2p + lcP + ccP + effP))
+              state.data.cpHistory = [{ ts: Date.now() - 86400_000, cfRating, cfSolved, lcSolved, ccRating, a2ojTotal: a2ojTot, score }]
+            }
+          }
           // Migrate old skillXp values from score-format (0-99) to XP-format
           // Old format stored display score directly; new formula uses sqrt(xp)*4
           // Multiply by 60 so old score S maps to new score ≈ S: sqrt(S*60)*4 ≈ S

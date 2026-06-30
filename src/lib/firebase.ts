@@ -94,9 +94,13 @@ export async function signOut(): Promise<void> {
 export async function deleteAccount(uid: string): Promise<void> {
   if (!fb) throw new Error('Not connected')
   const { doc, deleteDoc } = fb.fsMod as Record<string, unknown>
-  await (deleteDoc as (ref: unknown) => Promise<void>)(
-    (doc as (db: unknown, col: string, id: string) => unknown)(fb.db, 'operatives', uid)
-  )
+  const docFn = doc as (db: unknown, col: string, id: string) => unknown
+  const delFn = deleteDoc as (ref: unknown) => Promise<void>
+  // Delete all user Firestore docs in parallel before revoking auth
+  await Promise.allSettled([
+    delFn(docFn(fb.db, 'operatives', uid)),
+    delFn(docFn(fb.db, 'userProfiles', uid)),
+  ])
   const { deleteUser, getAuth } = fb.authMod as Record<string, unknown>
   const user = (getAuth as (a?: unknown) => { currentUser: unknown })(fb.auth).currentUser
   if (user) {
@@ -387,10 +391,15 @@ function currentNodeNameFromVillage(village: Record<string, unknown>): string {
 // Cloud backup — stored in userProfiles/{uid} (same collection as handles, confirmed writable)
 export async function saveCloudBackup(uid: string, data: unknown): Promise<void> {
   if (!fb) throw new Error('Not connected')
+  const payload = JSON.stringify(data)
+  // Firestore document limit is 1MB; leave some headroom for field overhead
+  if (payload.length > 900_000) {
+    throw new Error(`backup too large (${Math.round(payload.length / 1024)}KB > 900KB) — your log history may be too long`)
+  }
   const { doc, setDoc } = fb.fsMod as Record<string, unknown>
   await (setDoc as (ref: unknown, d: unknown, opts: unknown) => Promise<void>)(
     (doc as (db: unknown, col: string, id: string) => unknown)(fb.db, 'userProfiles', uid),
-    { backup: JSON.stringify(data), savedAt: Date.now() },
+    { backup: payload, savedAt: Date.now() },
     { merge: true }
   )
 }
