@@ -22,18 +22,24 @@ function xpToScore(xp: number): number {
   return Math.min(99, Math.round(Math.sqrt(Math.max(0, xp)) * 4))
 }
 
-// LOGIC (cp): composite of CF rating + problems solved + A2OJ + small effort bonus
+// LOGIC (cp): composite of CF + A2OJ + LeetCode + CodeChef + small effort bonus
+// Max breakdown: CF rating 30 + CF solved 15 + A2OJ 15 + LC solved 20 + CC rating 10 + effort 9 = 99
 export function cpScore(data: Data): number {
   const cf = data.cf
-  // CF rating contribution — max 45 at Grandmaster (2800+)
-  const cfPart  = cf.rating ? Math.min(45, Math.max(0, (cf.rating - 600) / 33)) : 0
-  // Problems solved — max 25 at 200+ solved
-  const solvedPart = Math.min(25, (cf.solved || 0) / 8)
-  // A2OJ ladders — max 20 at all 276 solved
-  const a2ojPart = Math.min(20, a2ojTotal(data) / 13.8)
-  // Effort feed (monkeytype delta, CF delta accumulator) — max 9
+  // CF rating — max 30 at Grandmaster (2800+), starts contributing at 600
+  const cfPart     = cf.rating ? Math.min(30, Math.max(0, (cf.rating - 600) / 73)) : 0
+  // CF solved — max 15 at 200+ problems
+  const cfSolved   = Math.min(15, (cf.solved || 0) / 13.3)
+  // A2OJ ladders — max 15 at all 276 solved
+  const a2ojPart   = Math.min(15, a2ojTotal(data) / 18.4)
+  // LeetCode solved — max 20 at 300+ problems
+  const lcPart     = Math.min(20, (data.lc?.solved || 0) / 15)
+  // CodeChef rating — max 10 at 2000+ (5★), starts at 1400
+  const ccRating   = data.cc?.rating || 0
+  const ccPart     = ccRating >= 1400 ? Math.min(10, (ccRating - 1400) / 60) : 0
+  // Effort accumulator (XP from study/practice) — max 9
   const effortPart = Math.min(9, Math.round(Math.sqrt(data.skillXp.cp || 0) * 1.5))
-  return Math.min(99, Math.round(cfPart + solvedPart + a2ojPart + effortPart))
+  return Math.min(99, Math.round(cfPart + cfSolved + a2ojPart + lcPart + ccPart + effortPart))
 }
 
 // PHYSIQUE: based on actual workout history + streak — decays without use

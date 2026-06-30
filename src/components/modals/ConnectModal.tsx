@@ -26,15 +26,18 @@ export function ConnectModal() {
   const [cfDraft, setCfDraft]     = useState(data.cf.handle || '')
 
   async function hardRefresh() {
+    // Clear service-worker caches (if any PWA caching is active)
     if ('caches' in window) {
       const keys = await caches.keys()
       await Promise.all(keys.map(k => caches.delete(k)))
     }
+    // Unregister service workers so they don't serve stale assets
     if ('serviceWorker' in navigator) {
       const regs = await navigator.serviceWorker.getRegistrations()
       await Promise.all(regs.map(r => r.unregister()))
     }
-    window.location.replace(window.location.pathname + '?_reload=' + Date.now())
+    // reload() without a query param avoids accumulating cache entries
+    window.location.reload()
   }
 
   async function handleGoogleAuth() {

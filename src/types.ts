@@ -54,6 +54,17 @@ export interface LeetCodeState {
   error: string | null
 }
 
+export interface CcState {
+  handle: string
+  rating: number | null
+  maxRating: number | null
+  stars: number | null          // 1-7
+  rank: string                  // e.g. '3 Star Coder'
+  solved: number | null         // problems solved on practice
+  lastSync: number | null
+  error: string | null
+}
+
 export type WeightMode = 'kg/hand' | 'kg total' | 'lb/hand' | 'bodyweight' | 'cardio'
 
 export interface SchedExercise {
@@ -136,7 +147,7 @@ export interface Data {
   mt: MonkeytypeState
   lc: LeetCodeState
   gh: GhState
-  ccHandle: string
+  cc: CcState
 }
 
 export interface ClanMember {
@@ -196,7 +207,7 @@ export interface PublicOperative {
   cf: { handle: string; rating: number | null; rank: string; solved: number | null }
   mt?: { handle: string; pb60?: number | null } | null
   gh?: { handle: string; public_repos?: number | null } | null
-  ccHandle?: string | null
+  cc?: { handle: string; rating?: number | null; stars?: number | null } | null
   lastSeen: number
   createdAt?: number
   isShowcase?: boolean

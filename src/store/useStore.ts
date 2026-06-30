@@ -11,6 +11,7 @@ import { pushToFirebase, deleteAccount as fbDeleteAccount, disbandClan as fbDisb
 import { TOJI_BOOK_DEFS } from '../data/toji'
 import { syncMonkeytype } from '../lib/monkeytype'
 import { syncLeetCode } from '../lib/leetcode'
+import { syncCodeChef } from '../lib/codechef'
 import { seedWorkoutData, TOJI } from '../data/workoutTemplate'
 import { computeSession, computePBs, est1rm } from '../lib/workoutStats'
 import { syncCfProfile } from '../lib/codeforces'
@@ -73,7 +74,7 @@ function seedData(): Data {
     mt: { handle: '', pb60: null, pb30: null, pb15: null, completed: null, lastSync: null, error: null },
     lc: { handle: '', solved: null, easy: null, medium: null, hard: null, ranking: null, lastSync: null, error: null },
     gh: { handle: '', public_repos: null, followers: null, lastSync: null, error: null },
-    ccHandle: '',
+    cc: { handle: '', rating: null, maxRating: null, stars: null, rank: '', solved: null, lastSync: null, error: null },
   }
 }
 
@@ -157,6 +158,7 @@ interface AppState {
   adoptToji: (choice: 'toji' | 'own' | 'both') => void
   syncMt: () => void
   syncLc: () => void
+  syncCc: () => void
   syncGh: () => void
   setMtHandle: (h: string) => void
   setLcHandle: (h: string) => void
@@ -164,6 +166,7 @@ interface AppState {
   setGhHandle: (h: string) => void
   mtPulling: boolean
   lcPulling: boolean
+  ccPulling: boolean
   ghPulling: boolean
   resetData: () => void
   onSignedIn: (user: FbUser) => void
@@ -275,6 +278,7 @@ export const useStore = create<AppState>()(
         selectedClan: null,
         mtPulling: false,
         lcPulling: false,
+        ccPulling: false,
         ghPulling: false,
         cloudRestorePrompt: null,
         logDraft: null,
@@ -617,7 +621,8 @@ export const useStore = create<AppState>()(
             const cloudMom  = cloud.momentum ?? 0
             // "Truly fresh" = no logs, no momentum, no platform handles set
             const localIsEmpty = localLogs === 0 && localMom === 0
-              && !local.cf?.handle && !local.mt?.handle && !local.ccHandle
+              && !local.cf?.handle && !local.mt?.handle && !local.cc?.handle
+              && !local.onboarded
             if (localIsEmpty && cloudLogs > 0) {
               set({ data: cloud })
               toast_('cloud data restored (' + cloudLogs + ' entries)')
@@ -635,15 +640,15 @@ export const useStore = create<AppState>()(
               if (remote.cf && !d.cf.handle)   d.cf.handle   = remote.cf
               if (remote.mt && !d.mt.handle)   d.mt.handle   = remote.mt
               if (remote.lc && !d.lc.handle)   d.lc.handle   = remote.lc
-              if (remote.cc && !d.ccHandle)     d.ccHandle    = remote.cc
+              if (remote.cc && !d.cc.handle)     d.cc.handle   = remote.cc
             }
           })
 
           // Push local handles to Firestore so other devices can pick them up
           const d = get().data
-          const anyHandle = d.cf.handle || d.mt.handle || d.lc.handle || d.ccHandle
+          const anyHandle = d.cf.handle || d.mt.handle || d.lc.handle || d.cc.handle
           if (anyHandle) {
-            saveUserHandles(user.uid, { cf: d.cf.handle, mt: d.mt.handle, lc: d.lc.handle, cc: d.ccHandle })
+            saveUserHandles(user.uid, { cf: d.cf.handle, mt: d.mt.handle, lc: d.lc.handle, cc: d.cc.handle })
               .catch((e) => toast_('handle sync failed: ' + String(e).slice(0, 50)))
           }
         },
@@ -684,9 +689,23 @@ export const useStore = create<AppState>()(
           if (uid) saveUserHandles(uid, { lc: h }).catch(() => {})
         },
         setCcHandle: (h) => {
-          persist_(d => { d.ccHandle = h })
+          persist_(d => { d.cc.handle = h })
           const uid = get().data.profile.uid
           if (uid) saveUserHandles(uid, { cc: h }).catch(() => {})
+        },
+
+        syncCc: async () => {
+          const handle = get().data.cc.handle.trim()
+          if (!handle) { toast_('enter a codechef username'); return }
+          set({ ccPulling: true })
+          try {
+            const result = await syncCodeChef(handle)
+            persist_(d => { d.cc = { ...result, error: null } })
+            toast_('codechef synced · ' + (result.stars ? result.stars + '★' : '—'))
+          } catch (e) {
+            persist_(d => { d.cc.error = String(e).replace('Error: ', '') })
+            toast_('CC sync failed')
+          } finally { set({ ccPulling: false }) }
         },
         setGhHandle: (h) => {
           persist_(d => { d.gh = { ...d.gh, handle: h } })
@@ -1056,6 +1075,12 @@ export const useStore = create<AppState>()(
           if (!state.data.campaign)         state.data.campaign         = {}
           if (!state.data.campaignDefeated) state.data.campaignDefeated = {}
           if (!state.data.gh)               state.data.gh = { handle: '', public_repos: null, followers: null, lastSync: null, error: null }
+          // Migrate ccHandle string → cc object
+          const anyState = state.data as any
+          if (!state.data.cc) {
+            state.data.cc = { handle: anyState.ccHandle || '', rating: null, maxRating: null, stars: null, rank: '', solved: null, lastSync: null, error: null }
+          }
+          delete anyState.ccHandle
           // Migrate old skillXp values from score-format (0-99) to XP-format
           // Old format stored display score directly; new formula uses sqrt(xp)*4
           // Multiply by 60 so old score S maps to new score ≈ S: sqrt(S*60)*4 ≈ S

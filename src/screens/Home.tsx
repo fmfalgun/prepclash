@@ -135,6 +135,7 @@ export function Home() {
   const togglePhase = useStore(s => s.togglePhase)
   const syncMt      = useStore(s => s.syncMt)
   const syncLc      = useStore(s => s.syncLc)
+  const syncCc      = useStore(s => s.syncCc)
   const syncGh      = useStore(s => s.syncGh)
   const setMtHandle = useStore(s => s.setMtHandle)
   const setLcHandle = useStore(s => s.setLcHandle)
@@ -142,11 +143,12 @@ export function Home() {
   const setGhHandle = useStore(s => s.setGhHandle)
   const mtPulling   = useStore(s => s.mtPulling)
   const lcPulling   = useStore(s => s.lcPulling)
+  const ccPulling   = useStore(s => s.ccPulling)
   const ghPulling   = useStore(s => s.ghPulling)
 
   const [mtDraft, setMtDraft] = useState(data.mt.handle || '')
   const [lcDraft, setLcDraft] = useState(data.lc.handle || '')
-  const [ccDraft, setCcDraft] = useState(data.ccHandle || '')
+  const [ccDraft, setCcDraft] = useState(data.cc?.handle || '')
   const [ghDraft, setGhDraft] = useState(data.gh?.handle || '')
   const [lcEditing, setLcEditing] = useState(false)
   const [ccEditing, setCcEditing] = useState(false)
@@ -171,11 +173,9 @@ export function Home() {
     if (lcDraft !== data.lc.handle) setLcHandle(lcDraft)
     setTimeout(() => { syncLc(); setLcEditing(false) }, 0)
   }
-  function handleCcSave() {
-    if (ccDraft.trim()) {
-      setCcHandle(ccDraft.trim())
-      setCcEditing(false)
-    }
+  function handleCcSync() {
+    if (ccDraft !== data.cc?.handle) setCcHandle(ccDraft.trim())
+    setTimeout(() => { syncCc(); setCcEditing(false) }, 0)
   }
   function handleGhSync() {
     if (ghDraft !== data.gh?.handle) setGhHandle(ghDraft)
@@ -184,6 +184,7 @@ export function Home() {
 
   const mt = data.mt
   const lc = data.lc
+  const cc = data.cc || { handle: '', rating: null, maxRating: null, stars: null, rank: '', solved: null, lastSync: null, error: null }
   const gh = data.gh || { handle: '', public_repos: null, followers: null, lastSync: null, error: null }
 
   // Only show courses with at least one phase completed
@@ -439,37 +440,54 @@ export function Home() {
               <CompetitiveCard />
             </div>
 
-            {/* CodeChef — compact (no public API, link only) */}
-            <div style={{ background: 'var(--card0)', borderRadius: 10, padding: '14px 16px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ font: "500 9px 'Roboto Mono'", letterSpacing: '.12em', color: 'var(--mut)' }}>CODECHEF</span>
-                {data.ccHandle && !ccEditing
-                  ? (
+            {/* CodeChef */}
+            {cc.handle && !ccEditing
+              ? (
+                <div style={{ background: 'var(--card0)', borderRadius: 10, padding: '14px 16px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                    <span style={{ font: "500 9px 'Roboto Mono'", letterSpacing: '.12em', color: 'var(--mut)' }}>CODECHEF</span>
                     <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                      <span style={{ font: "400 9px 'Roboto Mono'", color: 'var(--txt)' }}>@{data.ccHandle}</span>
-                      <a href={`https://www.codechef.com/users/${data.ccHandle}`} target="_blank" rel="noopener noreferrer" style={{ font: "400 9px 'Roboto Mono'", color: 'var(--a2)', textDecoration: 'none' }}>open ↗</a>
-                      <button onClick={() => { setCcDraft(data.ccHandle); setCcEditing(true) }} style={{ cursor: 'pointer', background: 'transparent', border: '1px solid rgba(255,255,255,.12)', color: 'var(--dim2)', font: "400 8px 'Roboto Mono'", padding: '2px 8px', borderRadius: 4 }}>edit</button>
+                      <a href={`https://www.codechef.com/users/${cc.handle}`} target="_blank" rel="noopener noreferrer" style={{ font: "400 8px 'Roboto Mono'", color: 'var(--a2)', textDecoration: 'none' }}>↗</a>
+                      <span style={{ font: "400 8px 'Roboto Mono'", color: 'var(--dim2)' }}>@{cc.handle}</span>
+                      <button onClick={() => { setCcDraft(cc.handle); setCcEditing(true) }} style={{ cursor: 'pointer', background: 'transparent', border: '1px solid rgba(255,255,255,.12)', color: 'var(--dim2)', font: "400 8px 'Roboto Mono'", padding: '2px 8px', borderRadius: 4 }}>edit</button>
                     </div>
-                  )
-                  : (
-                    <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                      <input
-                        value={ccDraft}
-                        onChange={e => setCcDraft(e.target.value)}
-                        onKeyDown={e => e.key === 'Enter' && handleCcSave()}
-                        placeholder="username"
-                        style={{ width: 130, background: 'var(--bg0)', border: 'none', borderRadius: 6, color: 'var(--ink)', font: "400 11px 'Roboto Mono'", padding: '6px 10px', outline: 'none' }}
-                      />
-                      <button onClick={handleCcSave} style={{ cursor: 'pointer', border: 'none', background: 'var(--a)', color: '#111', font: "500 10px 'Roboto Mono'", padding: '6px 12px', borderRadius: 6 }}>save</button>
-                      {data.ccHandle && <button onClick={() => setCcEditing(false)} style={{ cursor: 'pointer', background: 'transparent', border: '1px solid rgba(255,255,255,.12)', color: 'var(--dim2)', font: "400 8px 'Roboto Mono'", padding: '6px 10px', borderRadius: 6 }}>cancel</button>}
-                    </div>
-                  )
-                }
-              </div>
-              {!data.ccHandle && !ccEditing && (
-                <div style={{ marginTop: 8, font: "400 8px 'Roboto Mono'", color: 'var(--dim2)' }}>no API access — saves handle for direct profile link</div>
-              )}
-            </div>
+                  </div>
+                  {cc.lastSync
+                    ? <>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 7 }}>
+                          {[
+                            { l: 'rating',  v: cc.rating   ?? '—' },
+                            { l: 'stars',   v: cc.stars != null ? cc.stars + '★' : '—' },
+                            { l: 'max',     v: cc.maxRating ?? '—' },
+                          ].map(({ l, v }) => (
+                            <div key={l} style={{ background: 'var(--bg0)', borderRadius: 6, padding: '7px 8px' }}>
+                              <div style={{ font: "400 7px 'Roboto Mono'", color: 'var(--mut)', marginBottom: 2 }}>{l}</div>
+                              <div style={{ font: "500 14px/1 'Roboto Mono'", color: 'var(--a)' }}>{v}</div>
+                            </div>
+                          ))}
+                        </div>
+                        {cc.rank && <div style={{ marginTop: 7, font: "400 8px 'Roboto Mono'", color: 'var(--mut)' }}>{cc.rank}</div>}
+                        {cc.error && <div style={{ marginTop: 6, font: "400 8px 'Roboto Mono'", color: '#ff5a5a' }}>{cc.error}</div>}
+                      </>
+                    : <div style={{ font: "400 8px 'Roboto Mono'", color: 'var(--dim2)', lineHeight: 1.6 }}>
+                        {cc.error || 'not yet synced'}
+                      </div>
+                  }
+                </div>
+              )
+              : (
+                <PlatformCard
+                  title="CODECHEF · COMPETITIVE"
+                  handle={ccDraft}
+                  pulling={ccPulling}
+                  onHandleChange={setCcDraft}
+                  onSync={handleCcSync}
+                  note="syncs rating and star level — contributes to LOGIC score"
+                >
+                  <div style={{ font: "400 9px 'Roboto Mono'", color: 'var(--mut)' }}>enter username and sync</div>
+                </PlatformCard>
+              )
+            }
           </div>
 
           {/* Heatmap */}

@@ -172,7 +172,7 @@ export function PlayerDetailModal() {
               )}
 
               {/* Platform handles: GitHub, Monkeytype, CodeChef */}
-              {(o.gh?.handle || o.mt?.handle || o.ccHandle) && (
+              {(o.gh?.handle || o.mt?.handle || o.cc?.handle) && (
                 <div>
                   <div style={{ font: "500 8px 'Roboto Mono'", letterSpacing: '.18em', color: 'var(--mut)', marginBottom: 8 }}>PLATFORMS</div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -204,10 +204,18 @@ export function PlayerDetailModal() {
                         )}
                       </div>
                     )}
-                    {o.ccHandle && (
-                      <div style={{ background: 'rgba(255,255,255,.04)', borderRadius: 5, padding: '7px 9px' }}>
-                        <div style={{ font: "400 7px 'Roboto Mono'", color: 'var(--mut)', marginBottom: 2 }}>CODECHEF</div>
-                        <div style={{ font: "500 12px/1 'Roboto Mono'", color: P.a2 }}>@{o.ccHandle}</div>
+                    {o.cc?.handle && (
+                      <div style={{ display: 'flex', justifyContent: 'space-between', background: 'rgba(255,255,255,.04)', borderRadius: 5, padding: '7px 9px' }}>
+                        <div>
+                          <div style={{ font: "400 7px 'Roboto Mono'", color: 'var(--mut)', marginBottom: 2 }}>CODECHEF</div>
+                          <div style={{ font: "500 12px/1 'Roboto Mono'", color: P.a2 }}>@{o.cc.handle}</div>
+                        </div>
+                        {o.cc.rating && (
+                          <div style={{ textAlign: 'right' }}>
+                            <div style={{ font: "400 7px 'Roboto Mono'", color: 'var(--mut)', marginBottom: 2 }}>{o.cc.stars}★ RATING</div>
+                            <div style={{ font: "500 14px/1 'Roboto Mono'", color: P.a }}>{o.cc.rating}</div>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>

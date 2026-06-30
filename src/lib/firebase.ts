@@ -312,7 +312,7 @@ export async function pushToFirebase(data: Data): Promise<void> {
       },
       mt: data.mt.handle ? { handle: data.mt.handle, pb60: data.mt.pb60 ?? null } : null,
       gh: data.gh?.handle ? { handle: data.gh.handle, public_repos: data.gh.public_repos ?? null } : null,
-      ccHandle: data.ccHandle || null,
+      cc: data.cc?.handle ? { handle: data.cc.handle, rating: data.cc.rating ?? null, stars: data.cc.stars ?? null } : null,
       currentTarget: (() => {
         const inProgress = COURSE_DEFS.find(c => {
           const st = data.courses.find(x => x.id === c.id)
