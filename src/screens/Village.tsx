@@ -74,7 +74,7 @@ export function Village() {
 
   // ── fetch data ─────────────────────────────────────────────────────────
   useEffect(() => {
-    const base = 'https://raw.githubusercontent.com/fmfalgun/security-courses/main/data/courses/'
+    const base = 'https://raw.githubusercontent.com/fmfalgun/security-courses/main/data/'
     async function load() {
       try {
         const manifest = await fetch(base + 'manifest.json').then(r => r.json())
