@@ -75,6 +75,32 @@ function seedData(): Data {
     lc: { handle: '', solved: null, easy: null, medium: null, hard: null, ranking: null, lastSync: null, error: null },
     gh: { handle: '', public_repos: null, followers: null, lastSync: null, error: null },
     cc: { handle: '', rating: null, maxRating: null, stars: null, rank: '', solved: null, lastSync: null, error: null },
+    cpHistory: [],
+  }
+}
+
+function snapshotCp(d: Data) {
+  const cfRating = d.cf.rating
+  const cfSolved = d.cf.solved
+  const lcSolved = d.lc?.solved ?? null
+  const ccRating = d.cc?.rating ?? null
+  const a2ojTot  = d.a2oj.reduce((s, x) => s + (x.solved || 0), 0)
+  // Inline cpScore formula to avoid circular import
+  const cfPart   = cfRating ? Math.min(30, Math.max(0, (cfRating - 600) / 73)) : 0
+  const cfSolP   = Math.min(15, (cfSolved || 0) / 13.3)
+  const a2p      = Math.min(15, a2ojTot / 18.4)
+  const lcP      = Math.min(20, (lcSolved || 0) / 15)
+  const ccP      = ccRating && ccRating >= 1400 ? Math.min(10, (ccRating - 1400) / 60) : 0
+  const effP     = Math.min(9, Math.round(Math.sqrt(d.skillXp.cp || 0) * 1.5))
+  const score    = Math.min(99, Math.round(cfPart + cfSolP + a2p + lcP + ccP + effP))
+  const snap = { ts: Date.now(), cfRating, cfSolved, lcSolved, ccRating, a2ojTotal: a2ojTot, score }
+  if (!d.cpHistory) d.cpHistory = []
+  const last = d.cpHistory[d.cpHistory.length - 1]
+  // Skip if identical to last (avoids noise from no-change syncs)
+  if (!last || last.cfRating !== cfRating || last.cfSolved !== cfSolved ||
+      last.lcSolved !== lcSolved || last.ccRating !== ccRating || last.a2ojTotal !== a2ojTot) {
+    d.cpHistory.push(snap)
+    if (d.cpHistory.length > 200) d.cpHistory = d.cpHistory.slice(-200)
   }
 }
 
@@ -558,6 +584,7 @@ export const useStore = create<AppState>()(
                 const delta = (cf.solved || 0) - prevSolved
                 if (delta > 0) d.skillXp.cp = (d.skillXp.cp || 0) + delta * 0.3
               }
+              snapshotCp(d)
             })
             toast_('cf synced · ' + (cf.rating || '—') + ' rating')
           } catch (e) {
@@ -583,6 +610,7 @@ export const useStore = create<AppState>()(
               bumpActivity(d, 8)
               d.skillXp.cp = (d.skillXp.cp || 0) + 0.5
               d.logs.unshift({ type: 'arena', title: 'a2oj · ' + def.name, mins: 0, gain: 4, date: todayKey(), ts: Date.now() })
+              snapshotCp(d)
             }
           })
         },
@@ -700,7 +728,7 @@ export const useStore = create<AppState>()(
           set({ ccPulling: true })
           try {
             const result = await syncCodeChef(handle)
-            persist_(d => { d.cc = { ...result, error: null } })
+            persist_(d => { d.cc = { ...result, error: null }; snapshotCp(d) })
             toast_('codechef synced · ' + (result.stars ? result.stars + '★' : '—'))
           } catch (e) {
             persist_(d => { d.cc.error = String(e).replace('Error: ', '') })
@@ -746,7 +774,7 @@ export const useStore = create<AppState>()(
           set({ lcPulling: true })
           try {
             const result = await syncLeetCode(handle)
-            persist_(d => { d.lc = { ...result, error: null } })
+            persist_(d => { d.lc = { ...result, error: null }; snapshotCp(d) })
           } catch (e) {
             persist_(d => { d.lc.error = String(e).replace('Error: ', '') })
             toast_('LC sync failed')
@@ -1081,6 +1109,7 @@ export const useStore = create<AppState>()(
             state.data.cc = { handle: anyState.ccHandle || '', rating: null, maxRating: null, stars: null, rank: '', solved: null, lastSync: null, error: null }
           }
           delete anyState.ccHandle
+          if (!state.data.cpHistory) state.data.cpHistory = []
           // Migrate old skillXp values from score-format (0-99) to XP-format
           // Old format stored display score directly; new formula uses sqrt(xp)*4
           // Multiply by 60 so old score S maps to new score ≈ S: sqrt(S*60)*4 ≈ S

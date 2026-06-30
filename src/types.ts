@@ -54,6 +54,16 @@ export interface LeetCodeState {
   error: string | null
 }
 
+export interface CpSnapshot {
+  ts: number
+  cfRating: number | null
+  cfSolved: number | null
+  lcSolved: number | null
+  ccRating: number | null
+  a2ojTotal: number
+  score: number               // cpScore at that moment
+}
+
 export interface CcState {
   handle: string
   rating: number | null
@@ -148,6 +158,7 @@ export interface Data {
   lc: LeetCodeState
   gh: GhState
   cc: CcState
+  cpHistory: CpSnapshot[]
 }
 
 export interface ClanMember {
