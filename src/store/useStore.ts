@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { Data, Draft, ModalType, Palette, PublicOperative, ClanDoc, FbUser, SchedExercise, ScheduleDay, WorkoutSession } from '../types'
+import type { Data, Draft, ModalType, Palette, PublicOperative, ClanDoc, FbUser, SessionExercise, ScheduleDay, WorkoutSession } from '../types'
 import { SKILL_DEFS, DEFAULT_KEYWORDS, COURSE_DEFS, BOOK_DEFS } from '../data/skills'
 import { todayKey, addWeekXp, bumpActivity } from '../lib/dates'
 import { studyGain, studySkillXp, readGain } from '../lib/momentum'
@@ -55,7 +55,7 @@ function seedData(): Data {
   }
 }
 
-type LogDraft = { dayId: string; exercises: SchedExercise[]; durationMin: number }
+type LogDraft = { dayId: string; exercises: SessionExercise[]; durationMin: number }
 
 interface AppState {
   data: Data
@@ -86,6 +86,7 @@ interface AppState {
   editNote: string
   selEx: string
   openSession: string | null
+  editingSessionId: string | null
 
   setTab: (tab: string) => void
   setModal: (modal: ModalType) => void
@@ -147,10 +148,14 @@ interface AppState {
   // Workout Lab actions
   openLog: () => void
   openEdit: () => void
+  openEditSession: (id: string) => void
   pickDay: (dayId: string) => void
   addLogEx: () => void
   removeLogEx: (idx: number) => void
-  updateLogEx: (idx: number, field: string, value: string | number) => void
+  updateLogEx: (idx: number, field: 'name' | 'mode', value: string) => void
+  addLogSet: (exIdx: number) => void
+  removeLogSet: (exIdx: number, setIdx: number) => void
+  updateLogSet: (exIdx: number, setIdx: number, field: 'reps' | 'weight', value: number) => void
   setLogDuration: (v: number) => void
   submitSession: () => void
   saveSchedule: () => void
@@ -199,7 +204,15 @@ export const useStore = create<AppState>()(
       function draftForDay(dayId: string): LogDraft {
         const days = get().data.workoutLab?.schedule.days || TOJI
         const day = days.find(d => d.id === dayId) || days[0]
-        return { dayId: day.id, exercises: day.exercises.map(e => ({ ...e })), durationMin: 55 }
+        return {
+          dayId: day.id,
+          exercises: day.exercises.map(e => ({
+            name: e.name,
+            mode: e.mode,
+            sets: Array.from({ length: e.sets || 3 }, () => ({ reps: e.reps || 10, weight: e.weight || 0 })),
+          })),
+          durationMin: 55,
+        }
       }
 
       return {
@@ -232,6 +245,7 @@ export const useStore = create<AppState>()(
         editNote: '',
         selEx: '',
         openSession: null,
+        editingSessionId: null,
 
         setTab: (tab) => set({ tab }),
         setModal: (modal) => set({ modal }),
@@ -487,7 +501,12 @@ export const useStore = create<AppState>()(
           set({ cfPulling: true })
           try {
             const cf = await syncCfProfile(handle)
-            persist_(d => { d.cf = { ...cf, error: null } })
+            const prevSolved = get().data.cf.solved || 0
+            persist_(d => {
+              d.cf = { ...cf, error: null }
+              const delta = (cf.solved || 0) - prevSolved
+              if (delta > 0) d.skillXp.cp = (d.skillXp.cp || 0) + delta * 0.3
+            })
             toast_('cf synced · ' + (cf.rating || '—') + ' rating')
           } catch (e) {
             persist_(d => { d.cf.error = 'sync failed' })
@@ -661,12 +680,18 @@ export const useStore = create<AppState>()(
           const days = wl?.schedule.days || TOJI
           const sessions = wl?.sessions || []
           const suggestedId = days[sessions.length % days.length].id
-          set({ modal: 'log', logDraft: draftForDay(suggestedId), openSession: null })
+          set({ modal: 'log', logDraft: draftForDay(suggestedId), openSession: null, editingSessionId: null })
         },
 
         openEdit: () => {
           const days = get().data.workoutLab?.schedule.days || TOJI
           set({ modal: 'edit', editDraft: JSON.parse(JSON.stringify(days)), editNote: '' })
+        },
+
+        openEditSession: (id) => {
+          const s = get().data.workoutLab?.sessions.find(x => x.id === id)
+          if (!s) return
+          set({ modal: 'log', logDraft: { dayId: s.dayId, exercises: s.exercises.map(e => ({ ...e, sets: e.sets.map(st => ({ ...st })) })), durationMin: s.durationMin }, editingSessionId: id, openSession: null })
         },
 
         pickDay: (dayId) => {
@@ -676,7 +701,8 @@ export const useStore = create<AppState>()(
         addLogEx: () => {
           set(s => {
             if (!s.logDraft) return {}
-            return { logDraft: { ...s.logDraft, exercises: [...s.logDraft.exercises, { name: '', sets: 3, reps: 10, weight: 0, mode: 'kg/hand' as const }] } }
+            const blank: SessionExercise = { name: '', mode: 'kg/hand', sets: [{ reps: 10, weight: 0 }] }
+            return { logDraft: { ...s.logDraft, exercises: [...s.logDraft.exercises, blank] } }
           })
         },
 
@@ -684,7 +710,8 @@ export const useStore = create<AppState>()(
           set(s => {
             if (!s.logDraft) return {}
             const exercises = s.logDraft.exercises.filter((_, i) => i !== idx)
-            return { logDraft: { ...s.logDraft, exercises: exercises.length ? exercises : [{ name: '', sets: 3, reps: 10, weight: 0, mode: 'kg/hand' as const }] } }
+            const blank: SessionExercise = { name: '', mode: 'kg/hand', sets: [{ reps: 10, weight: 0 }] }
+            return { logDraft: { ...s.logDraft, exercises: exercises.length ? exercises : [blank] } }
           })
         },
 
@@ -696,34 +723,83 @@ export const useStore = create<AppState>()(
           })
         },
 
+        addLogSet: (exIdx) => {
+          set(s => {
+            if (!s.logDraft) return {}
+            const exercises = s.logDraft.exercises.map((e, i) => {
+              if (i !== exIdx) return e
+              const last = e.sets[e.sets.length - 1] || { reps: 10, weight: 0 }
+              return { ...e, sets: [...e.sets, { ...last }] }
+            })
+            return { logDraft: { ...s.logDraft, exercises } }
+          })
+        },
+
+        removeLogSet: (exIdx, setIdx) => {
+          set(s => {
+            if (!s.logDraft) return {}
+            const exercises = s.logDraft.exercises.map((e, i) => {
+              if (i !== exIdx) return e
+              const sets = e.sets.filter((_, si) => si !== setIdx)
+              return { ...e, sets: sets.length ? sets : [{ reps: 10, weight: 0 }] }
+            })
+            return { logDraft: { ...s.logDraft, exercises } }
+          })
+        },
+
+        updateLogSet: (exIdx, setIdx, field, value) => {
+          set(s => {
+            if (!s.logDraft) return {}
+            const exercises = s.logDraft.exercises.map((e, i) => {
+              if (i !== exIdx) return e
+              const sets = e.sets.map((st, si) => si === setIdx ? { ...st, [field]: value } : st)
+              return { ...e, sets }
+            })
+            return { logDraft: { ...s.logDraft, exercises } }
+          })
+        },
+
         setLogDuration: (v) => {
           set(s => s.logDraft ? { logDraft: { ...s.logDraft, durationMin: v } } : {})
         },
 
         submitSession: () => {
-          const { logDraft, data } = get()
+          const { logDraft, data, editingSessionId } = get()
           if (!logDraft) return
-          const exs: SchedExercise[] = logDraft.exercises
+          const exs: SessionExercise[] = logDraft.exercises
             .filter(e => (e.name || '').trim())
             .map(e => ({
               name: (e.name as string).trim(),
-              sets: parseInt(String(e.sets)) || 0,
-              reps: parseInt(String(e.reps)) || 0,
-              weight: parseFloat(String(e.weight)) || 0,
               mode: e.mode,
+              sets: e.sets.map(s => ({ reps: s.reps || 0, weight: s.weight || 0 })).filter(s => s.reps > 0 || s.weight > 0),
             }))
+            .filter(e => e.sets.length > 0)
           if (!exs.length) { get().showToast('add at least one exercise'); return }
 
           const days = data.workoutLab?.schedule.days || TOJI
           const day = days.find(d => d.id === logDraft.dayId) || days[0]
           const m = computeSession(exs)
+
+          if (editingSessionId) {
+            const existingSess = data.workoutLab?.sessions.find(x => x.id === editingSessionId)
+            if (!existingSess) { get().showToast('session not found'); return }
+            const updated: WorkoutSession = { ...existingSess, exercises: exs, durationMin: logDraft.durationMin, volume: m.volume, totalReps: m.totalReps, totalSets: m.totalSets }
+            persist_(d => {
+              if (!d.workoutLab) return
+              const idx = d.workoutLab.sessions.findIndex(x => x.id === editingSessionId)
+              if (idx >= 0) d.workoutLab.sessions[idx] = updated
+            })
+            get().showToast('session updated')
+            set({ modal: null, logDraft: null, editingSessionId: null })
+            return
+          }
+
           const before = computePBs(data.workoutLab?.sessions || []).best
           let prCount = 0
           exs.forEach(e => {
             const orm = est1rm(e)
             if (orm && (!before[e.name] || orm > before[e.name].orm + 0.01)) prCount++
           })
-
           const sess: WorkoutSession = {
             id: 's' + Date.now(), ts: Date.now(), date: todayKey(),
             dayId: logDraft.dayId, dayName: day.name, muscle: day.muscle,
@@ -742,7 +818,7 @@ export const useStore = create<AppState>()(
           })
           const msg = prCount ? `session logged · ★ ${prCount} new pr${prCount > 1 ? 's' : ''}!` : `session logged · ${m.volume}kg moved`
           get().showToast(msg)
-          set({ modal: null, logDraft: null, selEx: exs[0]?.name || get().selEx })
+          set({ modal: null, logDraft: null, selEx: exs[0]?.name || get().selEx, editingSessionId: null })
         },
 
         saveSchedule: () => {
@@ -836,6 +912,21 @@ export const useStore = create<AppState>()(
         if (state?.data) {
           if (!state.data.campaign)         state.data.campaign         = {}
           if (!state.data.campaignDefeated) state.data.campaignDefeated = {}
+          // Migrate old session exercises (flat format) to per-set format
+          if (state.data.workoutLab?.sessions) {
+            state.data.workoutLab.sessions = state.data.workoutLab.sessions.map((sess: WorkoutSession) => ({
+              ...sess,
+              exercises: sess.exercises.map((e: any) => {
+                if (Array.isArray(e.sets)) return e as SessionExercise
+                const old = e as { name: string; mode: string; sets: number; reps: number; weight: number }
+                return {
+                  name: old.name,
+                  mode: old.mode || 'kg/hand',
+                  sets: Array.from({ length: old.sets || 1 }, () => ({ reps: old.reps || 0, weight: old.weight || 0 })),
+                } as SessionExercise
+              }),
+            }))
+          }
         }
       },
     }

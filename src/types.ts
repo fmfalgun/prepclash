@@ -56,6 +56,12 @@ export interface SchedExercise {
   mode: WeightMode
 }
 
+export interface SessionExercise {
+  name: string
+  mode: WeightMode
+  sets: { reps: number; weight: number }[]
+}
+
 export interface ScheduleDay {
   id: string
   name: string
@@ -82,7 +88,7 @@ export interface WorkoutSession {
   dayId: string
   dayName: string
   muscle: string
-  exercises: SchedExercise[]
+  exercises: SessionExercise[]
   durationMin: number
   volume: number
   totalReps: number
@@ -143,7 +149,7 @@ export interface LiveQuestion {
   live?: boolean
 }
 
-export type ModalType = 'study' | 'reading' | 'node' | 'question' | 'connect' | 'log' | 'edit' | 'onboarding' | null
+export type ModalType = 'study' | 'reading' | 'node' | 'question' | 'connect' | 'log' | 'edit' | 'editSession' | 'onboarding' | null
 
 export interface Draft {
   title: string

@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useStore } from '../store/useStore'
 import { PALETTES } from '../data/palettes'
 import { Heatmap } from '../components/Heatmap'
@@ -28,6 +29,8 @@ export function Reading() {
   const setModal = useStore(s => s.setModal)
   const palette  = useStore(s => s.data.palette)
   const P = PALETTES[palette] || PALETTES.toxic
+
+  const [showAllBooks, setShowAllBooks] = useState(false)
 
   const defs    = allBookDefs(data)
   const books   = data.books
@@ -153,7 +156,11 @@ export function Reading() {
           <span style={{ font: "400 10px 'Roboto Mono'", color: 'var(--mut)' }}>click a book to log progress</span>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px 26px' }}>
-          {defs.map(def => {
+          {defs.filter(def => {
+            if (showAllBooks) return true
+            const b = books.find(x => x.id === def.id)
+            return b && b.done > 0
+          }).map(def => {
             const b   = books.find(x => x.id === def.id)
             const done = b?.done ?? 0
             const pct  = Math.round(done / def.total * 100)
@@ -179,6 +186,25 @@ export function Reading() {
             )
           })}
         </div>
+        {(() => {
+          const hiddenCount = defs.filter(def => {
+            const b = books.find(x => x.id === def.id)
+            return !b || b.done === 0
+          }).length
+          if (hiddenCount === 0 && !showAllBooks) return null
+          return (
+            <button
+              onClick={() => setShowAllBooks(v => !v)}
+              style={{
+                marginTop: 16, cursor: 'pointer', border: '1px dashed rgba(255,255,255,.12)',
+                background: 'transparent', color: 'var(--mut)', borderRadius: 7,
+                font: "400 11px 'Roboto Mono'", padding: '8px 16px', width: '100%',
+              }}
+            >
+              {showAllBooks ? `hide ${hiddenCount} unstarted` : `+ show ${hiddenCount} more book${hiddenCount > 1 ? 's' : ''}`}
+            </button>
+          )
+        })()}
       </div>
 
       {/* By unit + Heatmap */}

@@ -1,4 +1,4 @@
-import type { SchedExercise, WorkoutSession } from '../types'
+import type { SessionExercise, WorkoutSession } from '../types'
 
 export function loadKg(weight: number, mode: string): number {
   if (mode === 'bodyweight' || mode === 'cardio') return 0
@@ -7,22 +7,45 @@ export function loadKg(weight: number, mode: string): number {
   return w
 }
 
-export function exVolume(e: SchedExercise): number {
-  const l = loadKg(e.weight, e.mode)
+export function exVolume(e: SessionExercise): number {
   const ph = e.mode === 'kg/hand' || e.mode === 'lb/hand'
-  return (e.sets || 0) * (e.reps || 0) * l * (ph ? 2 : 1)
+  return e.sets.reduce((sum, s) => {
+    const l = loadKg(s.weight, e.mode)
+    return sum + (s.reps || 0) * l * (ph ? 2 : 1)
+  }, 0)
 }
 
-export function est1rm(e: SchedExercise): number {
-  const l = loadKg(e.weight, e.mode)
-  if (!l) return 0
-  return l * (1 + (e.reps || 0) / 30)
+export function est1rm(e: SessionExercise): number {
+  return e.sets.reduce((max, s) => {
+    const l = loadKg(s.weight, e.mode)
+    if (!l) return max
+    return Math.max(max, l * (1 + (s.reps || 0) / 30))
+  }, 0)
 }
 
-export function computeSession(exs: SchedExercise[]): { volume: number; totalReps: number; totalSets: number } {
+export function computeSession(exs: SessionExercise[]): { volume: number; totalReps: number; totalSets: number } {
   let v = 0, r = 0, s = 0
-  exs.forEach(e => { v += exVolume(e); r += (e.sets || 0) * (e.reps || 0); s += (e.sets || 0) })
+  exs.forEach(e => {
+    v += exVolume(e)
+    r += e.sets.reduce((sum, st) => sum + (st.reps || 0), 0)
+    s += e.sets.length
+  })
   return { volume: Math.round(v), totalReps: r, totalSets: s }
+}
+
+export function fmtSets(e: SessionExercise): string {
+  const allSameReps   = e.sets.every(s => s.reps   === e.sets[0].reps)
+  const allSameWeight = e.sets.every(s => s.weight === e.sets[0].weight)
+  const n = e.sets.length
+  if (allSameReps && allSameWeight) {
+    const s0 = e.sets[0]
+    const wLabel = e.mode === 'bodyweight' ? 'bw' : e.mode === 'cardio' ? '' : ` ${s0.weight} ${e.mode}`
+    return `${n}×${s0.reps}${wLabel}`
+  }
+  const repsStr = e.sets.map(s => s.reps).join('/')
+  const wUniq = [...new Set(e.sets.map(s => s.weight))]
+  const wStr = wUniq.length === 1 ? ` @ ${wUniq[0]} ${e.mode}` : ` @ ${e.sets.map(s => s.weight).join('/')} ${e.mode}`
+  return `${n} sets (${repsStr} reps${wStr})`
 }
 
 export interface PBMap {
@@ -34,14 +57,17 @@ export function computePBs(sessions: WorkoutSession[]): { best: PBMap; prSession
   const sorted = [...sessions].sort((a, b) => a.ts - b.ts)
   const best: PBMap = {}
   const prSessions: PRSessions = {}
-  sorted.forEach(s => s.exercises.forEach(e => {
-    const orm = est1rm(e)
-    if (!orm) return
-    if (!best[e.name] || orm > best[e.name].orm + 0.01) {
-      best[e.name] = { orm, weight: loadKg(e.weight, e.mode), reps: e.reps, mode: e.mode, ts: s.ts }
-      prSessions[s.id] = prSessions[s.id] || []
-      prSessions[s.id].push(e.name)
-    }
+  sorted.forEach(sess => sess.exercises.forEach(e => {
+    e.sets.forEach(s => {
+      const l = loadKg(s.weight, e.mode)
+      if (!l) return
+      const orm = l * (1 + (s.reps || 0) / 30)
+      if (!best[e.name] || orm > best[e.name].orm + 0.01) {
+        best[e.name] = { orm, weight: l, reps: s.reps, mode: e.mode, ts: sess.ts }
+        prSessions[sess.id] = prSessions[sess.id] || []
+        if (!prSessions[sess.id].includes(e.name)) prSessions[sess.id].push(e.name)
+      }
+    })
   }))
   return { best, prSessions }
 }

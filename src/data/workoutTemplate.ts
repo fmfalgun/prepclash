@@ -1,4 +1,4 @@
-import type { ScheduleDay, WorkoutData, WorkoutSession, SchedExercise } from '../types'
+import type { ScheduleDay, WorkoutData, WorkoutSession, SchedExercise, SessionExercise } from '../types'
 
 export const TOJI: ScheduleDay[] = [
   { id: 'd1', name: 'Chest + Shoulders', muscle: 'Chest', exercises: [
@@ -55,15 +55,17 @@ function loadKg(weight: number, mode: string): number {
   return w
 }
 
-function exVolume(e: SchedExercise): number {
-  const l = loadKg(e.weight, e.mode)
+function exVolume(e: SessionExercise): number {
   const ph = e.mode === 'kg/hand' || e.mode === 'lb/hand'
-  return e.sets * e.reps * l * (ph ? 2 : 1)
+  return e.sets.reduce((sum, s) => {
+    const l = loadKg(s.weight, e.mode)
+    return sum + s.reps * l * (ph ? 2 : 1)
+  }, 0)
 }
 
-function computeSession(exs: SchedExercise[]) {
+function computeSession(exs: SessionExercise[]) {
   let v = 0, r = 0, s = 0
-  exs.forEach(e => { v += exVolume(e); r += e.sets * e.reps; s += e.sets })
+  exs.forEach(e => { v += exVolume(e); r += e.sets.reduce((a, st) => a + st.reps, 0); s += e.sets.length })
   return { volume: Math.round(v), totalReps: r, totalSets: s }
 }
 
@@ -79,12 +81,13 @@ export function genSeed(): WorkoutSession[] {
     const tmpl = TOJI[cyc % 5]; cyc++
     const weeksAgo = Math.floor(d / 7)
     const scale = 1 - weeksAgo * 0.035
-    const exs: SchedExercise[] = tmpl.exercises.map((e, i) => {
+    const exs: SessionExercise[] = tmpl.exercises.map((e, i) => {
       let w = e.weight
       if (e.mode !== 'bodyweight' && e.mode !== 'cardio')
         w = Math.max(1, Math.round(e.weight * scale * 2) / 2)
       const j = (Math.abs(Math.sin((d + i) * 7.3)) % 1) < 0.25 ? -1 : 0
-      return { name: e.name, sets: e.sets, reps: Math.max(1, e.reps + j), weight: w, mode: e.mode }
+      const reps = Math.max(1, e.reps + j)
+      return { name: e.name, mode: e.mode, sets: Array.from({ length: e.sets }, () => ({ reps, weight: w })) }
     })
     const m = computeSession(exs)
     out.push({
