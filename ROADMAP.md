@@ -51,6 +51,18 @@ Manga · Manhwa · Manhua · Web Novel · Novel · Fiction · Hacking · (extens
 
 ---
 
+## Workout Lab — Time-based Exercise Tracking `[S]`
+
+**Goal:** Support duration as an input mode for exercises like Dead Hang where reps make no sense.
+
+- Currently all sets only record `reps × weight`
+- Dead Hang (and similar holds/planks) need a **time field** (e.g. `45 sec`) instead of or alongside reps
+- Add a `mode` toggle per exercise: `reps` (default) vs `time`
+- In `time` mode: input is seconds/mm:ss, weight stays optional
+- Last personal best in Day View should show `45 sec · 2 weeks ago` for time-mode exercises
+
+---
+
 ## Workout Lab — Delete Session `[S]`
 
 **Goal:** Let users delete a session that was logged by mistake.
