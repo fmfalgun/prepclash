@@ -41,6 +41,8 @@ Manga · Manhwa · Manhua · Web Novel · Novel · Fiction · Hacking · (extens
 - Minimal UI — just what you need at the gym
 - Option to log a session directly from here if needed
 - Mobile-first layout
+- Each exercise row shows **last personal best**: `80 kg × 5 reps · 3 weeks ago`
+  — derived from session history, computed on render, no extra store field needed
 
 ### Mode 2 — Analysis View
 - Everything the current Workout Lab already shows (full session history, volume graphs, schedule overview)
