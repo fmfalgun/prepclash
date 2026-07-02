@@ -10,6 +10,8 @@ export function StudyModal() {
   const setDraft      = useStore(s => s.setDraft)
   const addKeyword    = useStore(s => s.addKeyword)
   const submitStudy   = useStore(s => s.submitStudy)
+  const editingLogTs  = useStore(s => s.editingLogTs)
+  const isEditing     = editingLogTs !== null
 
   const allSkills = [...SKILL_DEFS, ...data.extraSkills]
   const gain = studyGain(draft.mins, draft.selected.length)
@@ -21,7 +23,7 @@ export function StudyModal() {
   }).filter(Boolean))].join(', ')
 
   return (
-    <ModalShell kicker="STUDY SESSION" title="Log Study Session">
+    <ModalShell kicker="STUDY SESSION" title={isEditing ? 'Edit Study Session' : 'Log Study Session'}>
       <ModalLabel>WHAT DID YOU WORK ON?</ModalLabel>
       <textarea
         value={draft.title}
@@ -122,7 +124,7 @@ export function StudyModal() {
         )}
       </div>
 
-      <SubmitBtn onClick={submitStudy}>LOG EFFORT → +{gain}</SubmitBtn>
+      <SubmitBtn onClick={submitStudy}>{isEditing ? 'SAVE CHANGES' : `LOG EFFORT → +${gain}`}</SubmitBtn>
     </ModalShell>
   )
 }

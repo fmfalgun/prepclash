@@ -22,9 +22,10 @@ function StatTile({ label, value, sub, accent }: { label: string; value: string 
 }
 
 export function Study() {
-  const data     = useStore(s => s.data)
-  const setModal = useStore(s => s.setModal)
-  const palette  = useStore(s => s.data.palette)
+  const data        = useStore(s => s.data)
+  const setModal    = useStore(s => s.setModal)
+  const openEditLog = useStore(s => s.openEditLog)
+  const palette     = useStore(s => s.data.palette)
   const P = PALETTES[palette] || PALETTES.toxic
 
   const studyLogs = data.logs.filter(l => l.type === 'study')
@@ -238,9 +239,16 @@ export function Study() {
                         </div>
                       ) : null}
                     </div>
-                    <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                      <div style={{ font: "400 15px 'Roboto Mono'", color: 'var(--a)' }}>{l.mins}</div>
-                      <div style={{ font: "400 9px 'Roboto Mono'", color: 'var(--mut)' }}>min</div>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, flexShrink: 0 }}>
+                      <button
+                        onClick={() => openEditLog(l.ts)}
+                        title="edit"
+                        style={{ cursor: 'pointer', border: 'none', background: 'transparent', color: 'var(--mut)', fontSize: 12, padding: '2px 4px', marginTop: 1 }}
+                      >✎</button>
+                      <div style={{ textAlign: 'right' }}>
+                        <div style={{ font: "400 15px 'Roboto Mono'", color: 'var(--a)' }}>{l.mins}</div>
+                        <div style={{ font: "400 9px 'Roboto Mono'", color: 'var(--mut)' }}>min</div>
+                      </div>
                     </div>
                   </div>
                 )

@@ -137,6 +137,7 @@ interface AppState {
   selEx: string
   openSession: string | null
   editingSessionId: string | null
+  editingLogTs: number | null
 
   setTab: (tab: string) => void
   setModal: (modal: ModalType) => void
@@ -162,6 +163,7 @@ interface AppState {
   setSelectedClan: (c: ClanDoc | null) => void
 
   submitStudy: () => void
+  openEditLog: (ts: number) => void
   submitReading: () => void
   addBook: () => void
   togglePhase: (cid: string, idx: number) => void
@@ -317,10 +319,11 @@ export const useStore = create<AppState>()(
         selEx: '',
         openSession: null,
         editingSessionId: null,
+        editingLogTs: null,
 
         setTab: (tab) => set({ tab }),
         setModal: (modal) => set({ modal }),
-        closeModal: () => set({ modal: null, activeNode: null, activeQ: null, proofDraft: '' }),
+        closeModal: () => set({ modal: null, activeNode: null, activeQ: null, proofDraft: '', editingLogTs: null }),
         showToast: toast_,
         setActiveTopic: (activeTopic) => set({ activeTopic }),
         setCfTagDraft: (cfTagDraft) => set({ cfTagDraft }),
@@ -356,7 +359,7 @@ export const useStore = create<AppState>()(
 
         submitStudy: () => {
           if (!requireAuth()) return
-          const { draft, data } = get()
+          const { draft, data, editingLogTs } = get()
           const title = (draft.title || '').trim()
           if (!title) { toast_('describe the work first'); return }
           const mins = Math.max(1, parseInt(String(draft.mins)) || 0)
@@ -365,6 +368,27 @@ export const useStore = create<AppState>()(
           const logTs   = dateToTs(logDate)
           const skillsHit = [...new Set(sel.map(l => data.keywords.find(k => k.label === l)?.skill).filter(Boolean))] as string[]
           const gain = studyGain(mins, sel.length)
+
+          if (editingLogTs !== null) {
+            // Edit mode: replace the existing log entry, adjust momentum delta
+            persist_(d => {
+              const idx = d.logs.findIndex(l => l.ts === editingLogTs)
+              if (idx === -1) return
+              const old = d.logs[idx]
+              const delta = gain - old.gain
+              // Adjust kwCounts: decrement old keywords, increment new
+              ;(old.keywords || []).forEach(l => { if (d.kwCounts[l]) d.kwCounts[l]-- })
+              sel.forEach(l => { d.kwCounts[l] = (d.kwCounts[l] || 0) + 1 })
+              d.momentum = Math.max(0, d.momentum + delta)
+              addWeekXp(d, delta)
+              d.logs[idx] = { ...old, title, mins, keywords: sel, gain, date: logDate, ts: logTs }
+              d.logs.sort((a, b) => b.ts - a.ts)
+            })
+            toast_('log updated')
+            set({ modal: null, draft: freshDraft(), editingLogTs: null })
+            return
+          }
+
           persist_(d => {
             const per = studySkillXp(mins)
             skillsHit.forEach(s => { d.skillXp[s] = (d.skillXp[s] || 0) + per })
@@ -377,6 +401,23 @@ export const useStore = create<AppState>()(
           })
           toast_('+' + gain + ' momentum · effort logged')
           set({ modal: null, draft: freshDraft() })
+        },
+
+        openEditLog: (ts: number) => {
+          const { data } = get()
+          const log = data.logs.find(l => l.ts === ts)
+          if (!log) return
+          set({
+            modal: 'study',
+            editingLogTs: ts,
+            draft: {
+              ...freshDraft(),
+              title: log.title,
+              mins: log.mins,
+              logDate: log.date,
+              selected: log.keywords || [],
+            },
+          })
         },
 
         submitReading: () => {
