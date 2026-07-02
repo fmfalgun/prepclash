@@ -201,10 +201,26 @@ export function PlayerDetailModal() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
               {/* Platform handles */}
-              {(o.gh?.handle || o.mt?.handle || o.cc?.handle) && (
+              {(o.gh?.handle || o.mt?.handle || o.cc?.handle || o.lc?.handle) && (
                 <div>
                   <div style={{ font: "500 8px 'Roboto Mono'", letterSpacing: '.18em', color: 'var(--mut)', marginBottom: 8 }}>PLATFORMS</div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                    {o.lc?.handle && (
+                      <div style={{ display: 'flex', justifyContent: 'space-between', background: 'rgba(255,255,255,.04)', borderRadius: 5, padding: '7px 9px' }}>
+                        <div>
+                          <div style={{ font: "400 7px 'Roboto Mono'", color: 'var(--mut)', marginBottom: 2 }}>LEETCODE</div>
+                          <div style={{ font: "500 11px/1 'Roboto Mono'", color: P.a2 }}>@{o.lc.handle}</div>
+                        </div>
+                        {o.lc.solved != null && (
+                          <div style={{ textAlign: 'right' }}>
+                            <div style={{ font: "400 7px 'Roboto Mono'", color: 'var(--mut)', marginBottom: 2 }}>
+                              {o.lc.easy != null ? `${o.lc.easy}E · ${o.lc.medium}M · ${o.lc.hard}H` : 'SOLVED'}
+                            </div>
+                            <div style={{ font: "500 13px/1 'Roboto Mono'", color: P.a }}>{o.lc.solved}</div>
+                          </div>
+                        )}
+                      </div>
+                    )}
                     {o.gh?.handle && (
                       <div style={{ display: 'flex', justifyContent: 'space-between', background: 'rgba(255,255,255,.04)', borderRadius: 5, padding: '7px 9px' }}>
                         <div>
@@ -247,6 +263,20 @@ export function PlayerDetailModal() {
                         )}
                       </div>
                     )}
+                  </div>
+                </div>
+              )}
+
+              {/* A2OJ Ladder */}
+              {(o.a2ojTotal ?? 0) > 0 && (
+                <div style={{ background: 'rgba(255,255,255,.04)', borderRadius: 5, padding: '7px 9px', display: 'flex', justifyContent: 'space-between' }}>
+                  <div>
+                    <div style={{ font: "400 7px 'Roboto Mono'", color: 'var(--mut)', marginBottom: 2 }}>A2OJ LADDER</div>
+                    <div style={{ font: "500 11px/1 'Roboto Mono'", color: P.a2 }}>ladder grind</div>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ font: "400 7px 'Roboto Mono'", color: 'var(--mut)', marginBottom: 2 }}>SOLVED</div>
+                    <div style={{ font: "500 13px/1 'Roboto Mono'", color: P.a }}>{o.a2ojTotal}</div>
                   </div>
                 </div>
               )}

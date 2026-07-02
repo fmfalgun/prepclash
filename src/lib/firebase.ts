@@ -314,9 +314,11 @@ export async function pushToFirebase(data: Data): Promise<void> {
         rank: data.cf.rank,
         solved: data.cf.solved,
       },
+      lc: data.lc?.handle ? { handle: data.lc.handle, solved: data.lc.solved ?? null, easy: data.lc.easy ?? null, medium: data.lc.medium ?? null, hard: data.lc.hard ?? null } : null,
+      cc: data.cc?.handle ? { handle: data.cc.handle, rating: data.cc.rating ?? null, stars: data.cc.stars ?? null } : null,
       mt: data.mt.handle ? { handle: data.mt.handle, pb60: data.mt.pb60 ?? null } : null,
       gh: data.gh?.handle ? { handle: data.gh.handle, public_repos: data.gh.public_repos ?? null } : null,
-      cc: data.cc?.handle ? { handle: data.cc.handle, rating: data.cc.rating ?? null, stars: data.cc.stars ?? null } : null,
+      a2ojTotal: data.a2oj.reduce((s, x) => s + (x.solved || 0), 0) || null,
       currentTarget: (() => {
         const inProgress = COURSE_DEFS.find(c => {
           const st = data.courses.find(x => x.id === c.id)

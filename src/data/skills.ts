@@ -20,11 +20,11 @@ export const DEFAULT_KEYWORDS: [string, string][] = [
 ]
 
 export const COURSE_DEFS = [
-  { id: 'ble',  name: 'BLE MONITOR',   tag: 'SYSTEMS',   skill: 'systems', phases: ['BASH','SQLITE','BLE','SYSD','DEB'],    done: [1,1,1,1,1] },
-  { id: 'web',  name: 'WEB VAPT',      tag: 'WEB / DNS', skill: 'web',     phases: ['DNS','X.509','TLS','SPF','HUB'],        done: [1,1,1,0,0] },
-  { id: 'iot',  name: 'IOT RECON',     tag: 'NETWORK',   skill: 'network', phases: ['ASYNC','ASN','TUI','CACHE'],            done: [1,1,0,0] },
-  { id: 'port', name: 'PORT ANALYZER', tag: 'INTEL API', skill: 'python',  phases: ['FASTAPI','CACHE','CI/CD','SRC'],        done: [1,0,0,0] },
-  { id: 'folio',name: 'PORTFOLIO',     tag: 'FRONTEND',  skill: 'web',     phases: ['HTML/CSS','MVC','ASYNC','SHIP'],        done: [0,0,0,0] },
+  { id: 'ble',  name: 'BLE MONITOR',   actName: 'GHOST DAEMON',  actNum: 'I',   tag: 'SYSTEMS',   skill: 'systems', phases: ['BASH','SQLITE','BLE','SYSD','DEB'],    done: [1,1,1,1,1] },
+  { id: 'web',  name: 'WEB VAPT',      actName: 'NAME EATER',    actNum: 'II',  tag: 'WEB / DNS', skill: 'web',     phases: ['DNS','X.509','TLS','SPF','HUB'],        done: [1,1,1,0,0] },
+  { id: 'iot',  name: 'IOT RECON',     actName: 'HOLLOW SIGNAL', actNum: 'III', tag: 'NETWORK',   skill: 'network', phases: ['ASYNC','ASN','TUI','CACHE'],            done: [1,1,0,0] },
+  { id: 'port', name: 'PORT ANALYZER', actName: 'SERPENT COIL',  actNum: 'IV',  tag: 'INTEL API', skill: 'python',  phases: ['FASTAPI','CACHE','CI/CD','SRC'],        done: [1,0,0,0] },
+  { id: 'folio',name: 'PORTFOLIO',     actName: 'FINAL RENDER',  actNum: 'V',   tag: 'FRONTEND',  skill: 'web',     phases: ['HTML/CSS','MVC','ASYNC','SHIP'],        done: [0,0,0,0] },
 ]
 
 export const BOOK_DEFS = [

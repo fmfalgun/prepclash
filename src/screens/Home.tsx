@@ -545,7 +545,7 @@ export function Home() {
                 return (
                   <div key={c.id} style={{ marginBottom: 12 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', font: "500 10px 'Lexend Deca'", color: done > 0 ? 'var(--ink)' : 'var(--mut)', marginBottom: 5 }}>
-                      <span>ACT {actIdx + 1} · {c.name}</span>
+                      <span>ACT {c.actNum} · {c.actName}</span>
                       <span style={{ font: "400 9px 'Roboto Mono'", color: 'var(--mut)' }}>{done}/{c.phases.length}</span>
                     </div>
                     <div style={{ display: 'flex', gap: 3 }}>

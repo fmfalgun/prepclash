@@ -222,9 +222,11 @@ export interface PublicOperative {
   // arena: question id → solved ts (proof hidden)
   arena: Record<string, { ts: number }>
   cf: { handle: string; rating: number | null; rank: string; solved: number | null }
+  lc?: { handle: string; solved: number | null; easy: number | null; medium: number | null; hard: number | null } | null
+  cc?: { handle: string; rating?: number | null; stars?: number | null } | null
   mt?: { handle: string; pb60?: number | null } | null
   gh?: { handle: string; public_repos?: number | null } | null
-  cc?: { handle: string; rating?: number | null; stars?: number | null } | null
+  a2ojTotal?: number | null
   lastSeen: number
   createdAt?: number
   isShowcase?: boolean
