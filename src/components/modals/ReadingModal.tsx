@@ -129,6 +129,42 @@ export function ReadingModal() {
             />
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               <select
+                value={draft.nbCategory}
+                onChange={e => setDraft(d => ({ ...d, nbCategory: e.target.value }))}
+                style={{ ...inputStyle, flex: 1, minWidth: 100, color: 'var(--txt)', fontSize: 11, padding: '8px 6px' }}
+              >
+                <option value="hacking">hacking</option>
+                <option value="manga">manga</option>
+                <option value="manhwa">manhwa</option>
+                <option value="manhua">manhua</option>
+                <option value="webnovel">web novel</option>
+                <option value="novel">novel</option>
+                <option value="fiction">fiction</option>
+                <option value="other">other</option>
+              </select>
+              <select
+                value={draft.nbStatus}
+                onChange={e => setDraft(d => ({ ...d, nbStatus: e.target.value }))}
+                style={{ ...inputStyle, flex: 1, minWidth: 90, color: 'var(--txt)', fontSize: 11, padding: '8px 6px' }}
+              >
+                <option value="ongoing">ongoing</option>
+                <option value="completed">completed</option>
+              </select>
+            </div>
+            <input
+              value={draft.nbAuthor}
+              onChange={e => setDraft(d => ({ ...d, nbAuthor: e.target.value }))}
+              placeholder="author (optional)"
+              style={{ ...inputStyle, fontSize: 11 }}
+            />
+            <input
+              value={draft.nbPublisher}
+              onChange={e => setDraft(d => ({ ...d, nbPublisher: e.target.value }))}
+              placeholder="publisher / source (optional)"
+              style={{ ...inputStyle, fontSize: 11 }}
+            />
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              <select
                 value={draft.nbUnit}
                 onChange={e => setDraft(d => ({ ...d, nbUnit: e.target.value }))}
                 style={{ ...inputStyle, flex: 1, minWidth: 110, color: 'var(--txt)', fontSize: 11, padding: '8px 6px' }}
@@ -151,6 +187,9 @@ export function ReadingModal() {
               >
                 {allSkills.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
               </select>
+            </div>
+            <div style={{ font: "400 9px 'Roboto Mono'", color: 'var(--dim2)' }}>
+              manga/manhwa/manhua/novel/fiction → lower XP · hacking/other → full XP
             </div>
             <button
               type="button"

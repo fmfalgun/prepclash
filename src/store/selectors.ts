@@ -8,8 +8,22 @@ export function allSkills(data: Data) {
   return [...SKILL_DEFS, ...data.extraSkills]
 }
 
-export function allBookDefs(data: Data) {
-  return [...BOOK_DEFS, ...(data.customDefs || [])]
+export interface BookDef {
+  id: string; title: string; skill: string; unit: string; total: number
+  category: string; author?: string; publisher?: string; status?: string
+}
+
+export function allBookDefs(data: Data): BookDef[] {
+  const staticBooks: BookDef[] = BOOK_DEFS.map(b => ({
+    id: b.id, title: b.title, skill: b.skill, unit: b.unit, total: b.total,
+    category: 'hacking', status: 'ongoing',
+  }))
+  const customBooks: BookDef[] = (data.customDefs || []).map(b => ({
+    id: b.id, title: b.title, skill: b.skill, unit: b.unit, total: b.total,
+    category: b.category || 'other',
+    author: b.author, publisher: b.publisher, status: b.status || 'ongoing',
+  }))
+  return [...staticBooks, ...customBooks]
 }
 
 export function a2ojTotal(data: Data) {

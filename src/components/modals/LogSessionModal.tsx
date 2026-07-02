@@ -4,7 +4,7 @@ import { computeSession, fmtK } from '../../lib/workoutStats'
 import { todayKey } from '../../lib/dates'
 import type { WeightMode } from '../../types'
 
-const MODE_OPTS: WeightMode[] = ['kg/hand', 'kg total', 'lb/hand', 'bodyweight', 'cardio']
+const MODE_OPTS: WeightMode[] = ['kg/hand', 'kg total', 'lb/hand', 'bodyweight', 'cardio', 'time']
 
 export function LogSessionModal() {
   const logDraft       = useStore(s => s.logDraft)
@@ -80,9 +80,11 @@ export function LogSessionModal() {
               {/* Set column headers */}
               <div style={{ display: 'grid', gridTemplateColumns: '28px 1fr 1fr 28px', gap: 4, marginBottom: 4 }}>
                 <div style={{ font: "400 9px 'Roboto Mono'", color: 'var(--mut)', textAlign: 'center' }}>#</div>
-                <div style={{ font: "400 9px 'Roboto Mono'", color: 'var(--mut)', textAlign: 'center' }}>reps</div>
                 <div style={{ font: "400 9px 'Roboto Mono'", color: 'var(--mut)', textAlign: 'center' }}>
-                  {e.mode === 'bodyweight' ? '—' : e.mode === 'cardio' ? 'dist/time' : e.mode}
+                  {e.mode === 'time' ? 'sec' : 'reps'}
+                </div>
+                <div style={{ font: "400 9px 'Roboto Mono'", color: 'var(--mut)', textAlign: 'center' }}>
+                  {e.mode === 'time' ? '—' : e.mode === 'bodyweight' ? '—' : e.mode === 'cardio' ? 'dist/time' : e.mode}
                 </div>
                 <div />
               </div>
@@ -94,10 +96,10 @@ export function LogSessionModal() {
                     {si + 1}
                   </div>
                   <input
-                    type="number" min={0} max={999}
+                    type="number" min={0} max={e.mode === 'time' ? 3600 : 999}
                     value={s.reps || ''}
                     onChange={ev => updateLogSet(ei, si, 'reps', parseInt(ev.target.value) || 0)}
-                    placeholder="0"
+                    placeholder={e.mode === 'time' ? 'sec' : '0'}
                     style={{ ...inputStyle, padding: '6px', textAlign: 'center' }}
                   />
                   <input
@@ -105,8 +107,8 @@ export function LogSessionModal() {
                     value={s.weight || ''}
                     onChange={ev => updateLogSet(ei, si, 'weight', parseFloat(ev.target.value) || 0)}
                     placeholder="0"
-                    disabled={e.mode === 'bodyweight'}
-                    style={{ ...inputStyle, padding: '6px', textAlign: 'center', opacity: e.mode === 'bodyweight' ? 0.4 : 1 }}
+                    disabled={e.mode === 'bodyweight' || e.mode === 'time'}
+                    style={{ ...inputStyle, padding: '6px', textAlign: 'center', opacity: (e.mode === 'bodyweight' || e.mode === 'time') ? 0.4 : 1 }}
                   />
                   <button onClick={() => removeLogSet(ei, si)} style={{
                     cursor: 'pointer', border: 'none', background: 'transparent',

@@ -75,7 +75,9 @@ export interface CcState {
   error: string | null
 }
 
-export type WeightMode = 'kg/hand' | 'kg total' | 'lb/hand' | 'bodyweight' | 'cardio'
+export type WeightMode = 'kg/hand' | 'kg total' | 'lb/hand' | 'bodyweight' | 'cardio' | 'time'
+
+export type BookCategory = 'manga' | 'manhwa' | 'manhua' | 'webnovel' | 'novel' | 'fiction' | 'hacking' | 'other'
 
 export interface SchedExercise {
   name: string
@@ -137,7 +139,7 @@ export interface Data {
   extraSkills: { id: string; name: string; base: number }[]
   courses: { id: string; done: number[] }[]
   books: { id: string; done: number }[]
-  customDefs: { id: string; title: string; unit: string; total: number; skill: string }[]
+  customDefs: { id: string; title: string; unit: string; total: number; skill: string; category?: string; author?: string; publisher?: string; edition?: string; status?: 'ongoing' | 'completed' }[]
   logs: LogEntry[]
   momentum: number
   workoutLab?: WorkoutData
@@ -196,6 +198,10 @@ export interface Draft {
   nbUnit: string
   nbTotal: string
   nbSkill: string
+  nbCategory: string
+  nbAuthor: string
+  nbPublisher: string
+  nbStatus: string
 }
 
 // Public profile stored in Firestore — readable by everyone

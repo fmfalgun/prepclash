@@ -12,9 +12,12 @@ export function workoutGain(exerciseCount: number): number {
   return 8 + exerciseCount * 3
 }
 
-export function readGain(unitType: string, amount: number): number {
+const LIGHT_CATS = new Set(['manga', 'manhwa', 'manhua', 'webnovel', 'novel', 'fiction'])
+
+export function readGain(unitType: string, amount: number, category?: string): number {
   const w = UNIT_PT[unitType] ?? 1
-  return 4 + Math.round(Math.max(0, amount) * w)
+  const catW = category && LIGHT_CATS.has(category) ? 0.2 : 1
+  return 4 + Math.round(Math.max(0, amount) * w * catW)
 }
 
 export function fmtWeight(ex: { mode: string; weight: string }): string {

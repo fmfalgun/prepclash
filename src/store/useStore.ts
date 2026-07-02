@@ -23,6 +23,7 @@ function freshDraft(): Draft {
     title: '', mins: 30, logDate: todayKey(), selected: [],
     newKwLabel: '', newKwSkill: 'python', newCatName: '',
     book: 'wahh', readAmount: 10, nbTitle: '', nbUnit: 'pages', nbTotal: '', nbSkill: 'web',
+    nbCategory: 'hacking', nbAuthor: '', nbPublisher: '', nbStatus: 'ongoing',
   }
 }
 
@@ -197,6 +198,7 @@ interface AppState {
   ghPulling: boolean
   resetData: () => void
   applyImport: (raw: unknown) => void
+  removeSession: (id: string) => void
   onSignedIn: (user: FbUser) => void
   onSignedOut: () => void
   deleteAccount: () => void
@@ -386,7 +388,7 @@ export const useStore = create<AppState>()(
           const amt = Math.max(1, parseInt(String(draft.readAmount)) || 0)
           const logDate = draft.logDate || todayKey()
           const logTs   = dateToTs(logDate)
-          const gain = readGain(def.unit, amt)
+          const gain = readGain(def.unit, amt, (def as any).category)
           persist_(d => {
             const b = d.books.find(x => x.id === draft.book)
             if (b) b.done = Math.min(def.total, b.done + amt)
@@ -409,10 +411,16 @@ export const useStore = create<AppState>()(
           const id = 'book_' + title.toLowerCase().replace(/[^a-z0-9]+/g, '_').slice(0, 24) + '_' + Math.floor(Math.random() * 999)
           persist_(d => {
             d.customDefs = d.customDefs || []
-            d.customDefs.push({ id, title, unit: draft.nbUnit, total, skill: draft.nbSkill })
+            d.customDefs.push({
+              id, title, unit: draft.nbUnit, total, skill: draft.nbSkill,
+              category: draft.nbCategory || 'other',
+              author: draft.nbAuthor || undefined,
+              publisher: draft.nbPublisher || undefined,
+              status: (draft.nbStatus as 'ongoing' | 'completed') || 'ongoing',
+            })
             d.books.push({ id, done: 0 })
           })
-          set(s => ({ draft: { ...s.draft, book: id, nbTitle: '', nbTotal: '' } }))
+          set(s => ({ draft: { ...s.draft, book: id, nbTitle: '', nbTotal: '', nbAuthor: '', nbPublisher: '' } }))
           toast_('book added')
         },
 
@@ -640,11 +648,18 @@ export const useStore = create<AppState>()(
         applyImport: (raw: unknown) => {
           const parsed = raw as any
           if (!parsed || typeof parsed !== 'object') { toast_('INVALID FILE'); return }
-          // Validate enough structure to be a real backup
           if (!parsed.profile || !Array.isArray(parsed.logs)) { toast_('NOT A VALID BACKUP'); return }
           if (!confirm('Replace ALL local data with this backup? This cannot be undone.')) return
           set({ data: parsed as Data, nameDraft: parsed.profile?.name || get().nameDraft })
           toast_('IMPORT OK')
+        },
+
+        removeSession: (id: string) => {
+          if (!confirm('delete this session? this cannot be undone.')) return
+          persist_(d => {
+            if (d.workoutLab) d.workoutLab.sessions = d.workoutLab.sessions.filter(s => s.id !== id)
+          })
+          toast_('session deleted')
         },
 
         onSignedIn: async (user: FbUser) => {

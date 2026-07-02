@@ -33,10 +33,21 @@ export function computeSession(exs: SessionExercise[]): { volume: number; totalR
   return { volume: Math.round(v), totalReps: r, totalSets: s }
 }
 
+export function fmtDuration(sec: number): string {
+  if (!sec) return '0s'
+  if (sec >= 60) return Math.floor(sec / 60) + 'm ' + (sec % 60 ? (sec % 60) + 's' : '')
+  return sec + 's'
+}
+
 export function fmtSets(e: SessionExercise): string {
+  const n = e.sets.length
+  if (e.mode === 'time') {
+    const allSame = e.sets.every(s => s.reps === e.sets[0].reps)
+    if (allSame) return `${n}×${fmtDuration(e.sets[0].reps)}`
+    return `${n} sets (${e.sets.map(s => fmtDuration(s.reps)).join('/')})`
+  }
   const allSameReps   = e.sets.every(s => s.reps   === e.sets[0].reps)
   const allSameWeight = e.sets.every(s => s.weight === e.sets[0].weight)
-  const n = e.sets.length
   if (allSameReps && allSameWeight) {
     const s0 = e.sets[0]
     const wLabel = e.mode === 'bodyweight' ? 'bw' : e.mode === 'cardio' ? '' : ` ${s0.weight} ${e.mode}`
@@ -58,18 +69,61 @@ export function computePBs(sessions: WorkoutSession[]): { best: PBMap; prSession
   const best: PBMap = {}
   const prSessions: PRSessions = {}
   sorted.forEach(sess => sess.exercises.forEach(e => {
-    e.sets.forEach(s => {
-      const l = loadKg(s.weight, e.mode)
-      if (!l) return
-      const orm = l * (1 + (s.reps || 0) / 30)
-      if (!best[e.name] || orm > best[e.name].orm + 0.01) {
-        best[e.name] = { orm, weight: l, reps: s.reps, mode: e.mode, ts: sess.ts }
-        prSessions[sess.id] = prSessions[sess.id] || []
-        if (!prSessions[sess.id].includes(e.name)) prSessions[sess.id].push(e.name)
-      }
-    })
+    if (e.mode === 'time') {
+      e.sets.forEach(s => {
+        const dur = s.reps // reps field stores seconds for time mode
+        if (dur <= 0) return
+        if (!best[e.name] || dur > best[e.name].orm + 0.01) {
+          best[e.name] = { orm: dur, weight: 0, reps: dur, mode: e.mode, ts: sess.ts }
+          prSessions[sess.id] = prSessions[sess.id] || []
+          if (!prSessions[sess.id].includes(e.name)) prSessions[sess.id].push(e.name)
+        }
+      })
+    } else {
+      e.sets.forEach(s => {
+        const l = loadKg(s.weight, e.mode)
+        if (!l) return
+        const orm = l * (1 + (s.reps || 0) / 30)
+        if (!best[e.name] || orm > best[e.name].orm + 0.01) {
+          best[e.name] = { orm, weight: l, reps: s.reps, mode: e.mode, ts: sess.ts }
+          prSessions[sess.id] = prSessions[sess.id] || []
+          if (!prSessions[sess.id].includes(e.name)) prSessions[sess.id].push(e.name)
+        }
+      })
+    }
   }))
   return { best, prSessions }
+}
+
+export interface DayBest { mode: string; weight: number; reps: number; dur: number; ts: number }
+
+export function computeDayBests(sessions: WorkoutSession[]): Record<string, DayBest> {
+  const bests: Record<string, DayBest> = {}
+  const sorted = [...sessions].sort((a, b) => a.ts - b.ts)
+  sorted.forEach(sess => sess.exercises.forEach(e => {
+    if (e.mode === 'time') {
+      const maxDur = Math.max(0, ...e.sets.map(s => s.reps))
+      if (maxDur > 0 && (!bests[e.name] || maxDur > bests[e.name].dur)) {
+        bests[e.name] = { mode: e.mode, weight: 0, reps: 0, dur: maxDur, ts: sess.ts }
+      }
+    } else {
+      e.sets.forEach(s => {
+        const l = loadKg(s.weight, e.mode)
+        if (l <= 0) return
+        const cur = bests[e.name]
+        const orm = l * (1 + s.reps / 30)
+        if (!cur || orm > (cur.weight * (1 + cur.reps / 30))) {
+          bests[e.name] = { mode: e.mode, weight: l, reps: s.reps, dur: 0, ts: sess.ts }
+        }
+      })
+    }
+  }))
+  return bests
+}
+
+export function fmtBest(b: DayBest): string {
+  if (b.mode === 'time') return fmtDuration(b.dur)
+  return b.weight.toFixed(1) + ' kg × ' + b.reps + ' reps'
 }
 
 export function weekKey(d?: Date | number): string {
