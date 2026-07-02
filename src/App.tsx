@@ -14,6 +14,7 @@ import { Study } from './screens/Study'
 import { Reading } from './screens/Reading'
 import { StudyModal } from './components/modals/StudyModal'
 import { ReadingModal } from './components/modals/ReadingModal'
+import { AddBookModal } from './components/modals/AddBookModal'
 import { NodeModal } from './components/modals/NodeModal'
 import { QuestionModal } from './components/modals/QuestionModal'
 import { ConnectModal } from './components/modals/ConnectModal'
@@ -82,7 +83,8 @@ export default function App() {
         {tab === 'ladder'  && <Ladder />}
       </main>
       {modal === 'study'    && <StudyModal />}
-      {modal === 'reading'  && <ReadingModal />}
+      {modal === 'reading'   && <ReadingModal />}
+      {modal === 'add-book'  && <AddBookModal />}
       {modal === 'node'     && <NodeModal />}
       {modal === 'question' && <QuestionModal />}
       {modal === 'connect'  && <ConnectModal />}

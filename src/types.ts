@@ -182,7 +182,7 @@ export interface LiveQuestion {
   live?: boolean
 }
 
-export type ModalType = 'study' | 'reading' | 'node' | 'question' | 'connect' | 'log' | 'edit' | 'editSession' | 'onboarding' | null
+export type ModalType = 'study' | 'reading' | 'add-book' | 'node' | 'question' | 'connect' | 'log' | 'edit' | 'editSession' | 'onboarding' | null
 
 export interface Draft {
   title: string
@@ -197,8 +197,8 @@ export interface Draft {
   nbTitle: string
   nbUnit: string
   nbTotal: string
-  nbSkill: string
   nbCategory: string
+  nbCustomCat: string
   nbAuthor: string
   nbPublisher: string
   nbStatus: string

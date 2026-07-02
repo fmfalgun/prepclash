@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { useStore } from '../../store/useStore'
 import { readGain } from '../../lib/momentum'
 import { allBookDefs } from '../../store/selectors'
-import { SKILL_DEFS } from '../../data/skills'
 import { todayKey } from '../../lib/dates'
 import { ModalShell, ModalLabel, inputStyle, SubmitBtn } from './ModalShell'
 
@@ -15,18 +14,16 @@ export function ReadingModal() {
   const draft         = useStore(s => s.draft)
   const setDraft      = useStore(s => s.setDraft)
   const submitReading = useStore(s => s.submitReading)
-  const addBook       = useStore(s => s.addBook)
+  const setModal      = useStore(s => s.setModal)
 
-  const [search, setSearch]   = useState('')
-  const [showAdd, setShowAdd] = useState(false)
+  const [search, setSearch] = useState('')
 
   const defs     = allBookDefs(data)
   const filtered = search.trim()
     ? defs.filter(d => d.title.toLowerCase().includes(search.toLowerCase()))
     : defs
   const curDef   = defs.find(b => b.id === draft.book) || defs[0]
-  const gain     = curDef ? readGain(curDef.unit, draft.readAmount) : 0
-  const allSkills = [...SKILL_DEFS, ...data.extraSkills]
+  const gain     = curDef ? readGain(curDef.unit, draft.readAmount, (curDef as any).category) : 0
 
   return (
     <ModalShell kicker="INTEL // READING" title="Log Reading">
@@ -72,7 +69,14 @@ export function ReadingModal() {
         })}
         {filtered.length === 0 && (
           <div style={{ font: "400 11px 'Roboto Mono'", color: 'var(--dim2)', padding: '12px 0', textAlign: 'center' }}>
-            no match — add it below
+            no match —{' '}
+            <button
+              type="button"
+              onClick={() => setModal('add-book')}
+              style={{ cursor: 'pointer', background: 'transparent', border: 'none', color: 'var(--a2)', font: "500 11px 'Roboto Mono'", padding: 0 }}
+            >
+              add it to library
+            </button>
           </div>
         )}
       </div>
@@ -106,98 +110,17 @@ export function ReadingModal() {
 
       <SubmitBtn onClick={submitReading}>LOG READING → +{gain}</SubmitBtn>
 
-      <div style={{ marginTop: 16, borderTop: '1px solid rgba(var(--rgb),.1)', paddingTop: 12 }}>
+      <div style={{ marginTop: 14, textAlign: 'center' }}>
         <button
           type="button"
-          onClick={() => setShowAdd(v => !v)}
+          onClick={() => setModal('add-book')}
           style={{
-            cursor: 'pointer', background: 'transparent', border: '1px solid rgba(var(--rgb),.14)',
-            color: 'var(--mut)', font: "500 10px 'Roboto Mono'", letterSpacing: '.1em',
-            padding: '6px 12px', borderRadius: 5, width: '100%',
+            cursor: 'pointer', background: 'transparent', border: 'none',
+            color: 'var(--mut)', font: "400 10px 'Roboto Mono'", letterSpacing: '.06em',
           }}
         >
-          {showAdd ? '▲ HIDE' : '+ ADD NEW BOOK / DOC TO LIBRARY'}
+          book not in library? → <span style={{ color: 'var(--a2)' }}>add it</span>
         </button>
-
-        {showAdd && (
-          <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <input
-              value={draft.nbTitle}
-              onChange={e => setDraft(d => ({ ...d, nbTitle: e.target.value }))}
-              placeholder="title (e.g. Gray Hat Hacking 4e)"
-              style={inputStyle}
-            />
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              <select
-                value={draft.nbCategory}
-                onChange={e => setDraft(d => ({ ...d, nbCategory: e.target.value }))}
-                style={{ ...inputStyle, flex: 1, minWidth: 100, color: 'var(--txt)', fontSize: 11, padding: '8px 6px' }}
-              >
-                <option value="hacking">hacking</option>
-                <option value="manga">manga</option>
-                <option value="manhwa">manhwa</option>
-                <option value="manhua">manhua</option>
-                <option value="webnovel">web novel</option>
-                <option value="novel">novel</option>
-                <option value="fiction">fiction</option>
-                <option value="other">other</option>
-              </select>
-              <select
-                value={draft.nbStatus}
-                onChange={e => setDraft(d => ({ ...d, nbStatus: e.target.value }))}
-                style={{ ...inputStyle, flex: 1, minWidth: 90, color: 'var(--txt)', fontSize: 11, padding: '8px 6px' }}
-              >
-                <option value="ongoing">ongoing</option>
-                <option value="completed">completed</option>
-              </select>
-            </div>
-            <input
-              value={draft.nbAuthor}
-              onChange={e => setDraft(d => ({ ...d, nbAuthor: e.target.value }))}
-              placeholder="author (optional)"
-              style={{ ...inputStyle, fontSize: 11 }}
-            />
-            <input
-              value={draft.nbPublisher}
-              onChange={e => setDraft(d => ({ ...d, nbPublisher: e.target.value }))}
-              placeholder="publisher / source (optional)"
-              style={{ ...inputStyle, fontSize: 11 }}
-            />
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              <select
-                value={draft.nbUnit}
-                onChange={e => setDraft(d => ({ ...d, nbUnit: e.target.value }))}
-                style={{ ...inputStyle, flex: 1, minWidth: 110, color: 'var(--txt)', fontSize: 11, padding: '8px 6px' }}
-              >
-                <option value="pages">pages</option>
-                <option value="chapters">chapters</option>
-                <option value="sections">sections</option>
-                <option value="questions">questions</option>
-              </select>
-              <input
-                type="number" value={draft.nbTotal}
-                onChange={e => setDraft(d => ({ ...d, nbTotal: e.target.value }))}
-                placeholder="total" min={1}
-                style={{ ...inputStyle, width: 80, fontSize: 11, padding: '8px 6px' }}
-              />
-              <select
-                value={draft.nbSkill}
-                onChange={e => setDraft(d => ({ ...d, nbSkill: e.target.value }))}
-                style={{ ...inputStyle, flex: '1.2', minWidth: 140, color: 'var(--txt)', fontSize: 11, padding: '8px 6px' }}
-              >
-                {allSkills.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-              </select>
-            </div>
-            <div style={{ font: "400 9px 'Roboto Mono'", color: 'var(--dim2)' }}>
-              manga/manhwa/manhua/novel/fiction → lower XP · hacking/other → full XP
-            </div>
-            <button
-              type="button"
-              onClick={addBook}
-              style={{ cursor: 'pointer', border: '1px solid var(--a2)', background: 'rgba(var(--a2rgb),.1)', color: 'var(--a2)', font: "500 12px 'Lexend Deca'", letterSpacing: '.08em', padding: '9px', borderRadius: 5 }}
-            >ADD TO LIBRARY</button>
-          </div>
-        )}
       </div>
     </ModalShell>
   )

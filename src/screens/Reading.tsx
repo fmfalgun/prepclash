@@ -144,7 +144,7 @@ export function Reading() {
           </div>
         </div>
         <div className="screen-header-btns" style={{ display: 'flex', gap: 10 }}>
-          <button onClick={() => setModal('reading')} style={{
+          <button onClick={() => setModal('add-book')} style={{
             cursor: 'pointer', border: 'none', background: 'var(--cardHi)', color: 'var(--txt)',
             font: "400 12px 'Roboto Mono'", padding: '11px 16px', borderRadius: 8,
           }}>+ add book</button>

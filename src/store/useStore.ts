@@ -22,8 +22,8 @@ function freshDraft(): Draft {
   return {
     title: '', mins: 30, logDate: todayKey(), selected: [],
     newKwLabel: '', newKwSkill: 'python', newCatName: '',
-    book: 'wahh', readAmount: 10, nbTitle: '', nbUnit: 'pages', nbTotal: '', nbSkill: 'web',
-    nbCategory: 'hacking', nbAuthor: '', nbPublisher: '', nbStatus: 'ongoing',
+    book: 'wahh', readAmount: 10, nbTitle: '', nbUnit: 'pages', nbTotal: '',
+    nbCategory: 'hacking', nbCustomCat: '', nbAuthor: '', nbPublisher: '', nbStatus: 'ongoing',
   }
 }
 
@@ -449,20 +449,25 @@ export const useStore = create<AppState>()(
           const title = (draft.nbTitle || '').trim()
           if (!title) { toast_('enter a title'); return }
           const total = Math.max(1, parseInt(draft.nbTotal) || 0) || 100
+          const cat   = draft.nbCategory === '__custom__'
+            ? (draft.nbCustomCat.trim() || 'other')
+            : (draft.nbCategory || 'other')
+          const LIGHT_CATS = new Set(['manga', 'manhwa', 'manhua', 'webnovel', 'novel', 'fiction'])
+          const skill = LIGHT_CATS.has(cat) ? 'physique' : 'systems'
           const id = 'book_' + title.toLowerCase().replace(/[^a-z0-9]+/g, '_').slice(0, 24) + '_' + Math.floor(Math.random() * 999)
           persist_(d => {
             d.customDefs = d.customDefs || []
             d.customDefs.push({
-              id, title, unit: draft.nbUnit, total, skill: draft.nbSkill,
-              category: draft.nbCategory || 'other',
+              id, title, unit: draft.nbUnit, total, skill,
+              category: cat,
               author: draft.nbAuthor || undefined,
               publisher: draft.nbPublisher || undefined,
               status: (draft.nbStatus as 'ongoing' | 'completed') || 'ongoing',
             })
             d.books.push({ id, done: 0 })
           })
-          set(s => ({ draft: { ...s.draft, book: id, nbTitle: '', nbTotal: '', nbAuthor: '', nbPublisher: '' } }))
-          toast_('book added')
+          set(s => ({ draft: { ...s.draft, book: id, nbTitle: '', nbTotal: '', nbAuthor: '', nbPublisher: '', nbCustomCat: '' }, modal: null }))
+          toast_('book added · open log reading to track it')
         },
 
         togglePhase: (cid, idx) => {
