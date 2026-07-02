@@ -534,18 +534,18 @@ export function Home() {
           {/* Active courses — only what's started */}
           {(activeCourses.length > 0 || COURSE_DEFS.length > 0) && (
             <div style={{ background: 'var(--card0)', borderRadius: 10, padding: 16 }}>
-              <div style={{ font: "500 9px 'Roboto Mono'", letterSpacing: '.08em', color: 'var(--mut)', marginBottom: 12 }}>TARGET COURSES</div>
+              <div style={{ font: "500 9px 'Roboto Mono'", letterSpacing: '.08em', color: 'var(--mut)', marginBottom: 12 }}>VILLAGE ACTS</div>
               {activeCourses.length === 0 && (
-                <div style={{ font: "400 9px 'Roboto Mono'", color: 'var(--dim2)' }}>no courses started · toggle phases below to track</div>
+                <div style={{ font: "400 9px 'Roboto Mono'", color: 'var(--dim2)' }}>no acts started · toggle phases below to track</div>
               )}
-              {COURSE_DEFS.map(c => {
+              {COURSE_DEFS.map((c, actIdx) => {
                 const state = data.courses.find(x => x.id === c.id)
                 const done = state ? state.done.filter(Boolean).length : 0
                 if (done === 0 && activeCourses.length > 0) return null
                 return (
                   <div key={c.id} style={{ marginBottom: 12 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', font: "500 10px 'Lexend Deca'", color: done > 0 ? 'var(--ink)' : 'var(--mut)', marginBottom: 5 }}>
-                      <span>{c.name}</span>
+                      <span>ACT {actIdx + 1} · {c.name}</span>
                       <span style={{ font: "400 9px 'Roboto Mono'", color: 'var(--mut)' }}>{done}/{c.phases.length}</span>
                     </div>
                     <div style={{ display: 'flex', gap: 3 }}>

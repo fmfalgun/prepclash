@@ -11,7 +11,7 @@ type Props = PropsData | PropsRaw
 export function Radar({ data, skillXp: rawXp, palette: rawPalette, size = 236 }: Props) {
   const P = data ? paletteCss(data) : PALETTES[rawPalette || 'toxic']
   const skills = data ? allSkills(data) : SKILL_DEFS
-  const xpOf = (id: string) => data ? skillScore(data, id) : Math.min(99, Math.round((rawXp?.[id] || 0)))
+  const xpOf = (id: string) => data ? skillScore(data, id) : Math.min(99, Math.round(Math.sqrt(Math.max(0, rawXp?.[id] || 0)) * 4))
 
   const n = skills.length
   const cx = size / 2, cy = size / 2, maxR = size / 2 - 28
